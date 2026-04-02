@@ -107,7 +107,7 @@ Main entities:
 
 1. Approved content enters the publishing queue
 2. Immediate publishing uses a server action
-3. Scheduled publishing can run through `/api/jobs/publish-due`
+3. Scheduled publishing can run through `/api/jobs/publish-due`, or as part of the combined `/api/jobs/daily-maintenance` cron on free-plan Vercel deployments
 4. Live publishing supports:
    - Facebook Page feed publishing
    - WhatsApp Cloud API text delivery when configured

@@ -28,7 +28,7 @@ The platform helps a loan business detect current trends, generate high-quality 
 ## Stack
 
 - Next.js 16 + React 19 + TypeScript
-- Prisma + SQLite
+- Prisma + PostgreSQL
 - Tailwind CSS v4
 - RSS trend ingestion
 - OpenAI-compatible generation path with fallback templated generation
@@ -48,14 +48,16 @@ npm install
 cp .env.example .env
 ```
 
-3. Initialize the local database and seed demo data:
+3. Create a Neon project, then paste your pooled and direct Postgres URLs into `.env`.
+
+4. Initialize the database and seed demo data:
 
 ```bash
 npm run db:generate
 npm run db:init
 ```
 
-4. Start the app:
+5. Start the app:
 
 ```bash
 npm run dev
@@ -74,7 +76,9 @@ npm run dev
 ## Environment Variables
 
 - `DATABASE_URL`
-  SQLite database URL. The included `.env` uses an absolute local path for this workspace.
+  PostgreSQL connection URL used by the app. For Neon, use the pooled connection string.
+- `DIRECT_URL`
+  Direct PostgreSQL connection URL used by Prisma CLI commands. For Neon, use the non-pooled direct connection string.
 - `AUTH_SECRET`
   Session signing key.
 - `OPENAI_API_KEY`
@@ -112,6 +116,8 @@ npm run db:seed
 
 The app exposes protected job routes that accept both `GET` and `POST`:
 
+- `/api/jobs/daily-maintenance`
+  Runs the once-daily maintenance sweep for free-plan Vercel cron usage: trend refresh, recommendation refresh, due publishing, and recent performance sync.
 - `/api/jobs/refresh-trends`
   Refreshes trend signals and recommendations.
 - `/api/jobs/publish-due`
@@ -121,7 +127,7 @@ The app exposes protected job routes that accept both `GET` and `POST`:
 
 Use `Authorization: Bearer $CRON_SECRET` or `?secret=$CRON_SECRET`.
 
-The included [vercel.json](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/vercel.json) defines Vercel cron schedules for daily trend refresh and 15-minute publishing checks.
+The included [vercel.json](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/vercel.json) defines a single daily Vercel cron for Hobby/free-plan compatibility. Use the individual job routes manually between cron runs when needed.
 
 ## Project Structure
 
@@ -153,7 +159,8 @@ docs/
 - The system is intentionally modular: generation, trends, recommendations, publishing, and analytics are separated into services.
 - Audit logging keeps major workflow actions traceable for future maintenance and team accountability.
 - Business profile data is the shared source of truth for content generation and scoring.
-- The included `db:init` helper exists because some local environments behave unreliably with `prisma db push` against SQLite. It deterministically creates the schema from the Prisma datamodel and then seeds it.
+- The included `db:init` helper pushes the Prisma schema to PostgreSQL and then seeds the database. For Neon, use the pooled URL in `DATABASE_URL` and the direct URL in `DIRECT_URL`.
+- During `db:init`, the seed step automatically uses `DIRECT_URL` to avoid Neon pooler issues on one-off setup tasks.
 - Facebook publishing falls back to a simulated publish record when Meta credentials are not configured.
 - OpenAI generation falls back to a structured template generator when no API key is present.
 - WhatsApp delivery falls back to a manual-ready simulated publish unless Cloud API credentials and a destination number are provided.
@@ -172,6 +179,7 @@ docs/
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Neon Free Setup](docs/neon-setup.md)
 - [Operations](docs/operations.md)
 - [Roadmap](docs/roadmap.md)
 - [Vercel Deployment Checklist](docs/vercel-deployment.md)

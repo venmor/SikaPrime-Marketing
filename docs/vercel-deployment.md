@@ -29,6 +29,7 @@ In Vercel Dashboard:
 Required for production:
 
 - `DATABASE_URL`
+- `DIRECT_URL`
 - `AUTH_SECRET`
 - `OPENAI_API_KEY`
 - `FACEBOOK_PAGE_ID`
@@ -76,45 +77,39 @@ Notes:
 
 ## 4. Cron Setup
 
-This project already includes [vercel.json](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/vercel.json) with cron definitions.
+This project already includes [vercel.json](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/vercel.json) with a free-plan-safe cron definition.
 
 Configured schedules:
 
-- `/api/jobs/refresh-trends` at `0 5 * * *`
-- `/api/jobs/publish-due` at `*/15 * * * *`
+- `/api/jobs/daily-maintenance` at `0 5 * * *`
 
 Meaning in Lusaka time:
 
 - `0 5 * * *` UTC = `07:00` Africa/Lusaka
-- `*/15 * * * *` = every 15 minutes
 
 What they do:
 
-- `refresh-trends`: refreshes trends and recommendations
-- `publish-due`: publishes due content and syncs recent Facebook performance
+- `daily-maintenance`: refreshes trends, refreshes recommendations, publishes due content, and syncs recent Facebook performance
 
 Important:
 
 - Vercel cron invokes routes with `GET`
 - This app supports both `GET` and `POST` for job routes
 - The routes are secured by `CRON_SECRET`
+- On the Hobby/free plan, cron expressions can only run once per day, so the other job routes are kept for manual use
 
 ## 5. Database Choice
 
-Current default:
+Current recommendation:
 
-- Local development uses SQLite
+- Use hosted PostgreSQL
+- Neon Free is a strong fit for this project on Vercel
 
-For real production on Vercel:
+Suggested production step:
 
-- Do not use local SQLite as your long-term production database
-- Move to a hosted database such as Postgres before serious production use
-
-Suggested next production step:
-
-1. Provision a hosted Postgres database
-2. Update `DATABASE_URL` in Vercel
-3. Update Prisma provider if you decide to migrate from SQLite to Postgres
+1. Provision a Neon Postgres database
+2. Add the pooled connection string as `DATABASE_URL`
+3. Add the direct connection string as `DIRECT_URL`
 4. Run the schema setup against the production database
 
 ## 6. First Production Deploy
@@ -144,6 +139,10 @@ Run this checklist after the first deployment:
 ## 8. Manual Job Checks
 
 You can test cron-protected routes manually from your terminal:
+
+```bash
+curl "https://YOUR-PRODUCTION-DOMAIN/api/jobs/daily-maintenance?secret=YOUR_CRON_SECRET"
+```
 
 ```bash
 curl "https://YOUR-PRODUCTION-DOMAIN/api/jobs/refresh-trends?secret=YOUR_CRON_SECRET"
@@ -216,7 +215,7 @@ Monthly:
 
 These are the next high-value improvements after the first Vercel deployment:
 
-1. Move from SQLite to hosted Postgres
+1. Keep Neon on a stable branch or upgrade plans as traffic grows
 2. Add production auth accounts instead of seeded demo-only usage
 3. Add a custom domain
 4. Add Vercel Analytics or logs monitoring

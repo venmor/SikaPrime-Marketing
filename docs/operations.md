@@ -12,6 +12,8 @@ npm run db:init
 npm run dev
 ```
 
+Before `db:init`, update `.env` with your Neon `DATABASE_URL` and `DIRECT_URL`.
+
 ### Verification
 
 ```bash
@@ -28,9 +30,10 @@ npm run build
 
 Why `db:init` exists:
 
-- Some local environments are unreliable with `prisma db push` against SQLite
-- `db:init` generates SQL from the Prisma datamodel, applies it to SQLite, and then seeds the app
-- This gives the team a repeatable setup path
+- The project uses PostgreSQL, including Neon-hosted databases
+- `db:init` pushes the Prisma schema to the configured Postgres database and then seeds the app
+- For Neon, `db:init` seeds through `DIRECT_URL` to avoid pooler-related setup failures
+- This gives the team a repeatable setup path for Neon and other hosted Postgres providers
 
 ## Seeded Demo Users
 
@@ -45,6 +48,13 @@ Password for all demo users:
 - `SikaPrime123!`
 
 ## Scheduled Jobs
+
+### Run the once-daily maintenance sweep
+
+```bash
+curl http://localhost:3000/api/jobs/daily-maintenance \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
 
 ### Refresh trends and recommendations
 
@@ -66,6 +76,8 @@ curl http://localhost:3000/api/jobs/publish-due \
 curl http://localhost:3000/api/jobs/sync-performance \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
+
+On the Vercel free/Hobby plan, `vercel.json` uses only the daily maintenance route. The other job routes remain available for manual runs.
 
 ## Live Integrations
 
