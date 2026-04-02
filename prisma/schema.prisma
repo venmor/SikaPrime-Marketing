@@ -1,0 +1,338 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  STRATEGIST
+  CREATOR
+  REVIEWER
+  ANALYST
+}
+
+enum TrendRegion {
+  LOCAL
+  GLOBAL
+}
+
+enum TrendStatus {
+  RISING
+  WATCH
+  COOLING
+}
+
+enum TrendLifecycle {
+  EMERGING
+  ACTIVE
+  SATURATED
+  DEAD
+}
+
+enum ContentType {
+  FACEBOOK_POST
+  AD_COPY
+  CAPTION
+  WHATSAPP_MESSAGE
+  CAMPAIGN_IDEA
+  EDUCATIONAL
+  TRUST_BUILDING
+  PRODUCT_PROMOTION
+}
+
+enum ContentTone {
+  PROFESSIONAL
+  PERSUASIVE
+  YOUTHFUL
+  LOCALIZED
+}
+
+enum WorkflowStage {
+  IDEA
+  DRAFT
+  IN_REVIEW
+  NEEDS_REVISION
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PublishingChannel {
+  FACEBOOK
+  WHATSAPP
+}
+
+enum PublicationStatus {
+  DRAFT
+  QUEUED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  SIMULATED
+}
+
+enum ReviewStatus {
+  REQUESTED
+  COMMENTED
+  APPROVED
+  REJECTED
+}
+
+enum GuardrailType {
+  PROHIBITED_WORD
+  MISLEADING_CLAIM
+  REVIEW_TRIGGER
+}
+
+model User {
+  id                String        @id @default(cuid())
+  name              String
+  email             String        @unique
+  passwordHash      String
+  role              UserRole
+  jobTitle          String
+  avatarSeed        String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  contentItems      ContentItem[] @relation("ContentOwner")
+  reviewAssignments ContentItem[] @relation("ContentReviewer")
+  reviews           ContentReview[] @relation("ReviewAuthor")
+  activityLogs      ActivityLog[] @relation("ActivityActor")
+}
+
+model BusinessProfile {
+  id                Int               @id @default(1)
+  companyName       String
+  brandPromise      String
+  mission           String
+  valueProposition  String
+  toneSummary       String
+  primaryGoal       String
+  coreNarrative     String
+  complianceSummary String
+  heroMessage       String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  values            CompanyValue[]
+  products          Product[]
+  audienceSegments  AudienceSegment[]
+  complianceRules   ComplianceRule[]
+  guardrailTerms    GuardrailTerm[]
+  offers            Offer[]
+  goals             StrategicGoal[]
+}
+
+model CompanyValue {
+  id          String          @id @default(cuid())
+  profileId   Int
+  name        String
+  description String
+  profile     BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id               String          @id @default(cuid())
+  profileId        Int
+  slug             String          @unique
+  name             String
+  category         String
+  description      String
+  keyBenefits      String
+  eligibilityNotes String
+  callToAction     String
+  priority         Int             @default(50)
+  active           Boolean         @default(true)
+  profile          BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  contentItems     ContentItem[]
+}
+
+model AudienceSegment {
+  id                String          @id @default(cuid())
+  profileId         Int
+  name              String
+  description       String
+  painPoints        String
+  needs             String
+  preferredChannels String
+  messagingAngles   String
+  priority          Int             @default(50)
+  profile           BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  contentItems      ContentItem[]
+}
+
+model ComplianceRule {
+  id        String          @id @default(cuid())
+  profileId Int
+  title     String
+  ruleText  String
+  guidance  String
+  severity  String
+  profile   BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model GuardrailTerm {
+  id          String          @id @default(cuid())
+  profileId   Int
+  phrase      String
+  explanation String
+  type        GuardrailType
+  severity    String
+  active      Boolean         @default(true)
+  profile     BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Offer {
+  id           String          @id @default(cuid())
+  profileId    Int
+  name         String
+  description  String
+  callToAction String
+  startDate    DateTime?
+  endDate      DateTime?
+  active       Boolean         @default(true)
+  priority     Int             @default(50)
+  profile      BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model StrategicGoal {
+  id          String          @id @default(cuid())
+  profileId   Int
+  title       String
+  description String
+  priority    Int             @default(50)
+  active      Boolean         @default(true)
+  profile     BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model TrendSignal {
+  id              String         @id @default(cuid())
+  title           String
+  summary         String
+  sourceName      String
+  sourceUrl       String
+  region          TrendRegion
+  topic           String
+  keywords        String
+  publishedAt     DateTime
+  detectedAt      DateTime       @default(now())
+  relevanceScore  Int
+  freshnessScore  Int
+  brandFitScore   Int
+  totalScore      Int
+  status          TrendStatus
+  lifecycle       TrendLifecycle
+  contentItems    ContentItem[]
+}
+
+model ContentItem {
+  id                String            @id @default(cuid())
+  title             String
+  brief             String
+  objective         String?
+  campaignLabel     String?
+  distributionTarget String?
+  contentType       ContentType
+  tone              ContentTone
+  channel           PublishingChannel
+  stage             WorkflowStage     @default(DRAFT)
+  draft             String            @default("")
+  finalCopy         String?
+  callToAction      String?
+  hashtags          String?
+  assetReference    String?
+  notes             String?
+  aiModel           String?
+  aiSummary         String?
+  themeLabel        String?
+  revisionCount     Int               @default(0)
+  scheduledFor      DateTime?
+  publishedAt       DateTime?
+  archivedAt        DateTime?
+  ownerId           String
+  reviewerId        String?
+  trendId           String?
+  productId         String?
+  audienceSegmentId String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  owner             User              @relation("ContentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  reviewer          User?             @relation("ContentReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  trend             TrendSignal?      @relation(fields: [trendId], references: [id], onDelete: SetNull)
+  product           Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  audienceSegment   AudienceSegment?  @relation(fields: [audienceSegmentId], references: [id], onDelete: SetNull)
+  reviews           ContentReview[]
+  publications      Publication[]
+}
+
+model ContentReview {
+  id            String       @id @default(cuid())
+  contentItemId String
+  reviewerId    String
+  status        ReviewStatus @default(REQUESTED)
+  notes         String
+  createdAt     DateTime     @default(now())
+  contentItem   ContentItem   @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  reviewer      User          @relation("ReviewAuthor", fields: [reviewerId], references: [id], onDelete: Cascade)
+}
+
+model Publication {
+  id           String            @id @default(cuid())
+  contentItemId String
+  channel      PublishingChannel
+  status       PublicationStatus @default(DRAFT)
+  caption      String
+  publishUrl   String?
+  externalId   String?
+  payload      String
+  scheduledFor DateTime?
+  publishedAt  DateTime?
+  errorMessage String?
+  createdAt    DateTime          @default(now())
+  contentItem  ContentItem       @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  metrics      PerformanceSnapshot[]
+}
+
+model PerformanceSnapshot {
+  id             String      @id @default(cuid())
+  publicationId  String
+  capturedAt     DateTime    @default(now())
+  impressions    Int         @default(0)
+  clicks         Int         @default(0)
+  leads          Int         @default(0)
+  comments       Int         @default(0)
+  shares         Int         @default(0)
+  saves          Int         @default(0)
+  conversions    Int         @default(0)
+  engagementRate Float       @default(0)
+  themeLabel     String
+  publication    Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+}
+
+model Recommendation {
+  id            String            @id @default(cuid())
+  title         String
+  rationale     String
+  contentType   ContentType
+  tone          ContentTone
+  channel       PublishingChannel
+  priorityScore Int
+  basedOn       String
+  createdAt     DateTime          @default(now())
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  entityType String
+  entityId   String
+  action     String
+  summary    String
+  details    String?
+  createdAt  DateTime @default(now())
+  actor      User?    @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+}
