@@ -4,8 +4,10 @@ import Link from "next/link";
 import { UserRole } from "@prisma/client";
 import { useState } from "react";
 import {
+  ArrowLeft,
   BarChart3,
   BookOpen,
+  ChevronDown,
   Menu,
   Sparkles,
 } from "lucide-react";
@@ -22,7 +24,7 @@ function getPrimaryAction(role: UserRole) {
   if (canGenerateContent(role)) {
     return {
       href: "/content",
-      label: "Create content",
+      label: "Create",
       icon: Sparkles,
     };
   }
@@ -30,7 +32,7 @@ function getPrimaryAction(role: UserRole) {
   if (canReviewContent(role)) {
     return {
       href: "/workflow",
-      label: "Review queue",
+      label: "Review",
       icon: BookOpen,
     };
   }
@@ -38,7 +40,7 @@ function getPrimaryAction(role: UserRole) {
   if (canViewAnalytics(role)) {
     return {
       href: "/analytics",
-      label: "View performance",
+      label: "Performance",
       icon: BarChart3,
     };
   }
@@ -65,6 +67,8 @@ export function ShellChrome({
     localNavigation,
   } = getNavigationState(pathname);
   const primaryAction = getPrimaryAction(user.role);
+  const backTarget =
+    breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2] : null;
 
   return (
     <div className="relative min-h-screen overflow-hidden">
@@ -95,28 +99,46 @@ export function ShellChrome({
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-3 sm:p-4 xl:p-5">
           <header className="sticky top-3 z-40 mb-5 rounded-[28px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.8))] px-4 py-4 shadow-[var(--shadow-panel)] backdrop-blur-2xl sm:px-5">
             <div className="mx-auto flex w-full max-w-[1380px] flex-col gap-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex min-w-0 items-start gap-3">
-                  <button
-                    type="button"
-                    aria-label="Open navigation"
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-[color:var(--border)] bg-white/80 text-[color:var(--foreground)] shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)] xl:hidden"
-                    onClick={() => setMobileOpen(true)}
-                  >
-                    <Menu className="h-5 w-5" />
-                  </button>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Open navigation"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-[color:var(--border)] bg-white/80 text-[color:var(--foreground)] shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)] xl:hidden"
+                      onClick={() => setMobileOpen(true)}
+                    >
+                      <Menu className="h-5 w-5" />
+                    </button>
 
-                  <div className="xl:hidden">
-                    <AppLogo compact />
+                    <div className="xl:hidden">
+                      <AppLogo compact />
+                    </div>
+
+                    {backTarget ? (
+                      <Link
+                        href={backTarget.href}
+                        className="inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-white/78 px-3.5 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:bg-white hover:shadow-[var(--shadow-card)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)]"
+                      >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to {backTarget.label}
+                      </Link>
+                    ) : null}
                   </div>
 
-                  <div className="min-w-0">
-                    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-[color:var(--muted)]">
+                  <div className="mt-4 overflow-x-auto pb-1">
+                    <nav
+                      aria-label="Breadcrumb"
+                      className="flex min-w-max items-center gap-2 whitespace-nowrap text-sm text-[color:var(--muted)]"
+                    >
                       {breadcrumbs.map((crumb, index) => {
                         const isLast = index === breadcrumbs.length - 1;
 
                         return (
-                          <div key={`${crumb.href}-${crumb.label}`} className="flex items-center gap-2">
+                          <div
+                            key={`${crumb.href}-${crumb.label}`}
+                            className="flex items-center gap-2"
+                          >
                             {isLast ? (
                               <span className="font-medium text-[color:var(--muted-strong)]">
                                 {crumb.label}
@@ -134,34 +156,42 @@ export function ShellChrome({
                         );
                       })}
                     </nav>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <Badge variant="cyan-subtle">{activeSection.label}</Badge>
-                      <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                        {humanizeEnum(user.role)}
-                      </span>
-                    </div>
-                    <h1 className="mt-3 font-display text-[1.7rem] font-semibold leading-tight text-[color:var(--foreground)] sm:text-[2rem]">
-                      {currentPage.label}
-                    </h1>
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-[0.97rem]">
-                      {currentPage.summary}
-                    </p>
                   </div>
+
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Badge variant="cyan-subtle">{activeSection.label}</Badge>
+                  </div>
+                  <h1 className="mt-3 font-display text-[1.7rem] font-semibold leading-tight text-[color:var(--foreground)] sm:text-[2rem]">
+                    {currentPage.label}
+                  </h1>
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-[0.97rem]">
+                    {currentPage.summary}
+                  </p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="hidden items-center gap-3 rounded-full border border-[color:var(--border)] bg-white/78 px-3 py-2.5 text-sm text-[color:var(--muted-strong)] shadow-[var(--shadow-soft)] md:flex">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.14))] font-semibold text-[color:var(--foreground)]">
-                      {user.name
-                        .split(" ")
-                        .map((part) => part[0])
-                        .join("")
-                        .slice(0, 2)}
-                    </span>
-                    <span className="max-w-[10rem] truncate font-medium">
-                      {user.name}
-                    </span>
-                  </div>
+                <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+                  <details className="group relative">
+                    <summary className="flex list-none cursor-pointer items-center gap-2 rounded-full border border-[color:var(--border)] bg-white/78 px-3.5 py-2.5 text-sm font-semibold text-[color:var(--muted-strong)] shadow-[var(--shadow-soft)] transition hover:bg-white hover:text-[color:var(--foreground)] hover:shadow-[var(--shadow-card)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)] [&::-webkit-details-marker]:hidden">
+                      <span className="max-w-[11rem] truncate">{user.name}</span>
+                      <ChevronDown className="h-4 w-4 transition group-open:rotate-180" />
+                    </summary>
+                    <div className="absolute right-0 top-[calc(100%+0.7rem)] z-20 w-64 rounded-[22px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] p-4 shadow-[var(--shadow-panel)] backdrop-blur-xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                        Account
+                      </p>
+                      <p className="mt-2 truncate text-sm font-semibold text-[color:var(--foreground)]">
+                        {user.name}
+                      </p>
+                      <p className="mt-1 text-sm text-[color:var(--muted)]">
+                        {user.jobTitle}
+                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        <Badge variant="muted">{humanizeEnum(user.role)}</Badge>
+                      </div>
+                      {accountActions ? <div className="mt-4">{accountActions}</div> : null}
+                    </div>
+                  </details>
+
                   {primaryAction ? (
                     <Link
                       href={primaryAction.href}
@@ -177,9 +207,9 @@ export function ShellChrome({
               {localNavigation.length > 1 ? (
                 <nav
                   aria-label={`${activeSection.label} pages`}
-                  className="overflow-x-auto pb-1"
+                  className="overflow-x-auto border-t border-[color:rgba(148,163,184,0.14)] pt-4 pb-1"
                 >
-                  <div className="flex min-w-max gap-2">
+                  <div className="flex min-w-max gap-2 whitespace-nowrap">
                     {localNavigation.map((item: NavigationChild) => {
                       const active = pathname === item.href;
 
