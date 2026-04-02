@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 export function Badge({
   children,
   variant = "default",
+  className,
 }: {
   children: React.ReactNode;
   variant?:
@@ -12,6 +13,7 @@ export function Badge({
     | "muted"
     | "brand-subtle"
     | "cyan-subtle";
+  className?: string;
 }) {
   return (
     <span
@@ -29,6 +31,7 @@ export function Badge({
           "border-[color:rgba(230,62,140,0.18)] bg-[color:rgba(230,62,140,0.14)] text-[color:var(--brand)]",
         variant === "cyan-subtle" &&
           "border-[color:rgba(33,198,217,0.2)] bg-[color:rgba(33,198,217,0.14)] text-[color:var(--secondary-strong)]",
+        className,
       )}
     >
       {children}

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
-import { appName, navigationItems } from "@/lib/constants";
+import { navigationItems } from "@/lib/constants";
 import { cn, humanizeEnum, initials } from "@/lib/utils";
 
 export function SidebarNav({
@@ -22,23 +22,23 @@ export function SidebarNav({
   const intelligenceItems = navigationItems.slice(6);
 
   return (
-    <div className="flex h-full flex-col gap-5 rounded-[32px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.82))] p-4 shadow-[var(--shadow-panel)] backdrop-blur-xl md:p-5">
-      <div className="rounded-[28px] border border-[color:rgba(255,255,255,0.32)] bg-[linear-gradient(145deg,rgba(15,23,42,0.98),rgba(46,55,88,0.96)_42%,rgba(111,29,92,0.94)_100%)] p-5 text-white shadow-[0_28px_70px_rgba(122,39,104,0.28)]">
-        <AppLogo theme="dark" />
-        <h1 className="mt-5 font-display text-[1.55rem] font-semibold leading-tight">
-          {appName}
-        </h1>
-        <p className="mt-3 text-sm leading-7 text-white/72">
-          Premium content operations for campaigns, approvals, publishing, and
-          always-on audience growth.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Badge variant="brand-subtle">Always on</Badge>
-          <Badge variant="cyan-subtle">AI assisted</Badge>
+    <div className="flex h-full flex-col gap-4 rounded-[30px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(248,250,252,0.84))] p-4 shadow-[var(--shadow-panel)] backdrop-blur-xl">
+      <div className="rounded-[26px] border border-[color:var(--border)] bg-white/88 p-4 shadow-[var(--shadow-soft)]">
+        <div className="flex items-center justify-between gap-3">
+          <AppLogo compact />
+          <Badge variant="brand-subtle">Live</Badge>
+        </div>
+        <div className="mt-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+            Sika Prime Loans
+          </p>
+          <h1 className="mt-1 font-display text-[1.15rem] font-semibold text-[color:var(--foreground)]">
+            Marketing Agent
+          </h1>
         </div>
       </div>
 
-      <div className="rounded-[28px] border border-[color:var(--border)] bg-white/80 p-4 shadow-[var(--shadow-soft)]">
+      <div className="rounded-[24px] border border-[color:var(--border)] bg-white/82 p-3.5 shadow-[var(--shadow-soft)]">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.16))] font-semibold text-[color:var(--foreground)] shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
             {initials(user.name)}
@@ -52,21 +52,21 @@ export function SidebarNav({
             </p>
           </div>
         </div>
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="mt-3 flex items-center justify-between gap-3">
           <Badge variant="muted">{humanizeEnum(user.role)}</Badge>
           <span className="text-xs font-medium text-[color:var(--muted)]">
-            Team access
+            Signed in
           </span>
         </div>
       </div>
 
-      <div className="grid gap-5">
+      <div className="grid gap-4">
         {[
           { title: "Workspace", items: primaryItems },
           { title: "Intelligence", items: intelligenceItems },
         ].map((group) => (
           <nav key={group.title} className="grid gap-2">
-            <p className="px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
+            <p className="px-2 text-[10px] font-semibold uppercase tracking-[0.26em] text-[color:var(--muted)]">
               {group.title}
             </p>
             {group.items.map((item) => {
@@ -82,9 +82,9 @@ export function SidebarNav({
                   href={item.href}
                   onClick={onNavigate}
                   className={cn(
-                    "group flex items-center gap-3 rounded-[22px] px-3 py-3.5 text-sm font-medium transition duration-200 ease-out",
+                    "group flex items-center gap-3 rounded-[20px] px-3 py-3 text-sm font-medium transition duration-200 ease-out",
                     active
-                      ? "bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.12))] text-[color:var(--foreground)] shadow-[inset_0_0_0_1px_rgba(230,62,140,0.12)]"
+                      ? "bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.12))] text-[color:var(--foreground)] shadow-[var(--shadow-soft)]"
                       : "text-[color:var(--muted)] hover:bg-white hover:text-[color:var(--foreground)] hover:shadow-[var(--shadow-soft)]",
                   )}
                 >
@@ -98,14 +98,7 @@ export function SidebarNav({
                   >
                     <item.icon className="h-[18px] w-[18px]" />
                   </span>
-                  <div className="min-w-0">
-                    <span className="block truncate">{item.label}</span>
-                    {active ? (
-                      <span className="mt-0.5 block text-xs font-medium text-[color:var(--muted)]">
-                        Current workspace
-                      </span>
-                    ) : null}
-                  </div>
+                  <span className="truncate">{item.label}</span>
                 </Link>
               );
             })}
@@ -113,16 +106,11 @@ export function SidebarNav({
         ))}
       </div>
 
-      <div className="mt-auto rounded-[28px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(244,247,251,0.9))] p-4 shadow-[var(--shadow-soft)]">
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
-          Daily focus
-        </p>
-        <p className="mt-3 text-sm leading-6 text-[color:var(--foreground)]">
-          Keep the content mix balanced, make trends feel safe, and move drafts
-          to publish-ready faster.
-        </p>
-        {accountActions ? <div className="mt-4">{accountActions}</div> : null}
-      </div>
+      {accountActions ? (
+        <div className="mt-auto rounded-[24px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(244,247,251,0.9))] p-3 shadow-[var(--shadow-soft)]">
+          {accountActions}
+        </div>
+      ) : null}
     </div>
   );
 }
