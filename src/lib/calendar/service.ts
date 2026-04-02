@@ -2,6 +2,10 @@ import { ContentType, WorkflowStage } from "@prisma/client";
 import { format } from "date-fns";
 
 import { prisma } from "@/lib/db";
+import {
+  getContentLaneLabel,
+  summarizeContentBalance,
+} from "@/lib/engines/content/strategy";
 
 const promotionalTypes = new Set<ContentType>([
   ContentType.AD_COPY,
@@ -128,6 +132,25 @@ export async function getCalendarSnapshot() {
         message: `${channel} currently dominates the schedule. Consider balancing content across platforms.`,
       });
     }
+  }
+
+  const scheduledBalance = summarizeContentBalance(
+    scheduledItems.map((item) => ({
+      title: item.title,
+      objective: item.objective,
+      themeLabel: item.themeLabel,
+      contentType: item.contentType,
+      channel: item.channel,
+    })),
+  );
+
+  if (scheduledBalance.recommendedLanes.length) {
+    warnings.push({
+      level: scheduledBalance.promotionalShare >= 0.55 ? "warning" : "info",
+      message: `Calendar rebalance suggestion: add ${scheduledBalance.recommendedLanes
+        .map((lane) => getContentLaneLabel(lane).toLowerCase())
+        .join(", ")} content to keep the queue useful and varied.`,
+    });
   }
 
   const hourStats = new Map<

@@ -13,6 +13,12 @@ import { SubmitButton } from "@/components/ui/submit-button";
 import { canGenerateContent } from "@/lib/auth/access";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import {
+  buildAssistantOpportunities,
+  contentLaneOptions,
+  generationModeOptions,
+  getContentLaneLabel,
+} from "@/lib/engines/content/strategy";
 import { formatRelativeDate, humanizeEnum } from "@/lib/utils";
 import {
   generateContentAction,
@@ -23,7 +29,16 @@ export default async function ContentPage() {
   const session = await requireSession();
   const isGenerator = canGenerateContent(session.role);
 
-  const [users, products, audiences, trends, workingItems, ideaItems] =
+  const [
+    users,
+    products,
+    audiences,
+    profile,
+    trends,
+    workingItems,
+    ideaItems,
+    recentAssistantSource,
+  ] =
     await Promise.all([
       prisma.user.findMany({
         orderBy: { name: "asc" },
@@ -43,6 +58,19 @@ export default async function ContentPage() {
         orderBy: { priority: "desc" },
       }),
       prisma.audienceSegment.findMany({ orderBy: { priority: "desc" } }),
+      prisma.businessProfile.findUnique({
+        where: { id: 1 },
+        include: {
+          offers: {
+            where: { active: true },
+            orderBy: { priority: "desc" },
+          },
+          goals: {
+            where: { active: true },
+            orderBy: { priority: "desc" },
+          },
+        },
+      }),
       prisma.trendSignal.findMany({
         orderBy: [{ totalScore: "desc" }, { freshnessScore: "desc" }],
         take: 12,
@@ -71,6 +99,17 @@ export default async function ContentPage() {
         orderBy: { createdAt: "desc" },
         take: 8,
       }),
+      prisma.contentItem.findMany({
+        orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+        take: 18,
+        select: {
+          title: true,
+          objective: true,
+          themeLabel: true,
+          contentType: true,
+          channel: true,
+        },
+      }),
     ]);
 
   const ownerRoles: UserRole[] = [
@@ -86,13 +125,20 @@ export default async function ContentPage() {
 
   const owners = users.filter((user) => ownerRoles.includes(user.role));
   const reviewers = users.filter((user) => reviewerRoles.includes(user.role));
+  const assistant = buildAssistantOpportunities({
+    products,
+    audiences,
+    goals: profile?.goals ?? [],
+    offers: profile?.offers ?? [],
+    recentContent: recentAssistantSource,
+  });
 
   return (
     <div className="grid gap-6">
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard
           title="AI Content Idea Generator"
-          description="Start with a campaign goal, blend it with live trends and business knowledge, and generate several saveable ideas before drafting."
+          description="Start with a campaign goal, then let the assistant combine proactive ideas, safe trend adaptation, and business knowledge into saveable ideas."
         >
           {isGenerator ? (
             <form action={generateIdeasAction} className="grid gap-4">
@@ -124,6 +170,41 @@ export default async function ContentPage() {
                     </select>
                   </label>
                 </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <label>
+                  Generation mode
+                  <select name="generationMode" defaultValue="BALANCED">
+                    {generationModeOptions.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Preferred content lane
+                  <select name="contentLane" defaultValue="">
+                    <option value="">Auto-select the best lane</option>
+                    {contentLaneOptions.map((lane) => (
+                      <option key={lane.value} value={lane.value}>
+                        {lane.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Occasion or seasonal moment
+                  <select name="occasionKey" defaultValue="">
+                    <option value="">Auto-detect the best moment</option>
+                    {assistant.occasionOpportunities.map((opportunity) => (
+                      <option key={opportunity.key} value={opportunity.key}>
+                        {opportunity.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
@@ -228,7 +309,7 @@ export default async function ContentPage() {
 
         <SectionCard
           title="Direct Draft Generator"
-          description="Use this when the team already knows the idea and wants to jump straight into drafting."
+          description="Use this when the team already knows the idea and wants to jump straight into drafting, with or without a live trend."
         >
           {isGenerator ? (
             <form action={generateContentAction} className="grid gap-4">
@@ -279,6 +360,41 @@ export default async function ContentPage() {
                   required
                 />
               </label>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <label>
+                  Generation mode
+                  <select name="generationMode" defaultValue="BALANCED">
+                    {generationModeOptions.map((mode) => (
+                      <option key={mode.value} value={mode.value}>
+                        {mode.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Preferred content lane
+                  <select name="contentLane" defaultValue="">
+                    <option value="">Auto-select the best lane</option>
+                    {contentLaneOptions.map((lane) => (
+                      <option key={lane.value} value={lane.value}>
+                        {lane.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Occasion or seasonal moment
+                  <select name="occasionKey" defaultValue="">
+                    <option value="">Auto-detect the best moment</option>
+                    {assistant.occasionOpportunities.map((opportunity) => (
+                      <option key={opportunity.key} value={opportunity.key}>
+                        {opportunity.title}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
 
               <div className="grid gap-4 md:grid-cols-3">
                 <label>
@@ -379,6 +495,115 @@ export default async function ContentPage() {
           ) : null}
         </SectionCard>
       </section>
+
+      <SectionCard
+        title="Always-On Assistant Signals"
+        description="These proactive and balancing cues help the team keep channels active even when no strong trend is worth using."
+      >
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid gap-4">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                Current balance
+              </p>
+              <h3 className="mt-3 font-display text-xl font-semibold">
+                {assistant.balance.guidance}
+              </h3>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm text-[color:var(--muted)]">
+                <span>
+                  Promotional share: {Math.round(assistant.balance.promotionalShare * 100)}%
+                </span>
+                <span>
+                  Dominant lane: {assistant.balance.dominantLane
+                    ? getContentLaneLabel(assistant.balance.dominantLane)
+                    : "No dominant lane"}
+                </span>
+              </div>
+              {assistant.balance.recommendedLanes.length ? (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {assistant.balance.recommendedLanes.map((lane) => (
+                    <Badge key={lane} variant="muted">
+                      Add {getContentLaneLabel(lane)}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-3">
+              {assistant.opportunities.slice(0, 4).map((opportunity) => (
+                <div
+                  key={opportunity.key}
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                >
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge>{opportunity.source}</Badge>
+                    <Badge variant="muted">
+                      {getContentLaneLabel(opportunity.lane)}
+                    </Badge>
+                    <span className="text-sm font-semibold text-[color:var(--brand)]">
+                      Score {opportunity.score}
+                    </span>
+                  </div>
+                  <h3 className="mt-3 font-display text-lg font-semibold">
+                    {opportunity.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    {opportunity.summary}
+                  </p>
+                  <p className="mt-3 text-sm text-[color:var(--muted)]">
+                    {opportunity.rationale}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                Active occasions
+              </p>
+              <div className="mt-4 grid gap-3">
+                {assistant.occasionOpportunities.length ? (
+                  assistant.occasionOpportunities.slice(0, 4).map((opportunity) => (
+                    <div
+                      key={opportunity.key}
+                      className="rounded-[20px] bg-[color:var(--surface-strong)] px-4 py-3"
+                    >
+                      <p className="font-semibold">{opportunity.title}</p>
+                      <p className="mt-1 text-sm text-[color:var(--muted)]">
+                        {opportunity.summary}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-[color:var(--muted)]">
+                    No major occasion is in the immediate window, so the assistant is
+                    leaning more on evergreen and balance-driven content.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                Safe trend adaptation
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                Trends are optional hooks. The assistant only recommends adapting
+                them when they are constructive, socially acceptable, and useful for
+                Sika Prime&apos;s audiences.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge variant="muted">No forced virality</Badge>
+                <Badge variant="muted">Brand-safe only</Badge>
+                <Badge variant="muted">Useful before trendy</Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
 
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard

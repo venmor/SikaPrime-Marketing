@@ -35,6 +35,18 @@ function optionalValue(formData: FormData, key: string) {
   return current || null;
 }
 
+type AssistantContentLane =
+  | "PROMOTIONAL"
+  | "EDUCATIONAL"
+  | "TRUST_BUILDING"
+  | "YOUTH_EMPOWERMENT"
+  | "VALUE_BASED"
+  | "ENGAGEMENT"
+  | "SEASONAL"
+  | "CAMPAIGN_SUPPORT"
+  | "COMMUNITY"
+  | "INSPIRATIONAL";
+
 async function createReviewRecord(input: {
   contentItemId: string;
   reviewerId: string;
@@ -73,6 +85,12 @@ export async function generateContentAction(formData: FormData) {
     productId: optionalValue(formData, "productId"),
     audienceSegmentId: optionalValue(formData, "audienceSegmentId"),
     trendId: optionalValue(formData, "trendId"),
+    generationMode: value(formData, "generationMode") as
+      | "BALANCED"
+      | "PROACTIVE"
+      | "TREND_ADAPTIVE",
+    contentLane: optionalValue(formData, "contentLane") as AssistantContentLane | null,
+    occasionKey: optionalValue(formData, "occasionKey"),
   });
 
   await logActivity({
@@ -399,6 +417,12 @@ export async function generateIdeasAction(formData: FormData) {
     productId: optionalValue(formData, "productId"),
     audienceSegmentId: optionalValue(formData, "audienceSegmentId"),
     trendId: optionalValue(formData, "trendId"),
+    generationMode: value(formData, "generationMode") as
+      | "BALANCED"
+      | "PROACTIVE"
+      | "TREND_ADAPTIVE",
+    contentLane: optionalValue(formData, "contentLane") as AssistantContentLane | null,
+    occasionKey: optionalValue(formData, "occasionKey"),
     numberOfIdeas: Number(value(formData, "numberOfIdeas") || 4),
   });
 

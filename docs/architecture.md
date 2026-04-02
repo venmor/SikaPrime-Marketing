@@ -83,8 +83,9 @@ Main entities:
    - freshness
    - relevance
    - brand fit
-4. Top signals are stored in `TrendSignal`
-5. Recommendations can refresh from the updated trend set
+4. Unsafe, exploitative, or brand-risky signals are rejected before storage
+5. Top safe signals are stored in `TrendSignal`
+6. Recommendations can refresh from the updated trend set
 
 ### Content Flow
 
@@ -98,10 +99,13 @@ Main entities:
    - optional product
    - optional audience segment
    - optional trend
+   - proactive occasion and evergreen opportunities
+   - current content-balance guidance
 4. The service builds an AI prompt or uses the fallback generator
-5. Idea generation stores reusable `ContentItem` records in the `IDEA` stage
-6. Draft generation stores draft-ready `ContentItem` records
-7. The item moves through review, scheduling, publishing, and archive stages
+5. Idea generation can work in proactive, trend-adaptive, or balanced mode
+6. Idea generation stores reusable `ContentItem` records in the `IDEA` stage
+7. Draft generation stores draft-ready `ContentItem` records
+8. The item moves through review, scheduling, publishing, and archive stages
 
 ### Publishing Flow
 
@@ -138,11 +142,13 @@ Main entities:
    - theme performance
    - channel performance
 3. Recommendation service blends:
-   - current trend signals
+   - proactive occasions and evergreen opportunities
+   - current safe trend signals
    - product priorities
    - goals
    - top historical themes
    - content calendar gaps
+   - content-balance guidance
 4. Planning-assistant answers explain why a recommendation is being suggested instead of only returning a ranked list
 
 ### Knowledge and Guardrail Flow

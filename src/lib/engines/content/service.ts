@@ -13,6 +13,12 @@ import {
   buildGenerationPrompt,
   buildIdeaPrompt,
 } from "@/lib/engines/content/prompt-builder";
+import {
+  buildAssistantOpportunities,
+  pickAssistantOpportunity,
+  type ContentLane,
+  type GenerationMode,
+} from "@/lib/engines/content/strategy";
 
 const generationSchema = z.object({
   title: z.string().trim().optional().nullable(),
@@ -29,6 +35,25 @@ const generationSchema = z.object({
   productId: z.string().trim().optional().nullable(),
   audienceSegmentId: z.string().trim().optional().nullable(),
   trendId: z.string().trim().optional().nullable(),
+  generationMode: z
+    .enum(["BALANCED", "PROACTIVE", "TREND_ADAPTIVE"])
+    .default("BALANCED"),
+  contentLane: z
+    .enum([
+      "PROMOTIONAL",
+      "EDUCATIONAL",
+      "TRUST_BUILDING",
+      "YOUTH_EMPOWERMENT",
+      "VALUE_BASED",
+      "ENGAGEMENT",
+      "SEASONAL",
+      "CAMPAIGN_SUPPORT",
+      "COMMUNITY",
+      "INSPIRATIONAL",
+    ])
+    .optional()
+    .nullable(),
+  occasionKey: z.string().trim().optional().nullable(),
 });
 
 const ideaSchema = z.object({
@@ -42,6 +67,25 @@ const ideaSchema = z.object({
   productId: z.string().trim().optional().nullable(),
   audienceSegmentId: z.string().trim().optional().nullable(),
   trendId: z.string().trim().optional().nullable(),
+  generationMode: z
+    .enum(["BALANCED", "PROACTIVE", "TREND_ADAPTIVE"])
+    .default("BALANCED"),
+  contentLane: z
+    .enum([
+      "PROMOTIONAL",
+      "EDUCATIONAL",
+      "TRUST_BUILDING",
+      "YOUTH_EMPOWERMENT",
+      "VALUE_BASED",
+      "ENGAGEMENT",
+      "SEASONAL",
+      "CAMPAIGN_SUPPORT",
+      "COMMUNITY",
+      "INSPIRATIONAL",
+    ])
+    .optional()
+    .nullable(),
+  occasionKey: z.string().trim().optional().nullable(),
   numberOfIdeas: z.coerce.number().int().min(2).max(6).default(4),
 });
 
@@ -141,10 +185,20 @@ async function loadGenerationContext(input: {
   productId?: string | null;
   audienceSegmentId?: string | null;
   trendId?: string | null;
+  generationMode?: GenerationMode;
+  contentLane?: ContentLane | null;
+  occasionKey?: string | null;
 }) {
   const profile = await prisma.businessProfile.findUnique({
     where: { id: 1 },
     include: {
+      products: {
+        where: { active: true },
+        orderBy: { priority: "desc" },
+      },
+      audienceSegments: {
+        orderBy: { priority: "desc" },
+      },
       offers: {
         where: { active: true },
         orderBy: { priority: "desc" },
@@ -164,7 +218,7 @@ async function loadGenerationContext(input: {
     throw new Error("Business profile has not been configured yet.");
   }
 
-  const [product, audience, trend] = await Promise.all([
+  const [product, audience, trend, recentContent] = await Promise.all([
     input.productId
       ? prisma.product.findUnique({ where: { id: input.productId } })
       : Promise.resolve(null),
@@ -176,17 +230,48 @@ async function loadGenerationContext(input: {
     input.trendId
       ? prisma.trendSignal.findUnique({ where: { id: input.trendId } })
       : Promise.resolve(null),
+    prisma.contentItem.findMany({
+      orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+      take: 18,
+      select: {
+        title: true,
+        objective: true,
+        themeLabel: true,
+        contentType: true,
+        channel: true,
+      },
+    }),
   ]);
+
+  const assistant = buildAssistantOpportunities({
+    products: profile.products,
+    audiences: profile.audienceSegments,
+    goals: profile.goals,
+    offers: profile.offers,
+    recentContent,
+  });
+
+  const selectedOpportunity = pickAssistantOpportunity({
+    occasionKey: input.occasionKey,
+    contentLane: input.contentLane,
+    generationMode: input.generationMode,
+    opportunities: assistant.opportunities,
+  });
 
   return {
     profile,
     product,
     audience,
     trend,
+    allProducts: profile.products,
+    allAudiences: profile.audienceSegments,
     offers: profile.offers,
     goals: profile.goals,
     complianceRules: profile.complianceRules,
     guardrailTerms: profile.guardrailTerms,
+    balance: assistant.balance,
+    proactiveOpportunities: assistant.opportunities,
+    selectedOpportunity,
   };
 }
 
@@ -202,6 +287,8 @@ export async function generateContentDraft(
     contentType: input.contentType,
     tone: input.tone,
     channel: input.channel,
+    generationMode: input.generationMode,
+    contentLane: input.contentLane,
     context,
   });
 
@@ -213,6 +300,8 @@ export async function generateContentDraft(
     contentType: input.contentType,
     tone: input.tone,
     channel: input.channel,
+    generationMode: input.generationMode,
+    contentLane: input.contentLane,
     context,
   });
 
@@ -235,7 +324,7 @@ export async function generateContentDraft(
       aiModel: process.env.OPENAI_API_KEY
         ? process.env.OPENAI_MODEL ?? "openai"
         : "fallback-template",
-      aiSummary: `${result.rationale}\n\nChecklist:\n${result.complianceChecklist.join("\n")}`,
+      aiSummary: `${result.rationale}\n\nMode: ${input.generationMode}\nLane: ${input.contentLane ?? "AUTO"}\nOccasion: ${context.selectedOpportunity?.title ?? "None"}\n\nChecklist:\n${result.complianceChecklist.join("\n")}`,
       themeLabel: result.themeLabel,
       ownerId: input.ownerId,
       reviewerId: input.reviewerId || null,
@@ -255,6 +344,8 @@ export async function generateContentIdeas(rawInput: z.input<typeof ideaSchema>)
     channel: input.channel,
     tone: input.tone,
     numberOfIdeas: input.numberOfIdeas,
+    generationMode: input.generationMode,
+    contentLane: input.contentLane,
     context,
   });
 
@@ -267,6 +358,8 @@ export async function generateContentIdeas(rawInput: z.input<typeof ideaSchema>)
     channel: input.channel,
     tone: input.tone,
     numberOfIdeas: input.numberOfIdeas,
+    generationMode: input.generationMode,
+    contentLane: input.contentLane,
     context,
   });
 
@@ -288,7 +381,7 @@ export async function generateContentIdeas(rawInput: z.input<typeof ideaSchema>)
       aiModel: process.env.OPENAI_API_KEY
         ? process.env.OPENAI_MODEL ?? "openai"
         : "fallback-idea-generator",
-      aiSummary: idea.rationale,
+      aiSummary: `${idea.rationale}\n\nMode: ${input.generationMode}\nLane: ${input.contentLane ?? "AUTO"}\nOccasion: ${context.selectedOpportunity?.title ?? "None"}`,
       themeLabel: idea.themeLabel,
       ownerId: input.ownerId,
       reviewerId: input.reviewerId || null,
@@ -328,6 +421,7 @@ export async function convertIdeaToDraft(
     productId: idea.productId,
     audienceSegmentId: idea.audienceSegmentId,
     trendId: idea.trendId,
+    generationMode: "BALANCED",
   });
 
   const prompt = buildGenerationPrompt({
@@ -336,6 +430,7 @@ export async function convertIdeaToDraft(
     contentType: input.contentType,
     tone: input.tone,
     channel: input.channel,
+    generationMode: "BALANCED",
     context,
   });
 
@@ -347,6 +442,7 @@ export async function convertIdeaToDraft(
     contentType: input.contentType,
     tone: input.tone,
     channel: input.channel,
+    generationMode: "BALANCED",
     context,
   });
 

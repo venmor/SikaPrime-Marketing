@@ -2,14 +2,14 @@
 
 Web-first, AI-powered marketing and content management platform for Sika Prime Loans.
 
-The platform helps a loan business detect current trends, generate high-quality content, manage approvals, schedule and publish campaigns, and learn from content performance. It is structured for a marketing team today and for future mobile app reuse later.
+The platform helps a loan business detect current trends, generate high-quality content, keep channels active even when there is no major trend, manage approvals, schedule and publish campaigns, and learn from content performance. It is structured for a marketing team today and for future mobile app reuse later.
 
 ## What’s Included
 
 - Trend Detection Engine
-  Detects local Zambian and global trends, scores them by freshness, relevance, and brand fit, and stores them for recommendation workflows.
+  Detects local Zambian and global attention signals, filters unsafe or low-value topics, scores safe signals by freshness, relevance, and brand fit, and stores them for recommendation workflows.
 - AI Content Generator
-  Generates Facebook posts, ad copy, captions, WhatsApp-ready promotions, campaign ideas, educational content, trust-building content, and product promotions.
+  Generates Facebook posts, ad copy, captions, WhatsApp-ready promotions, campaign ideas, educational content, trust-building content, youth-focused empowerment content, value-led content, seasonal posts, and product promotions.
 - Business Knowledge Base
   Stores company values, products, services, offers, audiences, goals, brand tone, compliance rules, and guardrail terms for reuse across workflows.
 - Content Workflow Manager
@@ -21,7 +21,7 @@ The platform helps a loan business detect current trends, generate high-quality 
 - Performance Dashboard
   Tracks publication history, engagement, leads, product response, trend performance, and top-performing content themes.
 - Recommendation Engine
-  Suggests what to create next using trend signals, business goals, audience needs, product priorities, calendar gaps, and performance history.
+  Suggests what to create next using proactive occasions, safe trend signals, business goals, audience needs, product priorities, content-balance gaps, and performance history.
 - Automation and Alerts
   Supports Vercel-compatible cron jobs, live performance sync, and optional Slack alerts for publishing and review workflow events.
 

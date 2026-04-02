@@ -28,6 +28,16 @@ export const interestKeywords = [
   "housing",
   "transport",
   "cost of living",
+  "youth",
+  "student",
+  "social media",
+  "viral",
+  "conversation",
+  "online",
+  "phrase",
+  "challenge",
+  "trend",
+  "community",
 ];
 
 export const blockedKeywords = [
@@ -41,6 +51,16 @@ export const blockedKeywords = [
   "death",
   "scandal",
   "lawsuit",
+  "racist",
+  "porn",
+  "suicide",
+  "drug",
+  "exploit",
+  "abuse",
+  "corruption",
+  "tribal",
+  "hate",
+  "explicit",
 ];
 
 export const defaultTrendSources: TrendSourceConfig[] = [

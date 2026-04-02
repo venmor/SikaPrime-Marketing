@@ -8,7 +8,7 @@ Goals:
 
 - Web dashboard for marketers
 - Trend ingestion and scoring
-- AI-assisted idea generation and drafting
+- AI-assisted idea generation and drafting with proactive and trend-adaptive modes
 - Business knowledge base with compliance and guardrails
 - Workflow, approvals, scheduling, publishing, and archives
 - Publishing queue and content calendar
@@ -66,9 +66,9 @@ Current workflow coverage in the product:
 1. Company knowledge setup
    Implemented through the Knowledge Base with business profile, products, audiences, offers, goals, compliance rules, and guardrail terms.
 2. Trend discovery and analysis
-   Implemented through the Trends module with freshness, relevance, brand-fit scoring, lifecycle classification, and local/global separation.
+   Implemented through the Trends module with freshness, relevance, brand-fit scoring, lifecycle classification, local/global separation, and safety filtering.
 3. AI content idea generation
-   Implemented through the Content Lab idea generator with reusable campaign objectives and trend-aware inputs.
+   Implemented through the Content Lab idea generator with reusable campaign objectives, proactive occasion support, balance-aware guidance, and safe trend-aware inputs.
 4. Content drafting
    Implemented through direct draft generation and idea-to-draft conversion.
 5. Content review and approval

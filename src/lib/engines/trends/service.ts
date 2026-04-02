@@ -27,6 +27,23 @@ function stripHtml(value?: string) {
   return (value ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function isSafeTrendText(text: string) {
+  const normalized = text.toLowerCase();
+  const riskyPhrases = [
+    "graphic",
+    "shocking",
+    "exposed",
+    "leaked",
+    "attack",
+    "riot",
+    "sexual",
+    "political violence",
+    "betting scandal",
+  ];
+
+  return !riskyPhrases.some((phrase) => normalized.includes(phrase));
+}
+
 async function collectBusinessTerms() {
   const profile = await prisma.businessProfile.findUnique({
     where: { id: 1 },
@@ -84,7 +101,7 @@ async function fetchSource(source: TrendSourceConfig, businessTerms: string[]) {
         [...interestKeywords, ...source.keywords],
       );
 
-      if (keywordHits === 0) {
+      if (keywordHits === 0 || !isSafeTrendText(combinedText)) {
         return null;
       }
 
@@ -155,6 +172,7 @@ export function explainTrendOpportunity(input: {
       ? "It reflects a local Zambian context that can make Sika Prime feel more relevant and practical."
       : "It offers a broader market signal that can be localized into trusted finance messaging.",
     `Its overall score of ${input.trend.totalScore} suggests strong timing and business relevance.`,
+    "It passed the current safety filter, so it can be adapted without chasing harmful or brand-risky attention.",
   ].join(" ");
 
   const adaptationIdea =

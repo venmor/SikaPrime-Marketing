@@ -15,7 +15,7 @@ export default async function TrendsPage() {
     <div className="grid gap-6">
       <SectionCard
         title="Trend Detection Engine"
-        description="Freshness-first trend tracking using live RSS sources plus seeded data. Local Zambian signals are separated from global market and finance conversations."
+        description="Freshness-first attention tracking using live sources plus seeded data. Signals are filtered for relevance, social safety, and brand fit before the assistant adapts them."
         action={
           <form action={refreshTrendSignalsAction}>
             <SubmitButton pendingLabel="Refreshing trends...">
@@ -28,6 +28,7 @@ export default async function TrendsPage() {
           <span>Last updated: {formatRelativeDate(trends.lastUpdated)}</span>
           <span>Local signals: {trends.local.length}</span>
           <span>Global signals: {trends.global.length}</span>
+          <span>Unsafe or low-value topics are filtered out before recommendation use</span>
         </div>
       </SectionCard>
 
@@ -39,7 +40,7 @@ export default async function TrendsPage() {
           <SectionCard
             key={label}
             title={label}
-            description="Signals are scored for relevance, freshness, and fit with Sika Prime Loans."
+            description="Signals are scored for relevance, freshness, fit with Sika Prime Loans, and whether they can be adapted safely."
           >
             <div className="grid gap-4">
               {items.map((trend) => (

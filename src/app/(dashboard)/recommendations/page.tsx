@@ -1,6 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { prisma } from "@/lib/db";
+import {
+  buildAssistantOpportunities,
+  getContentLaneLabel,
+} from "@/lib/engines/content/strategy";
 import {
   getPlanningAssistantAnswer,
   getRecommendations,
@@ -27,17 +32,59 @@ export default async function RecommendationsPage({
     firstValue(resolvedSearchParams.question).trim() ||
     "What content should we post this week?";
 
-  const [recommendations, trends, planningAnswer] = await Promise.all([
+  const [recommendations, trends, planningAnswer, profile, recentContent] = await Promise.all([
     getRecommendations(),
     getTrendCollections(),
     getPlanningAssistantAnswer(question),
+    prisma.businessProfile.findUnique({
+      where: { id: 1 },
+      include: {
+        products: {
+          where: { active: true },
+          orderBy: { priority: "desc" },
+        },
+        audienceSegments: {
+          orderBy: { priority: "desc" },
+        },
+        offers: {
+          where: { active: true },
+          orderBy: { priority: "desc" },
+        },
+        goals: {
+          where: { active: true },
+          orderBy: { priority: "desc" },
+        },
+      },
+    }),
+    prisma.contentItem.findMany({
+      orderBy: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+      take: 24,
+      select: {
+        title: true,
+        objective: true,
+        themeLabel: true,
+        contentType: true,
+        channel: true,
+      },
+    }),
   ]);
+
+  const assistant =
+    profile
+      ? buildAssistantOpportunities({
+          products: profile.products,
+          audiences: profile.audienceSegments,
+          goals: profile.goals,
+          offers: profile.offers,
+          recentContent,
+        })
+      : null;
 
   return (
     <div className="grid gap-6">
       <SectionCard
         title="Recommendation Engine"
-        description="Content recommendations combine trend freshness, company goals, audience needs, product priorities, calendar gaps, and performance history."
+        description="Content recommendations combine proactive occasions, safe trend hooks, company goals, audience needs, content balance, and performance history."
         action={
           <form action={refreshRecommendationsAction}>
             <SubmitButton pendingLabel="Refreshing recommendations...">
@@ -47,9 +94,9 @@ export default async function RecommendationsPage({
         }
       >
         <div className="grid gap-3 text-sm text-[color:var(--muted)] md:grid-cols-3">
-          <p>Live trend momentum guides timing and creative angle selection.</p>
-          <p>Product priorities and business goals shape what gets suggested first.</p>
-          <p>Past winners and scheduling gaps keep the plan practical, not generic.</p>
+          <p>Proactive opportunities keep the channels active even when no strong trend is available.</p>
+          <p>Safe trend adaptation adds timely hooks without letting virality override brand fit.</p>
+          <p>Performance history and content-balance gaps keep the plan practical, not repetitive.</p>
         </div>
       </SectionCard>
 
@@ -91,11 +138,32 @@ export default async function RecommendationsPage({
         </SectionCard>
 
         <SectionCard
-          title="Trend Drivers"
-          description="The local and international trend signals currently feeding recommendation logic."
+          title="Opportunity Drivers"
+          description="The recommendation engine now blends proactive opportunities with filtered local and international attention signals."
         >
           <div className="grid gap-4">
-            {[...trends.local.slice(0, 2), ...trends.global.slice(0, 2)].map((trend) => (
+            {assistant?.opportunities.slice(0, 2).map((opportunity) => (
+              <div
+                key={opportunity.key}
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+              >
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge>{opportunity.source}</Badge>
+                  <Badge variant="muted">{getContentLaneLabel(opportunity.lane)}</Badge>
+                  <span className="text-sm font-semibold text-[color:var(--brand)]">
+                    Score {opportunity.score}
+                  </span>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold">
+                  {opportunity.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  {opportunity.summary}
+                </p>
+              </div>
+            ))}
+
+            {[...trends.local.slice(0, 1), ...trends.global.slice(0, 1)].map((trend) => (
               <div
                 key={trend.id}
                 className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
