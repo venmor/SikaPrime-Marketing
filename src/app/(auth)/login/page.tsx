@@ -110,18 +110,20 @@ export default async function LoginPage({
           ) : null}
 
           <form action={signInAction} className="mt-7 grid gap-5">
-            <label>
+            <label htmlFor="email">
               Email
               <input
+                id="email"
                 name="email"
                 type="email"
                 placeholder="admin@sikaprime.local"
                 required
               />
             </label>
-            <label>
+            <label htmlFor="password">
               Password
               <input
+                id="password"
                 name="password"
                 type="password"
                 placeholder="SikaPrime123!"
