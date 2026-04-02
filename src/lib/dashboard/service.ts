@@ -55,19 +55,19 @@ export async function getDashboardSnapshot() {
   return {
     stats: [
       {
-        label: "Active Local Trends",
+        label: "Local Trends",
         value: trends.local.filter((trend) => trend.status === "RISING").length,
       },
       {
-        label: "Content In Review",
+        label: "In Review",
         value: countLookup.get(WorkflowStage.IN_REVIEW) ?? 0,
       },
       {
-        label: "Needs Revision",
+        label: "Revisions",
         value: countLookup.get(WorkflowStage.NEEDS_REVISION) ?? 0,
       },
       {
-        label: "Scheduled Posts",
+        label: "Scheduled",
         value: countLookup.get(WorkflowStage.SCHEDULED) ?? 0,
       },
     ],

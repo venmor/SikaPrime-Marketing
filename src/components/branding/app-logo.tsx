@@ -51,8 +51,8 @@ export function AppLogo({
               compact ? "text-base" : "text-lg",
               theme === "dark" ? "text-white" : "text-[color:var(--foreground)]",
             )}
-          >
-            Marketing OS
+            >
+            Marketing workspace
           </p>
         </div>
       ) : null}

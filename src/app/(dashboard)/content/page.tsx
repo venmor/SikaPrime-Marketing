@@ -137,8 +137,8 @@ export default async function ContentPage() {
     <div className="grid gap-6">
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard
-          title="AI Content Idea Generator"
-          description="Start with a campaign goal, then let the assistant combine proactive ideas, safe trend adaptation, and business knowledge into saveable ideas."
+          title="Create ideas"
+          description="Start with a goal and generate usable campaign ideas with business context and safe trend support."
         >
           {isGenerator ? (
             <form action={generateIdeasAction} className="grid gap-4">

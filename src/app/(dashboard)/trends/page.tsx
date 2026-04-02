@@ -14,8 +14,8 @@ export default async function TrendsPage() {
   return (
     <div className="grid gap-6">
       <SectionCard
-        title="Trend Detection Engine"
-        description="Freshness-first attention tracking using live sources plus seeded data. Signals are filtered for relevance, social safety, and brand fit before the assistant adapts them."
+        title="Trend watch"
+        description="Review live signals that are fresh, relevant, and safe to adapt."
         action={
           <form action={refreshTrendSignalsAction}>
             <SubmitButton pendingLabel="Refreshing trends...">
@@ -40,7 +40,7 @@ export default async function TrendsPage() {
           <SectionCard
             key={label}
             title={label}
-            description="Signals are scored for relevance, freshness, fit with Sika Prime Loans, and whether they can be adapted safely."
+            description="Each signal is scored before it is recommended for use."
           >
             <div className="grid gap-4">
               {items.map((trend) => (

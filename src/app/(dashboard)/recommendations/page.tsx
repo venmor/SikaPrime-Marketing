@@ -83,8 +83,8 @@ export default async function RecommendationsPage({
   return (
     <div className="grid gap-6">
       <SectionCard
-        title="Recommendation Engine"
-        description="Content recommendations combine proactive occasions, safe trend hooks, company goals, audience needs, content balance, and performance history."
+        title="Content plan"
+        description="See what the assistant recommends next and why."
         action={
           <form action={refreshRecommendationsAction}>
             <SubmitButton pendingLabel="Refreshing recommendations...">
@@ -102,8 +102,8 @@ export default async function RecommendationsPage({
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          title="Smart Planning Assistant"
-          description="Ask what to post next and the system explains the recommendation instead of only listing ideas."
+          title="Ask the planner"
+          description="Ask what to post next and get a reasoned answer."
         >
           <form className="grid gap-4">
             <label>
@@ -139,7 +139,7 @@ export default async function RecommendationsPage({
 
         <SectionCard
           title="Opportunity Drivers"
-          description="The recommendation engine now blends proactive opportunities with filtered local and international attention signals."
+          description="These are the signals currently shaping the plan."
         >
           <div className="grid gap-4">
             {assistant?.opportunities.slice(0, 2).map((opportunity) => (
@@ -188,8 +188,8 @@ export default async function RecommendationsPage({
       </section>
 
       <SectionCard
-        title="Recommended Content Ideas"
-        description="These stored ideas are ranked by how well they match what is fresh, useful, and proven for Sika Prime Loans."
+        title="Recommended ideas"
+        description="Saved ideas ranked by usefulness, freshness, and fit."
       >
         <div className="grid gap-4">
           {recommendations.length ? (

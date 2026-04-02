@@ -1,84 +1,49 @@
 "use client";
 
 import Link from "next/link";
+import { UserRole } from "@prisma/client";
 import { useState } from "react";
 import {
+  BarChart3,
   BookOpen,
-  CalendarDays,
   Menu,
-  Share2,
   Sparkles,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { canGenerateContent, canReviewContent, canViewAnalytics } from "@/lib/auth/access";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";
-import { navigationItems } from "@/lib/constants";
 import { cn, humanizeEnum } from "@/lib/utils";
+import { getNavigationState, type NavigationChild } from "@/lib/constants";
 
-const pageMeta: Record<string, { eyebrow: string; summary: string }> = {
-  "/dashboard": {
-    eyebrow: "Overview",
-    summary: "Track pipeline health, trends, and what the team should do next.",
-  },
-  "/trends": {
-    eyebrow: "Signals",
-    summary: "Review local and global attention safely before adapting it.",
-  },
-  "/content": {
-    eyebrow: "Creation",
-    summary: "Generate ideas and drafts with less effort and less repetition.",
-  },
-  "/workflow": {
-    eyebrow: "Review",
-    summary: "Move ideas, drafts, approvals, and revisions through one queue.",
-  },
-  "/calendar": {
-    eyebrow: "Planning",
-    summary: "Keep timing, content mix, and campaign rhythm in balance.",
-  },
-  "/publishing": {
-    eyebrow: "Distribution",
-    summary: "Publish or package approved content with clear status tracking.",
-  },
-  "/library": {
-    eyebrow: "Repository",
-    summary: "Reuse high performers and retire what no longer fits.",
-  },
-  "/analytics": {
-    eyebrow: "Performance",
-    summary: "See what themes, products, and times are winning attention.",
-  },
-  "/recommendations": {
-    eyebrow: "Planning",
-    summary: "Get ranked next-step ideas based on trends, balance, and results.",
-  },
-  "/knowledge": {
-    eyebrow: "Business context",
-    summary: "Maintain the products, rules, and brand inputs behind every output.",
-  },
-};
+function getPrimaryAction(role: UserRole) {
+  if (canGenerateContent(role)) {
+    return {
+      href: "/content",
+      label: "Create content",
+      icon: Sparkles,
+    };
+  }
 
-const quickLinks = [
-  { href: "/content", label: "Create", icon: Sparkles },
-  { href: "/workflow", label: "Review", icon: BookOpen },
-  { href: "/calendar", label: "Plan", icon: CalendarDays },
-  { href: "/publishing", label: "Publish", icon: Share2 },
-];
+  if (canReviewContent(role)) {
+    return {
+      href: "/workflow",
+      label: "Review queue",
+      icon: BookOpen,
+    };
+  }
 
-function resolveCurrentItem(pathname: string) {
-  return (
-    navigationItems.find((item) =>
-      item.href === "/dashboard"
-        ? pathname === item.href
-        : pathname === item.href || pathname.startsWith(`${item.href}/`),
-    ) ?? navigationItems[0]
-  );
-}
+  if (canViewAnalytics(role)) {
+    return {
+      href: "/analytics",
+      label: "View performance",
+      icon: BarChart3,
+    };
+  }
 
-function isActivePath(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return null;
 }
 
 export function ShellChrome({
@@ -86,24 +51,26 @@ export function ShellChrome({
   accountActions,
   children,
 }: {
-  user: { name: string; role: string; jobTitle: string; avatarSeed: string };
+  user: { name: string; role: UserRole; jobTitle: string; avatarSeed: string };
   accountActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const currentItem = resolveCurrentItem(pathname);
-  const meta = pageMeta[currentItem.href] ?? {
-    eyebrow: "Workspace",
-    summary: "Operate campaigns, approvals, and publishing from one place.",
-  };
+  const {
+    activeSection,
+    breadcrumbs,
+    currentPage,
+    localNavigation,
+  } = getNavigationState(pathname);
+  const primaryAction = getPrimaryAction(user.role);
 
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(230,62,140,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(33,198,217,0.12),transparent_22%),linear-gradient(180deg,#fcfdff_0%,#f6f8fc_52%,#f2f6fb_100%)]" />
       <div className="relative flex min-h-screen">
-        <div className="hidden w-[296px] shrink-0 p-4 xl:block">
+        <div className="hidden w-[320px] shrink-0 p-4 xl:block">
           <SidebarNav user={user} accountActions={accountActions} />
         </div>
 
@@ -115,7 +82,7 @@ export function ShellChrome({
               className="absolute inset-0 bg-slate-950/36 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
             />
-            <div className="relative h-full w-[min(86vw,320px)] p-3">
+            <div className="relative h-full w-[min(88vw,340px)] p-3">
               <SidebarNav
                 user={user}
                 accountActions={accountActions}
@@ -127,13 +94,13 @@ export function ShellChrome({
 
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-3 sm:p-4 xl:p-5">
           <header className="sticky top-3 z-40 mb-5 rounded-[28px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(248,250,252,0.8))] px-4 py-4 shadow-[var(--shadow-panel)] backdrop-blur-2xl sm:px-5">
-            <div className="mx-auto flex w-full max-w-[1380px] flex-col gap-4">
+            <div className="mx-auto flex w-full max-w-[1380px] flex-col gap-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex min-w-0 items-start gap-3">
                   <button
                     type="button"
                     aria-label="Open navigation"
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-[color:var(--border)] bg-white/80 text-[color:var(--foreground)] shadow-[var(--shadow-soft)] xl:hidden"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] border border-[color:var(--border)] bg-white/80 text-[color:var(--foreground)] shadow-[var(--shadow-soft)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)] xl:hidden"
                     onClick={() => setMobileOpen(true)}
                   >
                     <Menu className="h-5 w-5" />
@@ -144,63 +111,97 @@ export function ShellChrome({
                   </div>
 
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="cyan-subtle">{meta.eyebrow}</Badge>
+                    <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-[color:var(--muted)]">
+                      {breadcrumbs.map((crumb, index) => {
+                        const isLast = index === breadcrumbs.length - 1;
+
+                        return (
+                          <div key={`${crumb.href}-${crumb.label}`} className="flex items-center gap-2">
+                            {isLast ? (
+                              <span className="font-medium text-[color:var(--muted-strong)]">
+                                {crumb.label}
+                              </span>
+                            ) : (
+                              <Link
+                                href={crumb.href}
+                                className="rounded-full px-1.5 py-0.5 transition hover:text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)]"
+                              >
+                                {crumb.label}
+                              </Link>
+                            )}
+                            {!isLast ? <span>/</span> : null}
+                          </div>
+                        );
+                      })}
+                    </nav>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Badge variant="cyan-subtle">{activeSection.label}</Badge>
                       <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                        {currentItem.label}
+                        {humanizeEnum(user.role)}
                       </span>
                     </div>
-                    <h1 className="mt-3 font-display text-[1.6rem] font-semibold leading-tight text-[color:var(--foreground)] sm:text-[1.85rem]">
-                      {currentItem.label}
+                    <h1 className="mt-3 font-display text-[1.7rem] font-semibold leading-tight text-[color:var(--foreground)] sm:text-[2rem]">
+                      {currentPage.label}
                     </h1>
-                    <p className="mt-1 max-w-2xl text-sm leading-6 text-[color:var(--muted)]">
-                      {meta.summary}
+                    <p className="mt-1 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-[0.97rem]">
+                      {currentPage.summary}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Badge variant="muted" className="hidden md:inline-flex">
-                    {humanizeEnum(user.role)}
-                  </Badge>
-                  <Link
-                    href="/content"
-                    className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--brand),#ff74a7)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_38px_rgba(230,62,140,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(230,62,140,0.28)]"
-                  >
-                    <Sparkles className="h-4 w-4" />
-                    New content
-                  </Link>
+                  <div className="hidden items-center gap-3 rounded-full border border-[color:var(--border)] bg-white/78 px-3 py-2.5 text-sm text-[color:var(--muted-strong)] shadow-[var(--shadow-soft)] md:flex">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.14))] font-semibold text-[color:var(--foreground)]">
+                      {user.name
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .slice(0, 2)}
+                    </span>
+                    <span className="max-w-[10rem] truncate font-medium">
+                      {user.name}
+                    </span>
+                  </div>
+                  {primaryAction ? (
+                    <Link
+                      href={primaryAction.href}
+                      className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--brand),#ff74a7)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_16px_38px_rgba(230,62,140,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(230,62,140,0.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.2)]"
+                    >
+                      <primaryAction.icon className="h-4 w-4" />
+                      {primaryAction.label}
+                    </Link>
+                  ) : null}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <nav className="flex flex-wrap gap-2">
-                  {quickLinks.map((link) => {
-                    const active = isActivePath(pathname, link.href);
+              {localNavigation.length > 1 ? (
+                <nav
+                  aria-label={`${activeSection.label} pages`}
+                  className="overflow-x-auto pb-1"
+                >
+                  <div className="flex min-w-max gap-2">
+                    {localNavigation.map((item: NavigationChild) => {
+                      const active = pathname === item.href;
 
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={cn(
-                          "inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition",
-                          active
-                            ? "border-transparent bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.14))] text-[color:var(--foreground)] shadow-[var(--shadow-soft)]"
-                            : "border-[color:var(--border)] bg-white/78 text-[color:var(--muted-strong)] hover:bg-white hover:text-[color:var(--foreground)]",
-                        )}
-                      >
-                        <link.icon className="h-4 w-4" />
-                        {link.label}
-                      </Link>
-                    );
-                  })}
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "inline-flex items-center rounded-full border px-4 py-2.5 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[rgba(230,62,140,0.16)]",
+                            active
+                              ? "border-transparent bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.14))] text-[color:var(--foreground)] shadow-[var(--shadow-soft)]"
+                              : "border-[color:var(--border)] bg-white/72 text-[color:var(--muted-strong)] hover:bg-white hover:text-[color:var(--foreground)]",
+                          )}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </nav>
-
-                <div className="flex items-center gap-3 text-sm text-[color:var(--muted)]">
-                  <span className="hidden sm:inline">{user.name}</span>
-                  <div className="sm:hidden">{accountActions}</div>
-                </div>
-              </div>
+              ) : null}
             </div>
           </header>
 

@@ -41,8 +41,8 @@ export default async function PublishingPage() {
   return (
     <div className="grid gap-6">
       <SectionCard
-        title="Social Media Publishing Module"
-        description="Approved content can publish immediately, scheduled posts wait in queue, and WhatsApp messages stay packaged for controlled sharing."
+        title="Publish content"
+        description="Send approved posts live, run due items, and keep WhatsApp messages ready to share."
         action={
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -73,8 +73,8 @@ export default async function PublishingPage() {
 
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
-          title="Ready Queue"
-          description="Items that are approved or already scheduled for distribution."
+          title="Ready to publish"
+          description="Approved or scheduled items waiting for distribution."
         >
           <div className="grid gap-4">
             {readyItems.length ? (
@@ -143,8 +143,8 @@ export default async function PublishingPage() {
         </SectionCard>
 
         <SectionCard
-          title="Scheduling Intelligence"
-          description="The calendar checks timing, content balance, and trend staleness before publishing."
+          title="Schedule guidance"
+          description="Recommended posting windows and queue warnings."
         >
           <div className="grid gap-4">
             {calendar.recommendedWindows.length ? (
