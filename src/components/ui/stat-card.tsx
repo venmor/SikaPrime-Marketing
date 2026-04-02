@@ -8,15 +8,17 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4 backdrop-blur">
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+    <div className="group relative overflow-hidden rounded-[28px] border border-[color:var(--border-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.76))] p-5 shadow-[var(--shadow-panel)] backdrop-blur-xl transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.92),transparent)]" />
+      <div className="pointer-events-none absolute -right-8 top-3 h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(33,198,217,0.15),transparent_72%)]" />
+      <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[color:var(--muted)]">
         {label}
       </p>
-      <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+      <p className="mt-4 font-display text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--foreground)] sm:text-[2.35rem]">
         {value}
       </p>
       {hint ? (
-        <p className="mt-2 text-sm text-[color:var(--muted)]">{hint}</p>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{hint}</p>
       ) : null}
     </div>
   );
