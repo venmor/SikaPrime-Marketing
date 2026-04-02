@@ -17,9 +17,13 @@ type SessionPayload = {
 };
 
 function getSessionSecret() {
-  return new TextEncoder().encode(
-    process.env.AUTH_SECRET ?? "sika-prime-dev-secret-change-me",
-  );
+  const secret = process.env.AUTH_SECRET;
+
+  if (!secret) {
+    throw new Error("AUTH_SECRET environment variable is not set");
+  }
+
+  return new TextEncoder().encode(secret);
 }
 
 export async function createSession(session: SessionPayload) {
