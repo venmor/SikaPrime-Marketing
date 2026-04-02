@@ -22,17 +22,24 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-70",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-70",
         variant === "primary" &&
-          "bg-[linear-gradient(135deg,var(--brand),#ff74a7)] text-white shadow-[0_16px_38px_rgba(230,62,140,0.24)] hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(230,62,140,0.28)]",
+          "bg-brand text-white shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:bg-brand-strong",
         variant === "secondary" &&
-          "border border-[color:var(--border)] bg-white/78 text-[color:var(--foreground)] shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]",
+          "border border-[color:var(--border-strong)] bg-white text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:border-[color:var(--muted)] hover:shadow-md",
         variant === "ghost" &&
-          "bg-transparent text-[color:var(--foreground)] hover:bg-white/60",
+          "bg-transparent text-[color:var(--foreground)] hover:bg-slate-100",
         className,
       )}
     >
-      {pending ? pendingLabel : children}
+      {pending ? (
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+          {pendingLabel}
+        </>
+      ) : (
+        children
+      )}
     </button>
   );
 }
