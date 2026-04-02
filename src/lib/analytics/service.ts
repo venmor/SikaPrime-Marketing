@@ -21,17 +21,7 @@ export async function getAnalyticsSnapshot() {
     orderBy: { createdAt: "desc" },
   });
 
-  const totals = publications.flatMap((publication) => publication.metrics).reduce(
-    (accumulator, metric) => {
-      accumulator.impressions += metric.impressions;
-      accumulator.clicks += metric.clicks;
-      accumulator.leads += metric.leads;
-      accumulator.engagementRate += metric.engagementRate;
-      accumulator.count += 1;
-      return accumulator;
-    },
-    { impressions: 0, clicks: 0, leads: 0, engagementRate: 0, count: 0 },
-  );
+  const totals = { impressions: 0, clicks: 0, leads: 0, engagementRate: 0, count: 0 };
 
   const themeMap = new Map<
     string,
@@ -56,6 +46,12 @@ export async function getAnalyticsSnapshot() {
 
   for (const publication of publications) {
     for (const metric of publication.metrics) {
+      totals.impressions += metric.impressions;
+      totals.clicks += metric.clicks;
+      totals.leads += metric.leads;
+      totals.engagementRate += metric.engagementRate;
+      totals.count += 1;
+
       const theme = themeMap.get(metric.themeLabel) ?? {
         themeLabel: metric.themeLabel,
         engagementRate: 0,
