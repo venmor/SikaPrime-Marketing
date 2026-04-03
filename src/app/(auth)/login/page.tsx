@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { ShieldCheck, Sparkles, Zap } from "lucide-react";
 
 import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
@@ -39,63 +39,52 @@ export default async function LoginPage({
   }
 
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(230,62,140,0.14),transparent_22%),radial-gradient(circle_at_top_right,rgba(33,198,217,0.16),transparent_20%),linear-gradient(180deg,#ffffff_0%,#f5f8fc_50%,#eef4fb_100%)]" />
-      <div className="pointer-events-none absolute -left-10 top-24 h-44 w-44 rounded-full bg-[radial-gradient(circle,rgba(230,62,140,0.16),transparent_70%)] blur-2xl [animation:float-soft_14s_ease-in-out_infinite]" />
-      <div className="pointer-events-none absolute right-0 top-1/3 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(33,198,217,0.16),transparent_70%)] blur-3xl [animation:float-soft_18s_ease-in-out_infinite]" />
+    <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[color:var(--background)] px-4 py-8 sm:px-6 lg:px-10">
+      <div className="relative mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-2 lg:items-center">
+        <section className="fade-up order-2 lg:order-1 flex flex-col justify-center">
+          <Badge variant="brand-subtle" className="self-start mb-6">Sika Prime workspace</Badge>
 
-      <div className="relative mx-auto grid w-full max-w-6xl gap-6 lg:grid-cols-[1.06fr_0.94fr]">
-        <section className="surface-panel fade-up relative overflow-hidden rounded-[38px] p-8 sm:p-10 lg:p-12">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.34),rgba(255,255,255,0)),radial-gradient(circle_at_top_right,rgba(230,62,140,0.08),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(33,198,217,0.1),transparent_30%)]" />
-          <div className="relative">
-            <Badge variant="brand-subtle">Sika Prime workspace</Badge>
+          <AppLogo />
 
-            <div className="mt-6">
-              <AppLogo />
-            </div>
+          <h1 className="mt-8 font-display text-4xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-5xl">
+            One calm space for Sika Prime marketing.
+          </h1>
 
-            <h1 className="mt-8 max-w-2xl font-display text-[2.6rem] font-semibold leading-[1.04] tracking-[-0.05em] text-[color:var(--foreground)] sm:text-[3.15rem]">
-              One calm space for Sika Prime marketing.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--muted)]">
-              Create stronger content, keep approvals tidy, and stay active even
-              when trends are quiet.
-            </p>
+          <p className="mt-6 text-lg leading-relaxed text-[color:var(--muted)]">
+            Create stronger content, keep approvals tidy, and stay active even
+            when trends are quiet.
+          </p>
 
-            <div className="mt-8 grid gap-3">
-              {featureRows.map((item) => (
-                <div
-                  key={item.title}
-                  className="nested-panel card-hover flex items-start gap-4 rounded-[24px] px-4 py-4"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.16))] text-[color:var(--foreground)]">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-lg font-semibold text-[color:var(--foreground)]">
-                      {item.title}
-                    </h2>
-                    <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
-                      {item.detail}
-                    </p>
-                  </div>
+          <div className="mt-10 flex flex-col gap-6">
+            {featureRows.map((item) => (
+              <div
+                key={item.title}
+                className="flex items-start gap-4"
+              >
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-brand-strong">
+                  <item.icon className="h-6 w-6" />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <h2 className="font-display text-lg font-semibold text-[color:var(--foreground)]">
+                    {item.title}
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-[color:var(--muted)]">
+                    {item.detail}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section className="surface-panel fade-up rounded-[36px] p-6 shadow-[var(--shadow-lift)] sm:p-8">
-          <div className="flex items-start justify-between gap-4">
+        <section className="surface-panel fade-up order-1 lg:order-2 flex flex-col p-8 sm:p-10 shadow-2xl">
+          <div className="mb-8 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
-                Sign in
-              </p>
-              <h2 className="mt-3 font-display text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--foreground)]">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-[color:var(--foreground)]">
                 Welcome back
               </h2>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                Use a seeded demo account or your team login.
+              <p className="mt-2 text-sm text-[color:var(--muted)]">
+                Sign in to your team workspace.
               </p>
             </div>
             <div className="hidden sm:block">
@@ -103,50 +92,64 @@ export default async function LoginPage({
             </div>
           </div>
 
-          {params.error ? (
-            <div className="mt-6 rounded-[22px] border border-rose-200 bg-rose-50/90 px-4 py-3 text-sm text-rose-700 shadow-[var(--shadow-soft)]">
+          {params.error && (
+            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
               Invalid email or password. Try one of the seeded demo users below.
             </div>
-          ) : null}
+          )}
 
-          <form action={signInAction} className="mt-7 grid gap-5">
-            <label htmlFor="email">
-              Email
+          <form action={signInAction} className="flex flex-col gap-5">
+            <div className="group relative">
               <input
                 id="email"
                 name="email"
                 type="email"
                 placeholder="admin@sikaprime.local"
                 required
+                className="peer pt-6 pb-2 placeholder-transparent focus:placeholder-transparent"
               />
-            </label>
-            <label htmlFor="password">
-              Password
+              <label
+                htmlFor="email"
+                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
+              >
+                Email
+              </label>
+            </div>
+
+            <div className="group relative">
               <input
                 id="password"
                 name="password"
                 type="password"
                 placeholder="SikaPrime123!"
                 required
+                className="peer pt-6 pb-2 placeholder-transparent focus:placeholder-transparent"
               />
-            </label>
-            <SubmitButton className="mt-2 w-full" pendingLabel="Signing in...">
+              <label
+                htmlFor="password"
+                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
+              >
+                Password
+              </label>
+            </div>
+
+            <SubmitButton className="mt-4 w-full py-3 text-base" pendingLabel="Signing in...">
               Enter platform
             </SubmitButton>
           </form>
 
-          <div className="mt-8 grid gap-4 rounded-[28px] border border-[color:var(--border)] bg-[linear-gradient(180deg,rgba(255,255,255,0.86),rgba(244,247,251,0.86))] p-5 shadow-[var(--shadow-soft)]">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[color:var(--muted)]">
+          <div className="mt-10 flex flex-col gap-4 rounded-2xl bg-[color:var(--surface-soft)] p-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
                 Demo accounts
               </h3>
               <Badge variant="muted">Seeded access</Badge>
             </div>
-            <div className="grid gap-3">
+            <div className="flex flex-col gap-3">
               {demoCredentials.map((credential) => (
                 <div
                   key={credential}
-                  className="rounded-[20px] border border-[color:var(--border)] bg-white/84 px-4 py-3 text-sm text-[color:var(--foreground)] shadow-[var(--shadow-soft)]"
+                  className="rounded-xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm font-mono text-[color:var(--foreground)] shadow-sm transition-colors hover:border-[color:var(--border-strong)]"
                 >
                   {credential}
                 </div>
@@ -154,15 +157,14 @@ export default async function LoginPage({
             </div>
           </div>
 
-          <p className="mt-6 text-sm leading-6 text-[color:var(--muted)]">
+          <p className="mt-8 text-center text-sm text-[color:var(--muted)]">
             Need the overview first?{" "}
             <Link
               href="/"
-              className="font-semibold text-[color:var(--brand)] transition hover:text-[color:var(--brand-strong)]"
+              className="font-semibold text-brand transition-colors hover:text-brand-strong"
             >
               Back to overview
             </Link>
-            <ArrowRight className="ml-1 inline h-4 w-4" />
           </p>
         </section>
       </div>

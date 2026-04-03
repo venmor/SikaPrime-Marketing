@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createSession } from "./session";
-import { UserRole } from "@prisma/client";
 
+vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({
     set: vi.fn(),
@@ -10,16 +9,22 @@ vi.mock("next/headers", () => ({
   }),
 }));
 
+import { createSession } from "./session";
+import { UserRole } from "@prisma/client";
+
 vi.mock("jose", async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const actual = (await vi.importActual("jose")) as any;
   return {
     ...actual,
-    SignJWT: vi.fn().mockImplementation(() => ({
-      setProtectedHeader: vi.fn().mockReturnThis(),
-      setIssuedAt: vi.fn().mockReturnThis(),
-      setExpirationTime: vi.fn().mockReturnThis(),
-      sign: vi.fn().mockResolvedValue("mocked-token"),
-    })),
+    SignJWT: vi.fn().mockImplementation(function() {
+      return {
+        setProtectedHeader: vi.fn().mockReturnThis(),
+        setIssuedAt: vi.fn().mockReturnThis(),
+        setExpirationTime: vi.fn().mockReturnThis(),
+        sign: vi.fn().mockResolvedValue("mocked-token"),
+      };
+    }),
   };
 });
 

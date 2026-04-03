@@ -10,6 +10,7 @@ export function Badge({
     | "default"
     | "success"
     | "warning"
+    | "danger"
     | "muted"
     | "brand-subtle"
     | "cyan-subtle";
@@ -18,19 +19,21 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors",
         variant === "default" &&
-          "border-[color:rgba(230,62,140,0.16)] bg-[linear-gradient(135deg,rgba(230,62,140,0.12),rgba(255,255,255,0.88))] text-[color:var(--brand)]",
+          "bg-brand-soft text-brand-strong",
         variant === "success" &&
-          "border-emerald-200 bg-emerald-50 text-emerald-700",
+          "bg-emerald-100 text-emerald-800",
         variant === "warning" &&
-          "border-amber-200 bg-amber-50 text-amber-700",
+          "bg-amber-100 text-amber-800",
+        variant === "danger" &&
+          "bg-rose-100 text-rose-800",
         variant === "muted" &&
-          "border-[color:var(--border)] bg-[color:rgba(148,163,184,0.08)] text-[color:var(--muted)]",
+          "bg-slate-100 text-slate-600",
         variant === "brand-subtle" &&
-          "border-[color:rgba(230,62,140,0.18)] bg-[color:rgba(230,62,140,0.14)] text-[color:var(--brand)]",
+          "bg-[color:var(--brand-soft)] text-[color:var(--brand-strong)]",
         variant === "cyan-subtle" &&
-          "border-[color:rgba(33,198,217,0.2)] bg-[color:rgba(33,198,217,0.14)] text-[color:var(--secondary-strong)]",
+          "bg-[color:var(--secondary-soft)] text-[color:var(--secondary-strong)]",
         className,
       )}
     >

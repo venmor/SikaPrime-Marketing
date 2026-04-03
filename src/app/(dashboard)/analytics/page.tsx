@@ -8,8 +8,8 @@ export default async function AnalyticsPage() {
   const analytics = await getAnalyticsSnapshot();
 
   return (
-    <div className="grid gap-6">
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="flex flex-col gap-8">
+      <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Impressions"
           value={analytics.totals.impressions.toLocaleString()}
@@ -27,22 +27,27 @@ export default async function AnalyticsPage() {
           title="Performance Timeline"
           description="Track how impressions, engagement, and leads evolve across published content."
         >
-          <PerformanceChart data={analytics.timeline} />
+          <div className="mt-4 pt-4 border-t border-[color:var(--border)]">
+            <PerformanceChart data={analytics.timeline} />
+          </div>
         </SectionCard>
 
         <SectionCard
           title="Insight Summary"
           description="These observations feed the recommendation engine and guide the next content plan."
         >
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-3 mt-4">
             {analytics.insights.map((insight) => (
               <div
                 key={insight}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4 text-sm leading-6 text-[color:var(--foreground)]"
+                className="rounded-xl border border-[color:var(--border)] bg-white p-4 text-sm leading-relaxed text-[color:var(--foreground)] shadow-sm"
               >
                 {insight}
               </div>
             ))}
+            {!analytics.insights.length && (
+               <div className="empty-state">No insights generated yet.</div>
+            )}
           </div>
         </SectionCard>
       </section>
@@ -52,28 +57,26 @@ export default async function AnalyticsPage() {
           title="Top Themes"
           description="Themes that are currently leading on engagement and lead response."
         >
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-3 mt-4">
             {analytics.themePerformance.length ? (
               analytics.themePerformance.map((theme) => (
                 <div
                   key={theme.themeLabel}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
                 >
-                  <h3 className="font-display text-lg font-semibold">
+                  <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {theme.themeLabel}
                   </h3>
-                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-[color:var(--muted)]">
-                    <p>Leads: {theme.leads}</p>
-                    <p>
-                      Avg engagement: {theme.averageEngagementRate.toFixed(1)}%
-                    </p>
+                  <div className="mt-3 flex items-center justify-between text-sm text-[color:var(--muted)]">
+                    <span className="font-medium text-[color:var(--foreground)]">{theme.leads} <span className="text-[color:var(--muted)] font-normal">leads</span></span>
+                    <span>{theme.averageEngagementRate.toFixed(1)}% avg eng.</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 No published theme data is available yet.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
@@ -82,26 +85,32 @@ export default async function AnalyticsPage() {
           title="Product Performance"
           description="Products attracting the strongest lead response should influence the next campaign sequence."
         >
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-3 mt-4">
             {analytics.productPerformance.length ? (
               analytics.productPerformance.map((product) => (
                 <div
                   key={product.productName}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
                 >
-                  <h3 className="font-display text-lg font-semibold">
+                  <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {product.productName}
                   </h3>
-                  <div className="mt-3 grid gap-1 text-sm text-[color:var(--muted)]">
-                    <p>Leads: {product.leads}</p>
-                    <p>Impressions: {product.impressions.toLocaleString()}</p>
+                  <div className="mt-3 flex flex-col gap-1 text-sm text-[color:var(--muted)]">
+                    <div className="flex justify-between">
+                      <span>Leads</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{product.leads}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Impressions</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{product.impressions.toLocaleString()}</span>
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 Product-level performance will appear after more content is published.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
@@ -110,28 +119,26 @@ export default async function AnalyticsPage() {
           title="Best Posting Windows"
           description="Posting-time patterns based on the content that has already performed well."
         >
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-3 mt-4">
             {analytics.bestPostingWindows.length ? (
               analytics.bestPostingWindows.map((window) => (
                 <div
                   key={window.label}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4"
+                  className="rounded-xl bg-brand-soft border border-brand-soft p-4"
                 >
-                  <p className="font-display text-2xl font-semibold">
+                  <p className="font-display text-2xl font-bold tracking-tight text-brand-strong">
                     {window.label}
                   </p>
-                  <div className="mt-3 grid gap-1 text-sm text-[color:var(--muted)]">
-                    <p>Leads: {window.leads}</p>
-                    <p>
-                      Avg engagement: {window.averageEngagementRate.toFixed(1)}%
-                    </p>
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="font-medium text-[color:var(--foreground)]">{window.leads} leads</span>
+                    <span className="text-[color:var(--muted)]">{window.averageEngagementRate.toFixed(1)}% avg eng.</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 More published results are needed before timing recommendations stabilize.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
@@ -142,28 +149,26 @@ export default async function AnalyticsPage() {
           title="Trend Performance"
           description="Trend-linked posts that translated into stronger engagement or lead quality."
         >
-          <div className="grid gap-4">
+          <div className="flex flex-col gap-3 mt-4">
             {analytics.trendPerformance.length ? (
               analytics.trendPerformance.map((trend) => (
                 <div
                   key={trend.trendTitle}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
                 >
-                  <h3 className="font-display text-lg font-semibold">
+                  <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {trend.trendTitle}
                   </h3>
-                  <div className="mt-3 grid gap-1 text-sm text-[color:var(--muted)]">
-                    <p>Leads: {trend.leads}</p>
-                    <p>
-                      Avg engagement: {trend.averageEngagementRate.toFixed(1)}%
-                    </p>
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                     <span className="font-medium text-[color:var(--foreground)]">{trend.leads} <span className="text-[color:var(--muted)] font-normal">leads</span></span>
+                     <span className="text-[color:var(--muted)]">{trend.averageEngagementRate.toFixed(1)}% avg eng.</span>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 No trend-linked performance data is available yet.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
@@ -172,32 +177,39 @@ export default async function AnalyticsPage() {
           title="Channel Breakdown"
           description="Compare how each publishing channel is contributing to reach and lead generation."
         >
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2 mt-4">
             {analytics.channelPerformance.length ? (
               analytics.channelPerformance.map((channel) => (
                 <div
                   key={channel.channel}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="font-display text-lg font-semibold">
+                  <div className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] pb-3 mb-3">
+                    <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                       {channel.channel}
                     </h3>
-                    <Badge variant="muted">Live</Badge>
+                    <Badge variant="cyan-subtle">Live</Badge>
                   </div>
-                  <div className="mt-3 grid gap-1 text-sm text-[color:var(--muted)]">
-                    <p>Impressions: {channel.impressions.toLocaleString()}</p>
-                    <p>Leads: {channel.leads}</p>
-                    <p>
-                      Avg engagement: {channel.averageEngagementRate.toFixed(1)}%
-                    </p>
+                  <div className="flex flex-col gap-2 text-sm text-[color:var(--muted)]">
+                     <div className="flex justify-between">
+                      <span>Impressions</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{channel.impressions.toLocaleString()}</span>
+                    </div>
+                     <div className="flex justify-between">
+                      <span>Leads</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{channel.leads}</span>
+                    </div>
+                     <div className="flex justify-between">
+                      <span>Engagement</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{channel.averageEngagementRate.toFixed(1)}%</span>
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 Channel performance appears here after the first published posts.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
