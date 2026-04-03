@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { UserRole } from "@prisma/client";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -14,6 +13,7 @@ import {
 import { usePathname } from "next/navigation";
 
 import { canGenerateContent, canReviewContent, canViewAnalytics } from "@/lib/auth/access";
+import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";

@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { UserRole } from "@prisma/client";
 import { usePathname } from "next/navigation";
 
 import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
+import type { UserRole } from "@/lib/auth/roles";
 import {
   getNavigationState,
   isPathActive,
