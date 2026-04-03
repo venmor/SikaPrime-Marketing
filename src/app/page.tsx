@@ -41,99 +41,107 @@ export default async function Home() {
   }
 
   return (
-    <main className="relative min-h-screen bg-[color:var(--background)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-12">
-        <section className="flex flex-col items-center text-center">
-          <Badge variant="brand-subtle" className="mb-6">Web-first, mobile-ready</Badge>
+    <main className="relative isolate flex-1 overflow-hidden px-4 py-8 sm:px-6 lg:px-10">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(230,62,140,0.12),transparent_24%),radial-gradient(circle_at_top_right,rgba(33,198,217,0.14),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.92),rgba(246,248,252,0.98))]" />
 
-          <div className="mb-8">
-            <AppLogo />
-          </div>
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+          <div className="surface-panel overflow-hidden rounded-[38px] p-8 sm:p-10 lg:p-12">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(255,255,255,0.2),transparent_40%),radial-gradient(circle_at_top_right,rgba(230,62,140,0.1),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(33,198,217,0.12),transparent_34%)]" />
+            <div className="relative">
+              <Badge variant="brand-subtle">Web-first, mobile-ready</Badge>
 
-          <h1 className="max-w-4xl font-display text-4xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-6xl lg:text-7xl">
-            Marketing operations, simplified for Sika Prime.
-          </h1>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-[color:var(--muted)] sm:text-xl">
-            Detect safe trends, create useful campaigns, manage approvals,
-            publish with confidence, and learn what works from one workspace.
-          </p>
-
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-8 py-4 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-1 hover:bg-brand-strong hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
-            >
-              Open platform
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a
-              href="#modules"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-8 py-4 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-1 hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
-            >
-              View modules
-            </a>
-          </div>
-        </section>
-
-        <section className="mt-8 grid gap-8 md:grid-cols-3">
-          {heroPoints.map((item) => (
-            <div
-              key={item.title}
-              className="surface-panel card-hover flex flex-col items-center text-center p-8"
-            >
-              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-strong">
-                <item.icon className="h-6 w-6" />
+              <div className="mt-6">
+                <AppLogo />
               </div>
-              <h2 className="font-display text-xl font-semibold text-[color:var(--foreground)]">
-                {item.title}
-              </h2>
-              <p className="mt-3 text-sm leading-relaxed text-[color:var(--muted)]">
-                {item.detail}
+
+              <h1 className="mt-8 max-w-4xl font-display text-[2.8rem] font-semibold leading-[1.03] tracking-[-0.055em] text-[color:var(--foreground)] sm:text-[3.5rem] xl:text-[4.1rem]">
+                Marketing operations, simplified for Sika Prime Loans.
+              </h1>
+              <p className="mt-5 max-w-3xl text-base leading-7 text-[color:var(--muted)]">
+                Detect safe trends, create useful campaigns, manage approvals,
+                publish with confidence, and learn what works from one product.
               </p>
-            </div>
-          ))}
-        </section>
 
-        <section className="grid gap-8 lg:grid-cols-2">
-          <SectionCard
-            title="Demo Access"
-            description="Seeded roles are ready to explore."
-          >
-            <div className="flex flex-col gap-3 mt-2">
-              {demoCredentials.map((credential) => (
-                <div
-                  key={credential}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 text-sm font-mono text-[color:var(--foreground)] shadow-sm"
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,var(--brand),#ff74a7)] px-6 py-3.5 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(230,62,140,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(230,62,140,0.3)]"
                 >
-                  {credential}
-                </div>
-              ))}
-            </div>
-          </SectionCard>
+                  Open platform
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a
+                  href="#modules"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border)] bg-white/82 px-6 py-3.5 text-sm font-semibold text-[color:var(--foreground)] shadow-[var(--shadow-soft)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)]"
+                >
+                  View modules
+                </a>
+              </div>
 
-          <SectionCard
-            title="Built to last"
-            description="A clean technical foundation for future growth."
-          >
-            <div className="flex flex-col gap-6 mt-2">
-              {[
-                "Next.js and TypeScript for maintainable product delivery.",
-                "Prisma-backed data for content, trends, analytics, and knowledge.",
-                "Modular services ready for more channels, AI, and mobile reuse.",
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                    <BadgeCheck className="h-4 w-4" />
+              <div className="mt-8 grid gap-3">
+                {heroPoints.map((item) => (
+                  <div
+                    key={item.title}
+                    className="nested-panel card-hover flex items-start gap-4 rounded-[24px] px-4 py-4"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,rgba(230,62,140,0.14),rgba(33,198,217,0.16))] text-[color:var(--foreground)]">
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h2 className="font-display text-lg font-semibold text-[color:var(--foreground)]">
+                        {item.title}
+                      </h2>
+                      <p className="mt-1 text-sm leading-6 text-[color:var(--muted)]">
+                        {item.detail}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm leading-relaxed text-[color:var(--muted-strong)]">{item}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </SectionCard>
+          </div>
+
+          <div className="grid gap-6">
+            <SectionCard
+              title="Demo Access"
+              description="Seeded roles are ready to explore."
+            >
+              <div className="space-y-3">
+                {demoCredentials.map((credential) => (
+                  <div
+                    key={credential}
+                    className="nested-panel rounded-[20px] px-4 py-3 text-sm text-[color:var(--foreground)]"
+                  >
+                    {credential}
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+
+            <SectionCard
+              title="Built to last"
+              description="A clean technical foundation for future growth."
+            >
+              <div className="grid gap-4">
+                {[
+                  "Next.js and TypeScript for maintainable product delivery.",
+                  "Prisma-backed data for content, trends, analytics, and knowledge.",
+                  "Modular services ready for more channels, AI, and mobile reuse.",
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-[14px] bg-[linear-gradient(135deg,rgba(230,62,140,0.12),rgba(33,198,217,0.14))]">
+                      <BadgeCheck className="h-4 w-4 text-[color:var(--foreground)]" />
+                    </div>
+                    <p className="text-sm leading-6 text-[color:var(--muted)]">{item}</p>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          </div>
         </section>
 
-        <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Trend Engine"
             value="Safe + live"
@@ -156,35 +164,34 @@ export default async function Home() {
           />
         </section>
 
-        <section id="modules" className="grid gap-8 lg:grid-cols-2">
+        <section id="modules" className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
           <SectionCard
             title="What the team gets"
             description="A focused workspace instead of scattered tools."
           >
-            <ul className="flex flex-col gap-4 mt-2">
+            <div className="grid gap-3">
               {[
                 "Trend detection with local/global separation and safety filtering.",
                 "AI generation for proactive, seasonal, educational, and product-led content.",
                 "A shared knowledge base for tone, offers, products, audiences, and compliance.",
                 "Reviews, approvals, scheduling, publishing, and archiving in one workflow.",
                 "Analytics and recommendations that reduce creative fatigue.",
-              ].map((item, i) => (
-                <li
-                  key={i}
-                  className="flex items-center gap-3 text-sm leading-relaxed text-[color:var(--muted-strong)]"
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="nested-panel rounded-[22px] px-4 py-3 text-sm leading-6 text-[color:var(--muted)]"
                 >
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand shrink-0" />
                   {item}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </SectionCard>
 
           <SectionCard
             title="Why it feels easier to use"
             description="The product is designed to stay clean, branded, and readable."
           >
-            <div className="flex flex-col gap-6 mt-2">
+            <div className="grid gap-4">
               {[
                 {
                   title: "Clear hierarchy",
@@ -199,11 +206,11 @@ export default async function Home() {
                   detail: "Navigation, cards, and forms stay usable on desktop, tablet, and mobile.",
                 },
               ].map((item) => (
-                <div key={item.title}>
+                <div key={item.title} className="nested-panel rounded-[24px] p-4">
                   <h3 className="font-display text-lg font-semibold text-[color:var(--foreground)]">
                     {item.title}
                   </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[color:var(--muted)]">
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                     {item.detail}
                   </p>
                 </div>
