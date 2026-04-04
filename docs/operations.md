@@ -37,6 +37,7 @@ npm run smoke:vercel -- https://your-deployment-url.vercel.app
 - Prisma client generation uses `npm run db:generate`
 - Local schema initialization uses `npm run db:init`
 - Seeding runs through `prisma/seed.ts`
+- Production builds do not run `prisma db push` unless `PRISMA_SYNC_ON_BUILD=true` is explicitly set
 
 Why `db:init` exists:
 
@@ -44,6 +45,12 @@ Why `db:init` exists:
 - `db:init` pushes the Prisma schema to the configured Postgres database and then seeds the app
 - For Neon, `db:init` seeds through `DIRECT_URL` to avoid pooler-related setup failures
 - This gives the team a repeatable setup path for Neon and other hosted Postgres providers
+
+When the schema changes in production, run this manually against the live database before or after deploy:
+
+```bash
+npx prisma db push --skip-generate
+```
 
 ## Workspace Bootstrap
 

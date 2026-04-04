@@ -58,11 +58,7 @@ function shouldSyncSchemaOnBuild() {
     return true;
   }
 
-  if (explicit === "false") {
-    return false;
-  }
-
-  return process.env.VERCEL_ENV === "production";
+  return false;
 }
 
 loadEnvFile(".env");
@@ -79,7 +75,9 @@ if (shouldSyncSchemaOnBuild()) {
 
   run("npx prisma db push --skip-generate");
 } else {
-  console.log("\n> Skipping prisma db push during build");
+  console.log(
+    "\n> Skipping prisma db push during build (set PRISMA_SYNC_ON_BUILD=true to enable explicit schema sync)",
+  );
 }
 
 run("next build");

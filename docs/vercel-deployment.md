@@ -106,6 +106,25 @@ Important:
 - The routes are secured by `CRON_SECRET`
 - On the Hobby/free plan, cron expressions can only run once per day, so the other job routes are kept for manual use
 
+## 4.1 Prisma Schema Sync
+
+Production deploys do not run `prisma db push` automatically unless you explicitly enable it.
+
+Recommended default:
+
+- Leave `PRISMA_SYNC_ON_BUILD` unset on Vercel
+- Run schema sync manually from a trusted machine whenever the Prisma schema changes
+
+Manual schema sync:
+
+```bash
+npx prisma db push --skip-generate
+```
+
+Optional override:
+
+- Set `PRISMA_SYNC_ON_BUILD=true` only if you intentionally want Vercel builds to perform schema sync and your database is reliably reachable during build
+
 ## 5. Database Choice
 
 Current recommendation:

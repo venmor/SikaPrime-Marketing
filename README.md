@@ -155,7 +155,7 @@ RESET_DEMO_DATA=true npm run db:seed
 - `CRON_SECRET`
   Protects the refresh and publishing job endpoints.
 - `PRISMA_SYNC_ON_BUILD`
-  Optional. When `true`, runs `prisma db push --skip-generate` during `npm run build`. On Vercel production builds this sync runs by default.
+  Optional. When `true`, runs `prisma db push --skip-generate` during `npm run build`. This is opt-in and should only be enabled when you intentionally want schema sync during build.
 
 ## Useful Commands
 
