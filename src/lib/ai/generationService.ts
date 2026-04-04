@@ -98,6 +98,8 @@ type GenerationTrace = {
   requestPayload: string;
   responsePayload: string;
   responseText: string;
+  provider?: string;
+  model?: string;
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
@@ -121,6 +123,7 @@ export type GeneratedMarketingContent = {
   usedLiveTrends: LiveTrendPreview[];
   outputs: GeneratedOutput[];
   traces: GenerationTrace[];
+  fallbackReason?: string | null;
 };
 
 function normalizeHashtags(tags: string[]) {
@@ -473,6 +476,162 @@ function buildUserPrompt(input: {
       ? 'Return JSON with keys: title, body, caption, engagementComments, callToAction, hashtags, themeLabel, rationale.'
       : 'Return JSON with keys: title, message, buttons, callToAction, hashtags, themeLabel, rationale.',
   ].join("\n");
+}
+
+function buildFallbackTitle(
+  channel: ChannelOption,
+  context: ResolvedContext,
+  trends: LiveTrendPreview[],
+) {
+  if (context.product?.name) {
+    return `${context.product.name} for ${channel === "FACEBOOK" ? "Facebook" : "WhatsApp"}`;
+  }
+
+  if (trends[0]?.title) {
+    return `${trends[0].title} update for ${context.profile.companyName}`;
+  }
+
+  return `${context.profile.companyName} ${channel === "FACEBOOK" ? "post" : "message"}`;
+}
+
+function buildFallbackThemeLabel(context: ResolvedContext, trends: LiveTrendPreview[]) {
+  return (
+    trends[0]?.title ??
+    context.goal?.title ??
+    context.audience?.name ??
+    context.product?.name ??
+    "Brand-led support"
+  );
+}
+
+function buildFallbackCallToAction(context: ResolvedContext) {
+  return (
+    context.offer?.callToAction ??
+    context.product?.callToAction ??
+    `Message ${context.profile.companyName} to explore the right support for your situation.`
+  );
+}
+
+function buildFallbackHashtags(context: ResolvedContext, trends: LiveTrendPreview[]) {
+  return normalizeHashtags([
+    context.profile.companyName,
+    context.product?.name ?? "SmartBorrowing",
+    context.audience?.name ?? "FinancialPlanning",
+    trends[0]?.title ?? "MoneySupport",
+  ]);
+}
+
+function scrubGuardrails(value: string, guardrails: string[]) {
+  let output = value;
+
+  for (const guardrail of guardrails) {
+    const phrase = guardrail.split(":")[0]?.trim();
+
+    if (!phrase) {
+      continue;
+    }
+
+    const safePhrase = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    output = output.replace(new RegExp(safePhrase, "gi"), "support");
+  }
+
+  return output.replace(/\s+/g, " ").trim();
+}
+
+function buildFallbackOutput(input: {
+  channel: ChannelOption;
+  context: ResolvedContext;
+  objective: string;
+  trends: LiveTrendPreview[];
+  tone: ContentTone;
+  fallbackReason: string;
+}): GeneratedOutput {
+  const title = buildFallbackTitle(input.channel, input.context, input.trends);
+  const callToAction = buildFallbackCallToAction(input.context);
+  const hashtags = buildFallbackHashtags(input.context, input.trends);
+  const themeLabel = buildFallbackThemeLabel(input.context, input.trends);
+  const trendLine = input.trends[0]
+    ? `Right now, ${input.trends[0].title.toLowerCase()} is shaping the conversation, so this draft stays timely without losing trust.`
+    : "This draft stays useful even without depending on a single social trend.";
+  const audienceLine = input.context.audience
+    ? `${input.context.audience.name} needs clear messaging around ${input.context.audience.needs[0]?.toLowerCase() ?? "practical support"}.`
+    : "Keep the message broad enough for everyday financial needs.";
+  const toneLine =
+    input.tone === ContentTone.LOCALIZED
+      ? "Keep the language warm, local, and easy to act on."
+      : input.tone === ContentTone.PERSUASIVE
+        ? "Keep the message confident without overpromising."
+        : input.tone === ContentTone.YOUTHFUL
+          ? "Keep the message energetic but still responsible."
+          : "Keep the tone professional, calm, and trust-building.";
+  const rationale = scrubGuardrails(
+    `Fallback draft used business knowledge, selected product context, audience fit, and live trends because the live AI provider was temporarily unavailable (${input.fallbackReason}).`,
+    input.context.profile.guardrails,
+  );
+
+  if (input.channel === "FACEBOOK") {
+    const body = scrubGuardrails(
+      [
+        input.objective,
+        input.context.product?.description ?? input.context.profile.valueProposition,
+        audienceLine,
+        trendLine,
+        toneLine,
+        `${input.context.profile.companyName} keeps the message clear, respectful, and aligned with responsible borrowing.`,
+        callToAction,
+      ].join(" "),
+      input.context.profile.guardrails,
+    );
+    const caption = scrubGuardrails(
+      `${input.context.product?.name ?? input.context.profile.companyName}: clear support, timely context, and a practical next step.`,
+      input.context.profile.guardrails,
+    );
+
+    return {
+      channel: input.channel,
+      title,
+      callToAction,
+      hashtags,
+      themeLabel,
+      rationale,
+      payload: {
+        kind: "FACEBOOK",
+        body,
+        caption,
+        engagementComments: [
+          "What matters most to you before choosing a loan provider?",
+          "Would this work better as a short explainer or a customer story?",
+          "What financial topic should we unpack next for our audience?",
+        ],
+      },
+    };
+  }
+
+  const message = scrubGuardrails(
+    [
+      `Hello from ${input.context.profile.companyName}.`,
+      input.context.product?.description ?? input.context.profile.valueProposition,
+      trendLine,
+      audienceLine,
+      toneLine,
+      callToAction,
+    ].join(" "),
+    input.context.profile.guardrails,
+  );
+
+  return {
+    channel: input.channel,
+    title,
+    callToAction,
+    hashtags,
+    themeLabel,
+    rationale,
+    payload: {
+      kind: "WHATSAPP",
+      message,
+      buttons: ["Learn more", "Talk to us"],
+    },
+  };
 }
 
 async function runGeneration(channel: ChannelOption, prompt: string, systemPrompt: string) {
@@ -876,9 +1035,11 @@ export async function generateMarketingContent(input: {
     resolveLiveTrends(input.trendIds ?? []),
   ]);
   const objective = buildObjective(context, input.subjectDetails.customInstructions);
-  const provider = "openai";
+  let provider = "openai";
   const traces: GenerationTrace[] = [];
   const outputs: GeneratedOutput[] = [];
+  let fallbackReason: string | null = null;
+  const aiConfig = await getAiConfig();
 
   for (const channel of channels) {
     const systemPrompt = buildSystemPrompt(channel, context, liveTrends);
@@ -889,24 +1050,54 @@ export async function generateMarketingContent(input: {
       trends: liveTrends,
       objective,
     });
-    const generated = await runGeneration(channel, userPrompt, systemPrompt);
+    try {
+      if (!aiConfig.apiKey) {
+        throw new Error("AI generation is not configured yet.");
+      }
 
-    traces.push({
-      channel,
-      prompt: `${systemPrompt}\n\n${userPrompt}`,
-      requestPayload: generated.requestPayload,
-      responsePayload: generated.responsePayload,
-      responseText: generated.responseText,
-      promptTokens: generated.promptTokens,
-      completionTokens: generated.completionTokens,
-      totalTokens: generated.totalTokens,
-    });
+      const generated = await runGeneration(channel, userPrompt, systemPrompt);
 
-    if (channel === "FACEBOOK") {
-      const parsed = parseJson(generated.responseText, facebookSchema);
+      traces.push({
+        channel,
+        prompt: `${systemPrompt}\n\n${userPrompt}`,
+        requestPayload: generated.requestPayload,
+        responsePayload: generated.responsePayload,
+        responseText: generated.responseText,
+        provider: "openai",
+        model: generated.model,
+        promptTokens: generated.promptTokens,
+        completionTokens: generated.completionTokens,
+        totalTokens: generated.totalTokens,
+      });
+
+      if (channel === "FACEBOOK") {
+        const parsed = parseJson(generated.responseText, facebookSchema);
+
+        if (!parsed) {
+          throw new Error("AI returned Facebook content in an unexpected format.");
+        }
+
+        outputs.push({
+          channel,
+          title: parsed.title,
+          callToAction: parsed.callToAction,
+          hashtags: normalizeHashtags(parsed.hashtags),
+          themeLabel: parsed.themeLabel,
+          rationale: parsed.rationale,
+          payload: {
+            kind: "FACEBOOK",
+            body: parsed.body,
+            caption: parsed.caption,
+            engagementComments: parsed.engagementComments,
+          },
+        });
+        continue;
+      }
+
+      const parsed = parseJson(generated.responseText, whatsappSchema);
 
       if (!parsed) {
-        throw new Error("AI returned Facebook content in an unexpected format.");
+        throw new Error("AI returned WhatsApp content in an unexpected format.");
       }
 
       outputs.push({
@@ -917,46 +1108,52 @@ export async function generateMarketingContent(input: {
         themeLabel: parsed.themeLabel,
         rationale: parsed.rationale,
         payload: {
-          kind: "FACEBOOK",
-          body: parsed.body,
-          caption: parsed.caption,
-          engagementComments: parsed.engagementComments,
+          kind: "WHATSAPP",
+          message: parsed.message,
+          buttons: parsed.buttons?.filter(Boolean),
         },
       });
-      continue;
+    } catch (error) {
+      const reason =
+        error instanceof Error
+          ? error.message
+          : "Live AI generation failed unexpectedly.";
+      const fallbackOutput = buildFallbackOutput({
+        channel,
+        context,
+        objective,
+        trends: liveTrends,
+        tone: input.subjectDetails.tone,
+        fallbackReason: reason,
+      });
+
+      provider = "fallback-template";
+      fallbackReason ??= reason;
+      outputs.push(fallbackOutput);
+      traces.push({
+        channel,
+        prompt: `${systemPrompt}\n\n${userPrompt}`,
+        requestPayload: aiConfig.model,
+        responsePayload: JSON.stringify({
+          fallback: true,
+          reason,
+          output: fallbackOutput,
+        }),
+        responseText: reason,
+        provider: "fallback-template",
+        model: "fallback-template",
+      });
     }
-
-    const parsed = parseJson(generated.responseText, whatsappSchema);
-
-    if (!parsed) {
-      throw new Error("AI returned WhatsApp content in an unexpected format.");
-    }
-
-    outputs.push({
-      channel,
-      title: parsed.title,
-      callToAction: parsed.callToAction,
-      hashtags: normalizeHashtags(parsed.hashtags),
-      themeLabel: parsed.themeLabel,
-      rationale: parsed.rationale,
-      payload: {
-        kind: "WHATSAPP",
-        message: parsed.message,
-        buttons: parsed.buttons?.filter(Boolean),
-      },
-    });
   }
 
   return {
     provider,
-    model: traces[0]?.prompt ? await getIntegrationSettingValue(
-      "openai.text_model",
-      process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-    ) : "openai",
+    model: provider === "fallback-template" ? "fallback-template" : aiConfig.model,
     objective,
     context,
     usedLiveTrends: liveTrends,
     outputs,
     traces,
+    fallbackReason,
   } satisfies GeneratedMarketingContent;
 }

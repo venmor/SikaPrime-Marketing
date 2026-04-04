@@ -101,6 +101,7 @@ async function generateAndPersistAiContent(input: {
   const items = await Promise.all(
     generation.outputs.map(async (output, index) => {
       const liveTrend = generation.usedLiveTrends[index] ?? generation.usedLiveTrends[0] ?? null;
+      const trace = generation.traces.find((item) => item.channel === output.channel);
       const brief = buildBrief({
         subjectDetails: input.subjectDetails,
         objective: generation.objective,
@@ -125,7 +126,7 @@ async function generateAndPersistAiContent(input: {
             : null,
         callToAction: output.callToAction,
         hashtags: output.hashtags,
-        aiModel: generation.model,
+        aiModel: trace?.model ?? generation.model,
         aiSummary: output.rationale,
         themeLabel: output.themeLabel,
         ownerId: input.actorId,
@@ -145,14 +146,12 @@ async function generateAndPersistAiContent(input: {
         channelPayload: output.payload,
       });
 
-      const trace = generation.traces.find((item) => item.channel === output.channel);
-
       await prisma.generationLog.create({
         data: {
           contentItemId: contentItem.id,
           actorId: input.actorId,
-          provider: generation.provider,
-          model: generation.model,
+          provider: trace?.provider ?? generation.provider,
+          model: trace?.model ?? generation.model,
           channel: output.channel,
           status: "SUCCESS",
           prompt: trace?.prompt ?? "",
@@ -201,9 +200,13 @@ async function generateAndPersistAiContent(input: {
     items,
     usedLiveTrends: generation.usedLiveTrends,
     message:
-      items.length === 2
-        ? "Two channel-specific drafts are ready to review."
-        : "AI draft is ready to review.",
+      generation.fallbackReason
+        ? items.length === 2
+          ? "Live AI was busy, so two backup drafts are ready to review."
+          : "Live AI was busy, so a backup draft is ready to review."
+        : items.length === 2
+          ? "Two channel-specific drafts are ready to review."
+          : "AI draft is ready to review.",
   };
 }
 

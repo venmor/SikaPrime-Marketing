@@ -234,9 +234,9 @@ export function AssistantDock({
   }
 
   return (
-    <div className="pointer-events-none fixed bottom-5 right-5 z-[90] flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-3">
+    <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[210] flex flex-col items-end gap-3 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-[calc(100vw-1.5rem)]">
       {open ? (
-        <div className="pointer-events-auto w-[min(30rem,calc(100vw-1.5rem))] rounded-[28px] border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.97)] shadow-[0_24px_60px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+        <div className="pointer-events-auto flex h-[min(88dvh,54rem)] w-full max-w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.97)] shadow-[0_24px_60px_rgba(15,23,42,0.22)] backdrop-blur-xl">
           <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[color:var(--muted)]">
@@ -299,8 +299,9 @@ export function AssistantDock({
             ) : null}
           </div>
 
-          {activeTab === "assistant" ? (
-            <div className="grid gap-4 px-5 pb-5 pt-4">
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {activeTab === "assistant" ? (
+              <div className="flex h-full flex-col gap-4 overflow-y-auto px-5 pb-5 pt-4">
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion) => (
                   <button
@@ -314,7 +315,7 @@ export function AssistantDock({
                 ))}
               </div>
 
-              <div className="max-h-[22rem] overflow-y-auto rounded-[22px] bg-[color:var(--surface-soft)] p-3">
+              <div className="min-h-[12rem] rounded-[22px] bg-[color:var(--surface-soft)] p-3 sm:min-h-[14rem]">
                 <div className="grid gap-3">
                   {messages.map((message) => (
                     <div
@@ -573,9 +574,9 @@ export function AssistantDock({
                   </div>
                 </div>
               ) : null}
-            </div>
-          ) : (
-            <div className="grid gap-4 px-5 pb-5 pt-4">
+              </div>
+            ) : (
+              <div className="grid h-full gap-4 overflow-y-auto px-5 pb-5 pt-4">
               {reviewInbox.length ? (
                 reviewInbox.map((item) => (
                   <div
@@ -639,8 +640,9 @@ export function AssistantDock({
                   Nothing is waiting for review right now.
                 </div>
               )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       ) : null}
 
