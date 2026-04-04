@@ -1,8 +1,13 @@
 import Link from "next/link";
 
+import { getAssistantHomeSnapshot } from "@/lib/assistant/service";
 import { ShellChrome } from "@/components/layout/shell-chrome";
 import { SubmitButton } from "@/components/ui/submit-button";
-import { canManageAccess } from "@/lib/auth/access";
+import {
+  canGenerateContent,
+  canManageAccess,
+  canReviewContent,
+} from "@/lib/auth/access";
 import { getCurrentUser, requireSession } from "@/lib/auth/session";
 import { signOutAction } from "@/server/actions/session";
 
@@ -20,10 +25,18 @@ export default async function DashboardLayout({
     jobTitle: "Team Member",
     avatarSeed: "fallback",
   };
+  const assistantSnapshot =
+    canGenerateContent(resolvedUser.role) || canReviewContent(resolvedUser.role)
+      ? await getAssistantHomeSnapshot({
+          userId: session.userId,
+          role: resolvedUser.role,
+        })
+      : null;
 
   return (
     <ShellChrome
       user={resolvedUser}
+      assistantSnapshot={assistantSnapshot}
       accountActions={
         <div className="flex flex-col gap-3">
           {canManageAccess(resolvedUser.role) ? (

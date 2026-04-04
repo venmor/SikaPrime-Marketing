@@ -4,11 +4,15 @@ import { ContentType, PublishingChannel, ReviewStatus, WorkflowStage } from "@pr
 import { revalidatePath } from "next/cache";
 
 import { parseCommentText, normalizeHashtagList } from "@/lib/ai/payload";
-import { generateMarketingContent } from "@/lib/ai/generationService";
+import {
+  generateMarketingContent,
+  interpretAssistantPrompt,
+} from "@/lib/ai/generationService";
 import type {
   AIGenerationResult,
   AIGenerationSaveInput,
   AIGenerationSubjectDetails,
+  AssistantRunResult,
   GeneratedChannelPayload,
 } from "@/lib/ai/types";
 import { logActivity } from "@/lib/audit/service";
@@ -82,6 +86,127 @@ function serializePayloadForPreview(
   };
 }
 
+async function generateAndPersistAiContent(input: {
+  actorId: string;
+  channel: "FACEBOOK" | "WHATSAPP" | "BOTH";
+  subjectDetails: AIGenerationSubjectDetails;
+  trendIds?: string[];
+}) {
+  const generation = await generateMarketingContent({
+    channelSelection: input.channel,
+    subjectDetails: input.subjectDetails,
+    trendIds: input.trendIds ?? [],
+  });
+
+  const items = await Promise.all(
+    generation.outputs.map(async (output, index) => {
+      const liveTrend = generation.usedLiveTrends[index] ?? generation.usedLiveTrends[0] ?? null;
+      const brief = buildBrief({
+        subjectDetails: input.subjectDetails,
+        objective: generation.objective,
+        trendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+      });
+      const contentItem = await createGeneratedContentItem({
+        title: output.title,
+        brief,
+        objective: generation.context.goal?.title ?? generation.objective,
+        campaignLabel: generation.context.offer?.name ?? generation.context.goal?.title ?? null,
+        distributionTarget: null,
+        contentType: contentTypeForChannel(output.channel),
+        tone: input.subjectDetails.tone,
+        channel: output.channel,
+        draft:
+          output.payload.kind === "FACEBOOK"
+            ? output.payload.body
+            : output.payload.message,
+        finalCopy:
+          output.payload.kind === "FACEBOOK"
+            ? output.payload.caption
+            : null,
+        callToAction: output.callToAction,
+        hashtags: output.hashtags,
+        aiModel: generation.model,
+        aiSummary: output.rationale,
+        themeLabel: output.themeLabel,
+        ownerId: input.actorId,
+        reviewerId: null,
+        productId: generation.context.product?.id ?? null,
+        audienceSegmentId: generation.context.audience?.id ?? null,
+        liveTrendId: liveTrend?.id ?? null,
+        promptMetadata: {
+          objective: generation.objective,
+          productName: generation.context.product?.name ?? null,
+          offerName: generation.context.offer?.name ?? null,
+          audienceName: generation.context.audience?.name ?? null,
+          goalTitle: generation.context.goal?.title ?? null,
+          selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
+          selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+        },
+        channelPayload: output.payload,
+      });
+
+      const trace = generation.traces.find((item) => item.channel === output.channel);
+
+      await prisma.generationLog.create({
+        data: {
+          contentItemId: contentItem.id,
+          actorId: input.actorId,
+          provider: generation.provider,
+          model: generation.model,
+          channel: output.channel,
+          status: "SUCCESS",
+          prompt: trace?.prompt ?? "",
+          requestPayload: trace?.requestPayload,
+          responsePayload: trace?.responsePayload,
+          responseText: trace?.responseText,
+          promptTokens: trace?.promptTokens,
+          completionTokens: trace?.completionTokens,
+          totalTokens: trace?.totalTokens,
+        },
+      });
+
+      return serializePayloadForPreview(contentItem.id, output.channel, output.payload, {
+        title: output.title,
+        callToAction: output.callToAction,
+        hashtags: output.hashtags,
+        themeLabel: output.themeLabel,
+        rationale: output.rationale,
+        objective: generation.objective,
+        productName: generation.context.product?.name,
+        offerName: generation.context.offer?.name,
+        audienceName: generation.context.audience?.name,
+        goalTitle: generation.context.goal?.title,
+        selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
+        selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+      });
+    }),
+  );
+
+  await logActivity({
+    actorId: input.actorId,
+    entityType: "ai_generation",
+    entityId: items[0]?.contentItemId ?? input.actorId,
+    action: "content.ai_generated",
+    summary: `Generated ${items.length} AI draft${items.length === 1 ? "" : "s"}.`,
+    details: generation.usedLiveTrends.map((trend) => trend.title).join(", ") || null,
+  });
+
+  revalidatePath("/content");
+  revalidatePath("/workflow");
+  revalidatePath("/dashboard");
+  revalidatePath("/trends");
+  revalidatePath("/trends/live");
+
+  return {
+    items,
+    usedLiveTrends: generation.usedLiveTrends,
+    message:
+      items.length === 2
+        ? "Two channel-specific drafts are ready to review."
+        : "AI draft is ready to review.",
+  };
+}
+
 export async function generateAiContentAction(input: {
   channel: "FACEBOOK" | "WHATSAPP" | "BOTH";
   subjectDetails: AIGenerationSubjectDetails;
@@ -97,119 +222,18 @@ export async function generateAiContentAction(input: {
   }
 
   try {
-    const generation = await generateMarketingContent({
-      channelSelection: input.channel,
-      subjectDetails: input.subjectDetails,
-      trendIds: input.trendIds ?? [],
-    });
-
-    const items = await Promise.all(
-      generation.outputs.map(async (output, index) => {
-        const liveTrend = generation.usedLiveTrends[index] ?? generation.usedLiveTrends[0] ?? null;
-        const brief = buildBrief({
-          subjectDetails: input.subjectDetails,
-          objective: generation.objective,
-          trendTitles: generation.usedLiveTrends.map((trend) => trend.title),
-        });
-        const contentItem = await createGeneratedContentItem({
-          title: output.title,
-          brief,
-          objective: generation.context.goal?.title ?? generation.objective,
-          campaignLabel: generation.context.offer?.name ?? generation.context.goal?.title ?? null,
-          distributionTarget: null,
-          contentType: contentTypeForChannel(output.channel),
-          tone: input.subjectDetails.tone,
-          channel: output.channel,
-          draft:
-            output.payload.kind === "FACEBOOK"
-              ? output.payload.body
-              : output.payload.message,
-          finalCopy:
-            output.payload.kind === "FACEBOOK"
-              ? output.payload.caption
-              : null,
-          callToAction: output.callToAction,
-          hashtags: output.hashtags,
-          aiModel: generation.model,
-          aiSummary: output.rationale,
-          themeLabel: output.themeLabel,
-          ownerId: session.userId,
-          reviewerId: null,
-          productId: generation.context.product?.id ?? null,
-          audienceSegmentId: generation.context.audience?.id ?? null,
-          liveTrendId: liveTrend?.id ?? null,
-          promptMetadata: {
-            objective: generation.objective,
-            productName: generation.context.product?.name ?? null,
-            offerName: generation.context.offer?.name ?? null,
-            audienceName: generation.context.audience?.name ?? null,
-            goalTitle: generation.context.goal?.title ?? null,
-            selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
-            selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
-          },
-          channelPayload: output.payload,
-        });
-
-        const trace = generation.traces.find((item) => item.channel === output.channel);
-
-        await prisma.generationLog.create({
-          data: {
-            contentItemId: contentItem.id,
-            actorId: session.userId,
-            provider: generation.provider,
-            model: generation.model,
-            channel: output.channel,
-            status: "SUCCESS",
-            prompt: trace?.prompt ?? "",
-            requestPayload: trace?.requestPayload,
-            responsePayload: trace?.responsePayload,
-            responseText: trace?.responseText,
-            promptTokens: trace?.promptTokens,
-            completionTokens: trace?.completionTokens,
-            totalTokens: trace?.totalTokens,
-          },
-        });
-
-        return serializePayloadForPreview(contentItem.id, output.channel, output.payload, {
-          title: output.title,
-          callToAction: output.callToAction,
-          hashtags: output.hashtags,
-          themeLabel: output.themeLabel,
-          rationale: output.rationale,
-          objective: generation.objective,
-          productName: generation.context.product?.name,
-          offerName: generation.context.offer?.name,
-          audienceName: generation.context.audience?.name,
-          goalTitle: generation.context.goal?.title,
-          selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
-          selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
-        });
-      }),
-    );
-
-    await logActivity({
+    const result = await generateAndPersistAiContent({
       actorId: session.userId,
-      entityType: "ai_generation",
-      entityId: items[0]?.contentItemId ?? session.userId,
-      action: "content.ai_generated",
-      summary: `Generated ${items.length} AI draft${items.length === 1 ? "" : "s"}.`,
-      details: generation.usedLiveTrends.map((trend) => trend.title).join(", ") || null,
+      channel: input.channel,
+      subjectDetails: input.subjectDetails,
+      trendIds: input.trendIds,
     });
-
-    revalidatePath("/content");
-    revalidatePath("/workflow");
-    revalidatePath("/dashboard");
-    revalidatePath("/trends");
-    revalidatePath("/trends/live");
 
     return {
       status: "success",
-      message:
-        items.length === 2
-          ? "Two channel-specific drafts are ready to review."
-          : "AI draft is ready to review.",
-      items,
-      usedLiveTrends: generation.usedLiveTrends,
+      message: result.message,
+      items: result.items,
+      usedLiveTrends: result.usedLiveTrends,
     };
   } catch (error) {
     await prisma.generationLog.create({
@@ -230,6 +254,74 @@ export async function generateAiContentAction(input: {
         error instanceof Error
           ? error.message
           : "AI generation failed. Please retry or continue with manual creation.",
+    };
+  }
+}
+
+export async function runAssistantPromptAction(input: {
+  prompt: string;
+}): Promise<AssistantRunResult> {
+  const session = await requireSession();
+
+  if (!canGenerateContent(session.role)) {
+    return {
+      status: "error",
+      message: "Your role cannot use the AI assistant.",
+    };
+  }
+
+  try {
+    const interpretation = await interpretAssistantPrompt({
+      prompt: input.prompt,
+      userId: session.userId,
+    });
+
+    if (interpretation.status === "needs_clarification") {
+      return {
+        status: "needs_clarification",
+        question: interpretation.question,
+        explanation: interpretation.explanation,
+        defaultsSummary: interpretation.defaultsSummary,
+      };
+    }
+
+    const result = await generateAndPersistAiContent({
+      actorId: session.userId,
+      channel: interpretation.channelSelection,
+      subjectDetails: interpretation.subjectDetails,
+      trendIds: interpretation.trendIds,
+    });
+
+    return {
+      status: "success",
+      message: result.message,
+      items: result.items,
+      usedLiveTrends: result.usedLiveTrends,
+      explanation: interpretation.explanation,
+      defaultsSummary: interpretation.defaultsSummary,
+    };
+  } catch (error) {
+    await prisma.generationLog.create({
+      data: {
+        actorId: session.userId,
+        provider: "openai",
+        model: "unknown",
+        channel: PublishingChannel.FACEBOOK,
+        status: "FAILED",
+        prompt: input.prompt,
+        responseText:
+          error instanceof Error
+            ? error.message
+            : "Unknown assistant generation error",
+      },
+    });
+
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "The assistant could not create content right now. Try again or use manual drafting.",
     };
   }
 }

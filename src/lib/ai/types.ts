@@ -82,3 +82,42 @@ export type AIGenerationSaveInput = {
   items: AIGeneratedChannelPreview[];
   submitForReview?: boolean;
 };
+
+export type AssistantInterpretationResult =
+  | {
+      status: "ready";
+      channelSelection: AIGenerationChannelSelection;
+      subjectDetails: AIGenerationSubjectDetails;
+      trendIds: string[];
+      explanation: string;
+    }
+  | {
+      status: "needs_clarification";
+      question: string;
+      partial: {
+        channelSelection: AIGenerationChannelSelection;
+        subjectDetails: AIGenerationSubjectDetails;
+        trendIds: string[];
+      };
+      explanation: string;
+    };
+
+export type AssistantRunResult =
+  | {
+      status: "success";
+      message: string;
+      items: AIGeneratedChannelPreview[];
+      usedLiveTrends: LiveTrendPreview[];
+      explanation: string;
+      defaultsSummary: string;
+    }
+  | {
+      status: "needs_clarification";
+      question: string;
+      explanation: string;
+      defaultsSummary: string;
+    }
+  | {
+      status: "error";
+      message: string;
+    };

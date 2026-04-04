@@ -1,14 +1,18 @@
 import "server-only";
 
+import { ContentTone, PublishingChannel } from "@prisma/client";
 import { z } from "zod";
 
 import type {
+  AIGenerationChannelSelection,
   AIGenerationSubjectDetails,
+  AssistantInterpretationResult,
   ChannelOption,
   FacebookChannelPayload,
   LiveTrendPreview,
   WhatsAppChannelPayload,
 } from "@/lib/ai/types";
+import { getAssistantUserDefaults } from "@/lib/assistant/service";
 import { prisma } from "@/lib/db";
 import { getLiveTrends, getLiveTrendsByIds } from "@/lib/engines/trends/liveTrendService";
 import { getIntegrationSettingValue } from "@/lib/integrations/service";
@@ -34,6 +38,18 @@ const whatsappSchema = z.object({
   hashtags: z.array(z.string().min(2)).min(1).max(6),
   themeLabel: z.string().min(3),
   rationale: z.string().min(12),
+});
+
+const assistantInterpretationSchema = z.object({
+  channelSelection: z.enum(["FACEBOOK", "WHATSAPP", "BOTH"]).default("FACEBOOK"),
+  productId: z.string().nullable().optional(),
+  offerId: z.string().nullable().optional(),
+  audienceSegmentId: z.string().nullable().optional(),
+  goalId: z.string().nullable().optional(),
+  tone: z.nativeEnum(ContentTone).default(ContentTone.PROFESSIONAL),
+  needsClarification: z.boolean().default(false),
+  question: z.string().nullable().optional(),
+  explanation: z.string().default("Using recent preferences and live trends."),
 });
 
 type ResolvedContext = {
@@ -156,6 +172,99 @@ function extractUsage(payload: unknown) {
     promptTokens: usage?.input_tokens,
     completionTokens: usage?.output_tokens,
     totalTokens: usage?.total_tokens,
+  };
+}
+
+async function getAiConfig() {
+  const [apiKey, model] = await Promise.all([
+    getIntegrationSettingValue("openai.api_key", process.env.OPENAI_API_KEY ?? ""),
+    getIntegrationSettingValue(
+      "openai.text_model",
+      process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+    ),
+  ]);
+
+  return {
+    apiKey,
+    model,
+  };
+}
+
+async function runOpenAiTask(input: {
+  prompt: string;
+  systemPrompt: string;
+  operation: string;
+  metadata: Record<string, string>;
+}) {
+  const { apiKey, model } = await getAiConfig();
+
+  if (!apiKey) {
+    throw new Error("AI generation is not configured yet. Add an OpenAI API key in Integrations.");
+  }
+
+  const requestPayload = {
+    model,
+    input: [
+      {
+        role: "system",
+        content: [
+          {
+            type: "input_text",
+            text: input.systemPrompt,
+          },
+        ],
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: input.prompt,
+          },
+        ],
+      },
+    ],
+  };
+
+  const response = await fetchWithObservability(
+    "https://api.openai.com/v1/responses",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(requestPayload),
+      cache: "no-store",
+    },
+    {
+      source: "openai",
+      operation: input.operation,
+      retries: 1,
+      metadata: {
+        ...input.metadata,
+        model,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`AI generation failed with status ${response.status}.`);
+  }
+
+  const responsePayload = await response.json();
+  const responseText = extractResponseText(responsePayload);
+
+  if (!responseText) {
+    throw new Error("AI generation returned an empty response.");
+  }
+
+  return {
+    model,
+    requestPayload: JSON.stringify(requestPayload),
+    responsePayload: JSON.stringify(responsePayload),
+    responseText,
+    ...extractUsage(responsePayload),
   };
 }
 
@@ -367,81 +476,389 @@ function buildUserPrompt(input: {
 }
 
 async function runGeneration(channel: ChannelOption, prompt: string, systemPrompt: string) {
-  const [apiKey, model] = await Promise.all([
-    getIntegrationSettingValue("openai.api_key", process.env.OPENAI_API_KEY ?? ""),
-    getIntegrationSettingValue(
-      "openai.text_model",
-      process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-    ),
-  ]);
-
-  if (!apiKey) {
-    throw new Error("AI generation is not configured yet. Add an OpenAI API key in Integrations.");
-  }
-
-  const requestPayload = {
-    model,
-    input: [
-      {
-        role: "system",
-        content: [
-          {
-            type: "input_text",
-            text: systemPrompt,
-          },
-        ],
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "input_text",
-            text: prompt,
-          },
-        ],
-      },
-    ],
-  };
-
-  const response = await fetchWithObservability(
-    "https://api.openai.com/v1/responses",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(requestPayload),
-      cache: "no-store",
+  return runOpenAiTask({
+    prompt,
+    systemPrompt,
+    operation: "generate_ai_marketing_content",
+    metadata: {
+      channel,
     },
-    {
-      source: "openai",
-      operation: "generate_ai_marketing_content",
-      retries: 1,
-      metadata: {
-        channel,
-        model,
+  });
+}
+
+type AssistantPromptOptions = {
+  products: Array<{
+    id: string;
+    name: string;
+    category: string;
+    description: string;
+  }>;
+  offers: Array<{
+    id: string;
+    name: string;
+    description: string;
+  }>;
+  audiences: Array<{
+    id: string;
+    name: string;
+    description: string;
+    messagingAngles: string;
+  }>;
+  goals: Array<{
+    id: string;
+    title: string;
+    description: string;
+  }>;
+};
+
+async function loadAssistantPromptOptions() {
+  const profile = await prisma.businessProfile.findUnique({
+    where: { id: 1 },
+    include: {
+      products: {
+        where: { active: true },
+        orderBy: { priority: "desc" },
+      },
+      offers: {
+        where: { active: true },
+        orderBy: { priority: "desc" },
+      },
+      audienceSegments: {
+        orderBy: { priority: "desc" },
+      },
+      goals: {
+        where: { active: true },
+        orderBy: { priority: "desc" },
       },
     },
-  );
+  });
 
-  if (!response.ok) {
-    throw new Error(`AI generation failed with status ${response.status}.`);
-  }
-
-  const responsePayload = await response.json();
-  const responseText = extractResponseText(responsePayload);
-
-  if (!responseText) {
-    throw new Error("AI generation returned an empty response.");
+  if (!profile) {
+    throw new Error("Business knowledge is not configured yet.");
   }
 
   return {
-    model,
-    requestPayload: JSON.stringify(requestPayload),
-    responsePayload: JSON.stringify(responsePayload),
-    responseText,
-    ...extractUsage(responsePayload),
+    products: profile.products.map((product) => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      description: product.description,
+    })),
+    offers: profile.offers.map((offer) => ({
+      id: offer.id,
+      name: offer.name,
+      description: offer.description,
+    })),
+    audiences: profile.audienceSegments.map((audience) => ({
+      id: audience.id,
+      name: audience.name,
+      description: audience.description,
+      messagingAngles: audience.messagingAngles,
+    })),
+    goals: profile.goals.map((goal) => ({
+      id: goal.id,
+      title: goal.title,
+      description: goal.description,
+    })),
+  } satisfies AssistantPromptOptions;
+}
+
+function normalizePrompt(text: string) {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function inferChannelSelectionFromPrompt(
+  normalizedPrompt: string,
+  fallback: PublishingChannel,
+): AIGenerationChannelSelection {
+  const mentionsFacebook =
+    normalizedPrompt.includes("facebook") ||
+    normalizedPrompt.includes("fb post") ||
+    normalizedPrompt.includes("facebook ad");
+  const mentionsWhatsApp =
+    normalizedPrompt.includes("whatsapp") ||
+    normalizedPrompt.includes("wa message");
+
+  if (mentionsFacebook && mentionsWhatsApp) {
+    return "BOTH";
+  }
+
+  if (mentionsWhatsApp) {
+    return "WHATSAPP";
+  }
+
+  if (mentionsFacebook) {
+    return "FACEBOOK";
+  }
+
+  return fallback;
+}
+
+function inferToneFromPrompt(
+  normalizedPrompt: string,
+  fallback: ContentTone,
+): ContentTone {
+  if (
+    normalizedPrompt.includes("youthful") ||
+    normalizedPrompt.includes("youth-focused") ||
+    normalizedPrompt.includes("for youth")
+  ) {
+    return ContentTone.YOUTHFUL;
+  }
+
+  if (
+    normalizedPrompt.includes("localized") ||
+    normalizedPrompt.includes("local tone") ||
+    normalizedPrompt.includes("friendly") ||
+    normalizedPrompt.includes("conversational")
+  ) {
+    return ContentTone.LOCALIZED;
+  }
+
+  if (
+    normalizedPrompt.includes("urgent") ||
+    normalizedPrompt.includes("persuasive") ||
+    normalizedPrompt.includes("sales")
+  ) {
+    return ContentTone.PERSUASIVE;
+  }
+
+  if (
+    normalizedPrompt.includes("educational") ||
+    normalizedPrompt.includes("professional") ||
+    normalizedPrompt.includes("formal") ||
+    normalizedPrompt.includes("trust-building")
+  ) {
+    return ContentTone.PROFESSIONAL;
+  }
+
+  return fallback;
+}
+
+function findBestPromptMatch<T extends { id: string }>(
+  normalizedPrompt: string,
+  items: T[],
+  textForItem: (item: T) => string,
+) {
+  let selected: T | null = null;
+  let bestScore = 0;
+
+  for (const item of items) {
+    const searchable = textForItem(item).toLowerCase();
+    let score = 0;
+
+    for (const token of searchable.split(/[\s,/()-]+/)) {
+      const word = token.trim();
+
+      if (word.length > 3 && normalizedPrompt.includes(word)) {
+        score += 1;
+      }
+    }
+
+    if (normalizedPrompt.includes(searchable.trim())) {
+      score += 6;
+    }
+
+    if (score > bestScore) {
+      selected = item;
+      bestScore = score;
+    }
+  }
+
+  return bestScore > 0 ? selected : null;
+}
+
+function buildAssistantInterpretationSystemPrompt(input: {
+  defaultsSummary: string;
+  options: AssistantPromptOptions;
+  liveTrends: LiveTrendPreview[];
+}) {
+  return [
+    "You convert a user's natural-language marketing request into structured campaign settings.",
+    "Return JSON only.",
+    "Prefer filling missing information with sensible defaults instead of asking questions.",
+    "Ask a single clarifying question only if the product focus is too ambiguous and no clear default exists.",
+    `User defaults: ${input.defaultsSummary}`,
+    `Available products: ${input.options.products.map((product) => `${product.id}: ${product.name} (${product.category})`).join(" | ")}`,
+    `Available offers: ${input.options.offers.map((offer) => `${offer.id}: ${offer.name}`).join(" | ") || "None"}`,
+    `Available audiences: ${input.options.audiences.map((audience) => `${audience.id}: ${audience.name}`).join(" | ") || "None"}`,
+    `Available goals: ${input.options.goals.map((goal) => `${goal.id}: ${goal.title}`).join(" | ") || "None"}`,
+    `Current live trends: ${input.liveTrends.map((trend) => `${trend.id}: ${trend.title}`).join(" | ") || "None"}`,
+    "Map 'friendly' or conversational requests to LOCALIZED tone.",
+    "Map educational or trust-led requests to PROFESSIONAL tone.",
+    "If the user asks for the top trend, live trend, or today's trend, keep trendIds empty unless a specific trend title clearly matches. The generation engine will add current live trends automatically.",
+    "Schema keys: channelSelection, productId, offerId, audienceSegmentId, goalId, tone, needsClarification, question, explanation.",
+  ].join("\n");
+}
+
+function buildAssistantInterpretationUserPrompt(input: {
+  prompt: string;
+}) {
+  return `User request:\n${input.prompt}`;
+}
+
+async function tryInterpretPromptWithModel(input: {
+  prompt: string;
+  defaultsSummary: string;
+  options: AssistantPromptOptions;
+  liveTrends: LiveTrendPreview[];
+}) {
+  try {
+    const generated = await runOpenAiTask({
+      prompt: buildAssistantInterpretationUserPrompt({
+        prompt: input.prompt,
+      }),
+      systemPrompt: buildAssistantInterpretationSystemPrompt({
+        defaultsSummary: input.defaultsSummary,
+        options: input.options,
+        liveTrends: input.liveTrends,
+      }),
+      operation: "interpret_marketing_assistant_prompt",
+      metadata: {
+        channel: "assistant",
+      },
+    });
+
+    return parseJson(generated.responseText, assistantInterpretationSchema);
+  } catch {
+    return null;
+  }
+}
+
+export async function interpretAssistantPrompt(input: {
+  prompt: string;
+  userId: string;
+}): Promise<AssistantInterpretationResult & { defaultsSummary: string }> {
+  const trimmedPrompt = input.prompt.trim();
+
+  if (!trimmedPrompt) {
+    throw new Error("Type a short request so the assistant can generate something useful.");
+  }
+
+  const [defaults, options, liveTrends] = await Promise.all([
+    getAssistantUserDefaults(input.userId),
+    loadAssistantPromptOptions(),
+    getLiveTrends(3),
+  ]);
+  const normalizedPrompt = normalizePrompt(trimmedPrompt);
+  const interpreted = await tryInterpretPromptWithModel({
+    prompt: trimmedPrompt,
+    defaultsSummary: defaults.summary,
+    options,
+    liveTrends: liveTrends.map((trend) => ({
+      id: trend.id,
+      title: trend.title,
+      description: trend.description,
+      source: trend.source,
+      sourceUrl: trend.sourceUrl,
+      relevanceScore: trend.relevanceScore,
+      createdAt: trend.createdAt.toISOString(),
+    })),
+  });
+
+  const matchedProduct =
+    (interpreted?.productId
+      ? options.products.find((item) => item.id === interpreted.productId) ?? null
+      : null) ??
+    findBestPromptMatch(normalizedPrompt, options.products, (item) =>
+      [item.name, item.category, item.description].join(" "),
+    );
+  const matchedOffer =
+    (interpreted?.offerId
+      ? options.offers.find((item) => item.id === interpreted.offerId) ?? null
+      : null) ??
+    findBestPromptMatch(normalizedPrompt, options.offers, (item) =>
+      [item.name, item.description].join(" "),
+    );
+  const matchedAudience =
+    (interpreted?.audienceSegmentId
+      ? options.audiences.find((item) => item.id === interpreted.audienceSegmentId) ?? null
+      : null) ??
+    findBestPromptMatch(normalizedPrompt, options.audiences, (item) =>
+      [item.name, item.description, item.messagingAngles].join(" "),
+    );
+  const matchedGoal =
+    (interpreted?.goalId
+      ? options.goals.find((item) => item.id === interpreted.goalId) ?? null
+      : null) ??
+    findBestPromptMatch(normalizedPrompt, options.goals, (item) =>
+      [item.title, item.description].join(" "),
+    );
+
+  const trendIds = liveTrends
+    .filter((trend) =>
+      normalizePrompt(`${trend.title} ${trend.description ?? ""}`)
+        .split(/\s+/)
+        .some((token) => token.length > 4 && normalizedPrompt.includes(token)),
+    )
+    .slice(0, 3)
+    .map((trend) => trend.id);
+
+  if (
+    trendIds.length === 0 &&
+    (normalizedPrompt.includes("trend") ||
+      normalizedPrompt.includes("today") ||
+      normalizedPrompt.includes("finance signal"))
+  ) {
+    if (liveTrends[0]) {
+      trendIds.push(liveTrends[0].id);
+    }
+  }
+
+  const channelSelection =
+    interpreted?.channelSelection ??
+    inferChannelSelectionFromPrompt(normalizedPrompt, defaults.preferredChannel);
+  const tone =
+    interpreted?.tone ??
+    inferToneFromPrompt(normalizedPrompt, defaults.preferredTone);
+  const resolvedProductId = matchedProduct?.id ?? defaults.preferredProductId ?? null;
+  const resolvedAudienceId =
+    matchedAudience?.id ?? defaults.preferredAudienceSegmentId ?? null;
+  const resolvedGoalId = matchedGoal?.id ?? defaults.preferredGoalId ?? null;
+  const explanation =
+    interpreted?.explanation ??
+    `Using ${defaults.summary} and current live trends to remove repeated setup choices.`;
+
+  if (
+    (interpreted?.needsClarification && !resolvedProductId) ||
+    (!resolvedProductId && options.products.length > 1)
+  ) {
+    return {
+      status: "needs_clarification",
+      question:
+        interpreted?.question?.trim() ||
+        "Which product should I lead with for this piece?",
+      partial: {
+        channelSelection,
+        subjectDetails: {
+          productId: null,
+          offerId: matchedOffer?.id ?? null,
+          audienceSegmentId: resolvedAudienceId,
+          goalId: resolvedGoalId,
+          tone,
+          customInstructions: trimmedPrompt,
+        },
+        trendIds,
+      },
+      explanation,
+      defaultsSummary: defaults.summary,
+    };
+  }
+
+  return {
+    status: "ready",
+    channelSelection,
+    subjectDetails: {
+      productId: resolvedProductId,
+      offerId: matchedOffer?.id ?? null,
+      audienceSegmentId: resolvedAudienceId,
+      goalId: resolvedGoalId,
+      tone,
+      customInstructions: trimmedPrompt,
+    },
+    trendIds,
+    explanation,
+    defaultsSummary: defaults.summary,
   };
 }
 

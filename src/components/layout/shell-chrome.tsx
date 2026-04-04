@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { AssistantDock } from "@/components/assistant/assistant-dock";
 import {
   canAccessNavigationChild,
   canGenerateContent,
   canReviewContent,
   canViewAnalytics,
 } from "@/lib/auth/access";
+import type { AssistantHomeSnapshot } from "@/lib/assistant/types";
 import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -55,10 +57,12 @@ function getPrimaryAction(role: UserRole) {
 
 export function ShellChrome({
   user,
+  assistantSnapshot,
   accountActions,
   children,
 }: {
   user: { name: string; role: UserRole; jobTitle: string; avatarSeed: string };
+  assistantSnapshot: AssistantHomeSnapshot | null;
   accountActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -210,6 +214,16 @@ export function ShellChrome({
           </main>
         </div>
       </div>
+
+      {assistantSnapshot ? (
+        <AssistantDock
+          canGenerate={canGenerateContent(user.role)}
+          canReview={canReviewContent(user.role)}
+          defaultsSummary={assistantSnapshot.defaults.summary}
+          suggestions={assistantSnapshot.suggestions}
+          reviewInbox={assistantSnapshot.reviewInbox}
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,52 +1,25 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
 import { redirect } from "next/navigation";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock3,
-  PenSquare,
-  Sparkles,
-} from "lucide-react";
+import { CheckCircle2, Clock3, PenSquare, Sparkles } from "lucide-react";
 
+import { OpenAssistantButton } from "@/components/assistant/open-assistant-button";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
-  canGenerateContent,
-  canPublishContent,
-  canReviewContent,
   canViewWorkflow,
   shouldScopeWorkflowToOwnedItems,
 } from "@/lib/auth/access";
+import { USER_ROLES } from "@/lib/auth/roles";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
-import { formatDateTime, formatRelativeDate, humanizeEnum } from "@/lib/utils";
+import { formatRelativeDate, humanizeEnum } from "@/lib/utils";
 import {
   approveContentAction,
   sendBackToDraftAction,
   submitForReviewAction,
 } from "@/server/actions/content";
-import { publishContentAction } from "@/server/actions/publishing";
-
-function stageVariant(stage: WorkflowStage) {
-  if (
-    stage === WorkflowStage.APPROVED ||
-    stage === WorkflowStage.PUBLISHED
-  ) {
-    return "success" as const;
-  }
-
-  if (
-    stage === WorkflowStage.NEEDS_REVISION ||
-    stage === WorkflowStage.IN_REVIEW ||
-    stage === WorkflowStage.SCHEDULED
-  ) {
-    return "warning" as const;
-  }
-
-  return "muted" as const;
-}
 
 export default async function WorkflowPage() {
   const session = await requireSession();
@@ -55,29 +28,17 @@ export default async function WorkflowPage() {
     redirect("/dashboard");
   }
 
-  const contentScope = shouldScopeWorkflowToOwnedItems(session.role)
-    ? { ownerId: session.userId }
-    : undefined;
+  const creatorScoped = shouldScopeWorkflowToOwnedItems(session.role);
 
-  const [items, reviewers] = await Promise.all([
-    prisma.contentItem.findMany({
-      where: contentScope,
-      include: {
-        owner: true,
-        reviewer: true,
-        product: true,
-      },
-      orderBy: [{ updatedAt: "desc" }],
-    }),
-    prisma.user.findMany({
-      where: {
-        role: {
-          in: ["ADMIN", "STRATEGIST", "REVIEWER"],
-        },
-      },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  const items = await prisma.contentItem.findMany({
+    where: creatorScoped ? { ownerId: session.userId } : undefined,
+    include: {
+      owner: true,
+      reviewer: true,
+      product: true,
+    },
+    orderBy: [{ updatedAt: "desc" }],
+  });
 
   const ideas = items.filter((item) => item.stage === WorkflowStage.IDEA);
   const draftQueue = items.filter(
@@ -85,381 +46,349 @@ export default async function WorkflowPage() {
       item.stage === WorkflowStage.DRAFT ||
       item.stage === WorkflowStage.NEEDS_REVISION,
   );
-  const reviewQueue = items.filter(
-    (item) => item.stage === WorkflowStage.IN_REVIEW,
-  );
+  const reviewQueue = items.filter((item) => item.stage === WorkflowStage.IN_REVIEW);
   const readyQueue = items.filter(
     (item) =>
       item.stage === WorkflowStage.APPROVED ||
       item.stage === WorkflowStage.SCHEDULED,
   );
-  const publishedQueue = items.filter(
-    (item) =>
-      item.stage === WorkflowStage.PUBLISHED ||
-      item.stage === WorkflowStage.ARCHIVED,
-  );
 
-  const nextMove = reviewQueue.length
-    ? "Review queue needs attention before more work is pushed forward."
-    : readyQueue.length
-      ? "Approved work is ready for publishing or calendar placement."
-      : draftQueue.length
-        ? "Drafts are in progress. Push the strongest ones into review next."
-        : ideas.length
-          ? "The idea pool is ready. Convert the best concept into a draft."
-          : "The workflow is clear. Start a fresh draft or generate a new idea.";
-
-  const activeLanes = [
-    {
-      key: "drafts",
-      title: "Create and revise",
-      description: "Drafts being written or returned for another pass.",
-      icon: PenSquare,
-      badge: `${draftQueue.length} active`,
-      items: draftQueue,
-      empty:
-        "No drafts need writing right now. New ideas can move straight into this lane.",
-    },
-    {
-      key: "review",
-      title: "Review queue",
-      description: "Items waiting for approval or feedback.",
-      icon: Clock3,
-      badge: `${reviewQueue.length} waiting`,
-      items: reviewQueue,
-      empty:
-        "Nothing is waiting for review. This lane clears automatically when reviewers are caught up.",
-    },
-    {
-      key: "ready",
-      title: "Ready to publish",
-      description: "Approved or scheduled work prepared for release.",
-      icon: CheckCircle2,
-      badge: `${readyQueue.length} ready`,
-      items: readyQueue,
-      empty:
-        "No items are approved yet. Reviewers will move strong drafts here.",
-    },
-  ] as const;
-
-  return (
-    <div className="flex flex-col gap-8">
-      <SectionCard
-        title="Workflow command center"
-        description="Move work from idea to live post without losing track of the next owner."
-        action={
-          <Link
-            href="/content"
-            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
-          >
-            <Sparkles className="h-4 w-4" />
-            Open content lab
-          </Link>
-        }
-      >
-        <div className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  if (session.role === USER_ROLES.CREATOR) {
+    return (
+      <div className="grid gap-6">
+        <SectionCard
+          title="My draft queue"
+          description="Only the work you can move forward is shown here."
+          action={
+            <OpenAssistantButton
+              label="Create with AI"
+              prompt="Create the next best post for my usual channel and product."
+              autoSend
+            />
+          }
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
             {[
               { label: "Ideas", value: ideas.length, hint: "Saved for later" },
-              { label: "Drafts", value: draftQueue.length, hint: "Writing lane" },
-              { label: "Review", value: reviewQueue.length, hint: "Needs approval" },
-              { label: "Ready", value: readyQueue.length, hint: "Approved or scheduled" },
-            ].map((stat) => (
+              { label: "Drafts", value: draftQueue.length, hint: "Needs your touch" },
+              {
+                label: "Submitted",
+                value: reviewQueue.length,
+                hint: "Waiting on reviewer",
+              },
+            ].map((item) => (
               <div
-                key={stat.label}
+                key={item.label}
                 className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
-                  {stat.label}
+                  {item.label}
                 </p>
                 <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-                  {stat.value}
+                  {item.value}
                 </p>
-                <p className="mt-2 text-sm text-[color:var(--muted)]">{stat.hint}</p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">{item.hint}</p>
               </div>
             ))}
           </div>
+        </SectionCard>
 
-          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="brand-subtle">Next move</Badge>
-              {shouldScopeWorkflowToOwnedItems(session.role) ? (
-                <Badge variant="muted">Your queue only</Badge>
-              ) : (
-                <Badge variant="muted">Shared team queue</Badge>
-              )}
-            </div>
-            <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
-              {nextMove}
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-4">
-              {[
-                "Idea",
-                "Draft",
-                "Review",
-                "Publish",
-              ].map((step, index) => (
+        <SectionCard
+          title="Ready to submit"
+          description="Drafts and revisions that still need your final pass."
+        >
+          <div className="grid gap-4">
+            {draftQueue.length ? (
+              draftQueue.map((item) => (
                 <div
-                  key={step}
-                  className="rounded-[20px] border border-[color:var(--border)] bg-white px-4 py-3 text-center"
+                  key={item.id}
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
-                    Step {index + 1}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={item.stage === WorkflowStage.NEEDS_REVISION ? "warning" : "muted"}>
+                      {humanizeEnum(item.stage)}
+                    </Badge>
+                    <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
+                  </div>
+                  <Link
+                    href={`/content/${item.id}`}
+                    className="mt-3 block font-display text-lg font-semibold text-[color:var(--foreground)] transition-colors hover:text-brand"
+                  >
+                    {item.title}
+                  </Link>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    {item.brief}
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
-                    {step}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Idea pool"
-        description="Use saved ideas as the quiet planning lane before real drafting starts."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {ideas.length ? (
-            ideas.map((item) => (
-              <Link
-                key={item.id}
-                href={`/content/${item.id}`}
-                className="nested-panel card-hover group p-5"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="muted">Idea</Badge>
-                  <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
-                </div>
-                <h3 className="mt-3 font-display text-base font-semibold text-[color:var(--foreground)] group-hover:text-brand transition-colors">
-                  {item.title}
-                </h3>
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[color:var(--muted)]">
-                  {item.draft}
-                </p>
-                <div className="mt-4 flex items-center justify-between text-xs text-[color:var(--muted)]">
-                  <span>{item.owner.name}</span>
-                  <span>{formatRelativeDate(item.updatedAt)}</span>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="empty-state md:col-span-2 xl:col-span-3">
-              No saved ideas yet. Generate a few in the Content Lab so the team
-              always has a starting point.
-            </div>
-          )}
-        </div>
-      </SectionCard>
-
-      <section className="grid gap-6 xl:grid-cols-3">
-        {activeLanes.map((lane) => (
-          <SectionCard
-            key={lane.key}
-            title={lane.title}
-            description={lane.description}
-            action={<Badge variant="muted">{lane.badge}</Badge>}
-          >
-            <div className="flex flex-col gap-4">
-              {lane.items.length ? (
-                lane.items.map((item) => (
-                  <div key={item.id} className="nested-panel p-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={stageVariant(item.stage)}>
-                        {humanizeEnum(item.stage)}
-                      </Badge>
-                      <Badge variant="cyan-subtle">
-                        {humanizeEnum(item.contentType)}
-                      </Badge>
-                    </div>
-
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--muted)]">
+                    <span>{formatRelativeDate(item.updatedAt)}</span>
+                    <span>{item.product?.name ?? "General content"}</span>
+                  </div>
+                  <div className="mt-5 flex flex-wrap gap-3">
                     <Link
                       href={`/content/${item.id}`}
-                      className="mt-3 block font-display text-base font-semibold text-[color:var(--foreground)] transition-colors hover:text-brand"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
-                      {item.title}
+                      Edit draft
                     </Link>
-                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[color:var(--muted)]">
-                      {item.brief}
-                    </p>
-
-                    <div className="mt-4 grid gap-1 text-xs text-[color:var(--muted)]">
-                      <div className="flex justify-between gap-3">
-                        <span>Owner</span>
-                        <span className="font-medium text-[color:var(--foreground)]">
-                          {item.owner.name}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-3">
-                        <span>Reviewer</span>
-                        <span className="font-medium text-[color:var(--foreground)]">
-                          {item.reviewer?.name ?? "Unassigned"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between gap-3">
-                        <span>Updated</span>
-                        <span>{formatRelativeDate(item.updatedAt)}</span>
-                      </div>
-                      {item.scheduledFor ? (
-                        <div className="flex justify-between gap-3">
-                          <span>Scheduled</span>
-                          <span>{formatDateTime(item.scheduledFor)}</span>
-                        </div>
+                    <form action={submitForReviewAction}>
+                      <input type="hidden" name="id" value={item.id} />
+                      {item.reviewerId ? (
+                        <input type="hidden" name="reviewerId" value={item.reviewerId} />
                       ) : null}
-                      {item.revisionCount > 0 ? (
-                        <div className="flex justify-between gap-3">
-                          <span>Revisions</span>
-                          <span className="font-medium text-amber-700">
-                            {item.revisionCount}
-                          </span>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-5 flex flex-col gap-3">
-                      {(item.stage === WorkflowStage.DRAFT ||
-                        item.stage === WorkflowStage.NEEDS_REVISION) &&
-                      canGenerateContent(session.role) ? (
-                        <form
-                          action={submitForReviewAction}
-                          className="rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
-                        >
-                          <input type="hidden" name="id" value={item.id} />
-                          <div className="grid gap-3">
-                            <select
-                              name="reviewerId"
-                              defaultValue={item.reviewerId ?? reviewers[0]?.id ?? ""}
-                              className="bg-white text-sm"
-                            >
-                              <option value="">Assign reviewer</option>
-                              {reviewers.map((reviewer) => (
-                                <option key={reviewer.id} value={reviewer.id}>
-                                  {reviewer.name}
-                                </option>
-                              ))}
-                            </select>
-                            <input
-                              name="reviewNotes"
-                              placeholder="What should the reviewer focus on?"
-                              className="bg-white text-sm"
-                            />
-                            <SubmitButton
-                              className="w-full"
-                              pendingLabel="Sending..."
-                            >
-                              Send to review
-                            </SubmitButton>
-                          </div>
-                        </form>
-                      ) : null}
-
-                      {item.stage === WorkflowStage.IN_REVIEW &&
-                      canReviewContent(session.role) ? (
-                        <div className="grid gap-3 rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
-                          <form action={approveContentAction} className="grid gap-2">
-                            <input type="hidden" name="id" value={item.id} />
-                            <input
-                              name="approvalNotes"
-                              placeholder="Approval notes (optional)"
-                              className="bg-white text-sm"
-                            />
-                            <SubmitButton className="w-full" pendingLabel="Approving...">
-                              Approve draft
-                            </SubmitButton>
-                          </form>
-                          <form action={sendBackToDraftAction} className="grid gap-2">
-                            <input type="hidden" name="id" value={item.id} />
-                            <input
-                              name="revisionNotes"
-                              placeholder="What needs to change?"
-                              required
-                              className="bg-white text-sm"
-                            />
-                            <SubmitButton
-                              variant="secondary"
-                              className="w-full"
-                              pendingLabel="Returning..."
-                            >
-                              Request revision
-                            </SubmitButton>
-                          </form>
-                        </div>
-                      ) : null}
-
-                      {item.stage === WorkflowStage.APPROVED &&
-                      canPublishContent(session.role) ? (
-                        <form
-                          action={publishContentAction}
-                          className="rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
-                        >
-                          <input type="hidden" name="id" value={item.id} />
-                          <input type="hidden" name="channel" value={item.channel} />
-                          <SubmitButton
-                            className="w-full"
-                            pendingLabel="Publishing..."
-                          >
-                            Publish immediately
-                          </SubmitButton>
-                        </form>
-                      ) : null}
-                    </div>
+                      <input
+                        type="hidden"
+                        name="reviewNotes"
+                        value="Ready for review from the creator queue."
+                      />
+                      <SubmitButton pendingLabel="Submitting...">
+                        Ready to submit
+                      </SubmitButton>
+                    </form>
                   </div>
-                ))
-              ) : (
-                <div className="empty-state">{lane.empty}</div>
-              )}
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                No drafts need attention. Create the next piece with AI or start a manual draft.
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
+        {ideas.length ? (
+          <SectionCard
+            title="Idea shelf"
+            description="Low-pressure ideas waiting for you to turn them into real drafts."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              {ideas.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/content/${item.id}`}
+                  className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <p className="text-sm font-semibold text-[color:var(--foreground)]">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    {item.brief}
+                  </p>
+                </Link>
+              ))}
             </div>
           </SectionCard>
-        ))}
-      </section>
+        ) : null}
+      </div>
+    );
+  }
 
+  if (session.role === USER_ROLES.REVIEWER) {
+    return (
+      <div className="grid gap-6">
+        <SectionCard
+          title="Review inbox"
+          description="Only the work that needs your decision is shown here."
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { label: "Waiting now", value: reviewQueue.length, hint: "Needs your review" },
+              { label: "Approved", value: readyQueue.length, hint: "Ready for publish" },
+              { label: "Recent ideas", value: ideas.length, hint: "Visible for context" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                  {item.label}
+                </p>
+                <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                  {item.value}
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">{item.hint}</p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Waiting for your decision"
+          description="Approve or send back each draft without scanning unrelated stages."
+        >
+          <div className="grid gap-4">
+            {reviewQueue.length ? (
+              reviewQueue.map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="warning">In review</Badge>
+                    <Badge variant="muted">{humanizeEnum(item.channel)}</Badge>
+                    <Badge variant="muted">{formatRelativeDate(item.updatedAt)}</Badge>
+                  </div>
+                  <h3 className="mt-4 font-display text-xl font-semibold text-[color:var(--foreground)]">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    {item.brief}
+                  </p>
+                  <p className="mt-4 text-sm text-[color:var(--muted)]">
+                    Owner: {item.owner.name}
+                  </p>
+                  <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+                    <form action={sendBackToDraftAction} className="grid gap-3">
+                      <input type="hidden" name="id" value={item.id} />
+                      <label>
+                        Revision note
+                        <textarea
+                          name="revisionNotes"
+                          placeholder="Say exactly what should change."
+                          required
+                        />
+                      </label>
+                      <SubmitButton pendingLabel="Sending back..." variant="secondary">
+                        Request changes
+                      </SubmitButton>
+                    </form>
+                    <form action={approveContentAction}>
+                      <input type="hidden" name="id" value={item.id} />
+                      <input
+                        type="hidden"
+                        name="approvalNotes"
+                        value="Approved from reviewer inbox."
+                      />
+                      <SubmitButton pendingLabel="Approving...">
+                        Approve
+                      </SubmitButton>
+                    </form>
+                    <Link
+                      href={`/content/${item.id}`}
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      Open detail
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                Nothing is waiting for review right now.
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-6">
       <SectionCard
-        title="Closed loop"
-        description="Published work and archived items stay easy to revisit without cluttering the active queue."
+        title="Workflow overview"
+        description="Strategists and admins get the cross-team picture, but the next decision still stays simple."
         action={
-          <Link
-            href="/library"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
-          >
-            Open library
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          <OpenAssistantButton
+            label="Create with AI"
+            prompt="Create the next best post for the team using our best product and the current top trend."
+            autoSend
+          />
         }
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {publishedQueue.length ? (
-            publishedQueue.map((item) => (
-              <Link
-                key={item.id}
-                href={`/content/${item.id}`}
-                className="nested-panel card-hover group p-5"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={stageVariant(item.stage)}>
-                    {humanizeEnum(item.stage)}
-                  </Badge>
-                  <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
-                </div>
-                <h3 className="mt-3 font-display text-base font-semibold text-[color:var(--foreground)] transition-colors group-hover:text-brand">
-                  {item.title}
-                </h3>
-                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[color:var(--muted)]">
-                  {item.brief}
-                </p>
-                <div className="mt-4 flex items-center justify-between text-xs text-[color:var(--muted)]">
-                  <span>{item.owner.name}</span>
-                  <span>{formatRelativeDate(item.updatedAt)}</span>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="empty-state md:col-span-2 xl:col-span-3">
-              Nothing has reached the published or archived lane yet.
+        <div className="grid gap-4 sm:grid-cols-4">
+          {[
+            { label: "Ideas", value: ideas.length, icon: Sparkles },
+            { label: "Drafts", value: draftQueue.length, icon: PenSquare },
+            { label: "Review", value: reviewQueue.length, icon: Clock3 },
+            { label: "Ready", value: readyQueue.length, icon: CheckCircle2 },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+            >
+              <item.icon className="h-5 w-5 text-brand" />
+              <p className="mt-3 text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                {item.label}
+              </p>
+              <p className="mt-2 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                {item.value}
+              </p>
             </div>
-          )}
+          ))}
         </div>
       </SectionCard>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <SectionCard
+          title="Needs review"
+          description="Oldest items first."
+        >
+          <div className="grid gap-4">
+            {reviewQueue.length ? (
+              reviewQueue.slice(0, 4).map((item) => (
+                <div
+                  key={item.id}
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge variant="warning">In review</Badge>
+                    <span className="text-sm text-[color:var(--muted)]">
+                      {formatRelativeDate(item.updatedAt)}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/content/${item.id}`}
+                    className="mt-3 block font-display text-lg font-semibold text-[color:var(--foreground)] transition-colors hover:text-brand"
+                  >
+                    {item.title}
+                  </Link>
+                  <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    {item.owner.name}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                The review queue is clear.
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Ready to publish"
+          description="Approved or scheduled items that can move out now."
+        >
+          <div className="grid gap-4">
+            {readyQueue.length ? (
+              readyQueue.slice(0, 4).map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/content/${item.id}`}
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <Badge variant="success">{humanizeEnum(item.stage)}</Badge>
+                    <span className="text-sm text-[color:var(--muted)]">
+                      {item.product?.name ?? "General"}
+                    </span>
+                  </div>
+                  <p className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                    {item.title}
+                  </p>
+                  <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    {item.owner.name}
+                  </p>
+                </Link>
+              ))
+            ) : (
+              <div className="empty-state">
+                Nothing is approved yet.
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      </section>
     </div>
   );
 }
