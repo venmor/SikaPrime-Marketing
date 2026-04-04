@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
 import { redirect } from "next/navigation";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock3,
+  PenSquare,
+  Sparkles,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
@@ -22,18 +29,11 @@ import {
 } from "@/server/actions/content";
 import { publishContentAction } from "@/server/actions/publishing";
 
-const activeStages = [
-  WorkflowStage.DRAFT,
-  WorkflowStage.NEEDS_REVISION,
-  WorkflowStage.IN_REVIEW,
-  WorkflowStage.APPROVED,
-  WorkflowStage.SCHEDULED,
-] as const;
-
-const closedStages = [WorkflowStage.PUBLISHED, WorkflowStage.ARCHIVED] as const;
-
 function stageVariant(stage: WorkflowStage) {
-  if (stage === WorkflowStage.APPROVED || stage === WorkflowStage.PUBLISHED) {
+  if (
+    stage === WorkflowStage.APPROVED ||
+    stage === WorkflowStage.PUBLISHED
+  ) {
     return "success" as const;
   }
 
@@ -80,45 +80,147 @@ export default async function WorkflowPage() {
   ]);
 
   const ideas = items.filter((item) => item.stage === WorkflowStage.IDEA);
-  const activeGroups = Object.fromEntries(
-    activeStages.map((stage) => [stage, items.filter((item) => item.stage === stage)]),
-  ) as Record<(typeof activeStages)[number], typeof items>;
-  const closedGroups = Object.fromEntries(
-    closedStages.map((stage) => [stage, items.filter((item) => item.stage === stage)]),
-  ) as Record<(typeof closedStages)[number], typeof items>;
+  const draftQueue = items.filter(
+    (item) =>
+      item.stage === WorkflowStage.DRAFT ||
+      item.stage === WorkflowStage.NEEDS_REVISION,
+  );
+  const reviewQueue = items.filter(
+    (item) => item.stage === WorkflowStage.IN_REVIEW,
+  );
+  const readyQueue = items.filter(
+    (item) =>
+      item.stage === WorkflowStage.APPROVED ||
+      item.stage === WorkflowStage.SCHEDULED,
+  );
+  const publishedQueue = items.filter(
+    (item) =>
+      item.stage === WorkflowStage.PUBLISHED ||
+      item.stage === WorkflowStage.ARCHIVED,
+  );
+
+  const nextMove = reviewQueue.length
+    ? "Review queue needs attention before more work is pushed forward."
+    : readyQueue.length
+      ? "Approved work is ready for publishing or calendar placement."
+      : draftQueue.length
+        ? "Drafts are in progress. Push the strongest ones into review next."
+        : ideas.length
+          ? "The idea pool is ready. Convert the best concept into a draft."
+          : "The workflow is clear. Start a fresh draft or generate a new idea.";
+
+  const activeLanes = [
+    {
+      key: "drafts",
+      title: "Create and revise",
+      description: "Drafts being written or returned for another pass.",
+      icon: PenSquare,
+      badge: `${draftQueue.length} active`,
+      items: draftQueue,
+      empty:
+        "No drafts need writing right now. New ideas can move straight into this lane.",
+    },
+    {
+      key: "review",
+      title: "Review queue",
+      description: "Items waiting for approval or feedback.",
+      icon: Clock3,
+      badge: `${reviewQueue.length} waiting`,
+      items: reviewQueue,
+      empty:
+        "Nothing is waiting for review. This lane clears automatically when reviewers are caught up.",
+    },
+    {
+      key: "ready",
+      title: "Ready to publish",
+      description: "Approved or scheduled work prepared for release.",
+      icon: CheckCircle2,
+      badge: `${readyQueue.length} ready`,
+      items: readyQueue,
+      empty:
+        "No items are approved yet. Reviewers will move strong drafts here.",
+    },
+  ] as const;
 
   return (
     <div className="flex flex-col gap-8">
       <SectionCard
-        title="Content Workflow Manager"
-        description="Ideas, drafts, reviews, approvals, scheduling, publishing, and archives stay visible in a shared workspace with role-based actions."
+        title="Workflow command center"
+        description="Move work from idea to live post without losing track of the next owner."
+        action={
+          <Link
+            href="/content"
+            className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
+          >
+            <Sparkles className="h-4 w-4" />
+            Open content lab
+          </Link>
+        }
       >
-        {shouldScopeWorkflowToOwnedItems(session.role) ? (
-          <div className="mb-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[color:var(--muted)]">
-            You are seeing the workflow items you own. Review and publishing teams keep the wider queue.
+        <div className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              { label: "Ideas", value: ideas.length, hint: "Saved for later" },
+              { label: "Drafts", value: draftQueue.length, hint: "Writing lane" },
+              { label: "Review", value: reviewQueue.length, hint: "Needs approval" },
+              { label: "Ready", value: readyQueue.length, hint: "Approved or scheduled" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                  {stat.label}
+                </p>
+                <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">{stat.hint}</p>
+              </div>
+            ))}
           </div>
-        ) : null}
-        <div className="grid gap-6 text-sm text-[color:var(--muted)] md:grid-cols-3 mt-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm border border-[color:var(--border)]">
-            <span className="block font-semibold text-[color:var(--foreground)] mb-1">Creators</span>
-            Move ideas into draft mode and request review.
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm border border-[color:var(--border)]">
-            <span className="block font-semibold text-[color:var(--foreground)] mb-1">Reviewers</span>
-            Protect tone, compliance, and product accuracy.
-          </div>
-          <div className="rounded-xl bg-white p-4 shadow-sm border border-[color:var(--border)]">
-            <span className="block font-semibold text-[color:var(--foreground)] mb-1">Managers</span>
-             Publish immediately or schedule when the calendar is ready.
+
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="brand-subtle">Next move</Badge>
+              {shouldScopeWorkflowToOwnedItems(session.role) ? (
+                <Badge variant="muted">Your queue only</Badge>
+              ) : (
+                <Badge variant="muted">Shared team queue</Badge>
+              )}
+            </div>
+            <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
+              {nextMove}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-4">
+              {[
+                "Idea",
+                "Draft",
+                "Review",
+                "Publish",
+              ].map((step, index) => (
+                <div
+                  key={step}
+                  className="rounded-[20px] border border-[color:var(--border)] bg-white px-4 py-3 text-center"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                    Step {index + 1}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-[color:var(--foreground)]">
+                    {step}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </SectionCard>
 
       <SectionCard
-        title="Idea Pool"
-        description="Saved campaign ideas can be refined or converted into full drafts when the team is ready."
+        title="Idea pool"
+        description="Use saved ideas as the quiet planning lane before real drafting starts."
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 mt-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {ideas.length ? (
             ideas.map((item) => (
               <Link
@@ -126,57 +228,44 @@ export default async function WorkflowPage() {
                 href={`/content/${item.id}`}
                 className="nested-panel card-hover group p-5"
               >
-                <div className="flex flex-wrap items-center gap-2 mb-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="muted">Idea</Badge>
                   <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
                 </div>
-                <h3 className="font-display text-base font-semibold text-[color:var(--foreground)] group-hover:text-brand transition-colors">
+                <h3 className="mt-3 font-display text-base font-semibold text-[color:var(--foreground)] group-hover:text-brand transition-colors">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-[color:var(--muted)] line-clamp-2">
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[color:var(--muted)]">
                   {item.draft}
                 </p>
-                <div className="mt-4 pt-4 border-t border-[color:var(--border)] flex flex-col gap-1 text-xs text-[color:var(--muted)]">
-                  <div className="flex justify-between">
-                    <span>Owner:</span>
-                    <span className="font-medium text-[color:var(--foreground)]">{item.owner.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Updated:</span>
-                    <span>{formatRelativeDate(item.updatedAt)}</span>
-                  </div>
-                  {item.product && (
-                    <div className="flex justify-between">
-                      <span>Product:</span>
-                      <span className="truncate max-w-[120px]" title={item.product.name}>{item.product.name}</span>
-                    </div>
-                  )}
+                <div className="mt-4 flex items-center justify-between text-xs text-[color:var(--muted)]">
+                  <span>{item.owner.name}</span>
+                  <span>{formatRelativeDate(item.updatedAt)}</span>
                 </div>
               </Link>
             ))
           ) : (
             <div className="empty-state md:col-span-2 xl:col-span-3">
-              No saved ideas yet. Generate a few in the Content Lab to start the pipeline.
+              No saved ideas yet. Generate a few in the Content Lab so the team
+              always has a starting point.
             </div>
           )}
         </div>
       </SectionCard>
 
-      <div className="grid gap-6 xl:grid-cols-3 items-start">
-        {activeStages.map((stage) => (
+      <section className="grid gap-6 xl:grid-cols-3">
+        {activeLanes.map((lane) => (
           <SectionCard
-            key={stage}
-            title={humanizeEnum(stage)}
-            description={`${activeGroups[stage].length} item${activeGroups[stage].length === 1 ? "" : "s"} currently in this stage.`}
+            key={lane.key}
+            title={lane.title}
+            description={lane.description}
+            action={<Badge variant="muted">{lane.badge}</Badge>}
           >
-            <div className="flex flex-col gap-4 mt-4">
-              {activeGroups[stage].length ? (
-                activeGroups[stage].map((item) => (
-                  <div
-                    key={item.id}
-                    className="nested-panel p-5"
-                  >
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="flex flex-col gap-4">
+              {lane.items.length ? (
+                lane.items.map((item) => (
+                  <div key={item.id} className="nested-panel p-5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={stageVariant(item.stage)}>
                         {humanizeEnum(item.stage)}
                       </Badge>
@@ -184,55 +273,65 @@ export default async function WorkflowPage() {
                         {humanizeEnum(item.contentType)}
                       </Badge>
                     </div>
+
                     <Link
                       href={`/content/${item.id}`}
-                      className="block font-display text-base font-semibold text-[color:var(--foreground)] hover:text-brand transition-colors"
+                      className="mt-3 block font-display text-base font-semibold text-[color:var(--foreground)] transition-colors hover:text-brand"
                     >
                       {item.title}
                     </Link>
-                    <p className="mt-2 text-sm leading-relaxed text-[color:var(--muted)] line-clamp-2">
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[color:var(--muted)]">
                       {item.brief}
                     </p>
 
-                    <div className="mt-4 pt-4 border-t border-[color:var(--border)] flex flex-col gap-1.5 text-xs text-[color:var(--muted)]">
-                      <div className="flex justify-between">
-                        <span>Owner:</span>
-                        <span className="font-medium text-[color:var(--foreground)]">{item.owner.name}</span>
+                    <div className="mt-4 grid gap-1 text-xs text-[color:var(--muted)]">
+                      <div className="flex justify-between gap-3">
+                        <span>Owner</span>
+                        <span className="font-medium text-[color:var(--foreground)]">
+                          {item.owner.name}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Reviewer:</span>
-                        <span className="font-medium text-[color:var(--foreground)]">{item.reviewer?.name ?? "Unassigned"}</span>
+                      <div className="flex justify-between gap-3">
+                        <span>Reviewer</span>
+                        <span className="font-medium text-[color:var(--foreground)]">
+                          {item.reviewer?.name ?? "Unassigned"}
+                        </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Updated:</span>
+                      <div className="flex justify-between gap-3">
+                        <span>Updated</span>
                         <span>{formatRelativeDate(item.updatedAt)}</span>
                       </div>
-                      {item.scheduledFor && (
-                        <div className="flex justify-between">
-                          <span>Scheduled:</span>
-                          <span className="font-medium text-[color:var(--foreground)]">{formatDateTime(item.scheduledFor)}</span>
+                      {item.scheduledFor ? (
+                        <div className="flex justify-between gap-3">
+                          <span>Scheduled</span>
+                          <span>{formatDateTime(item.scheduledFor)}</span>
                         </div>
-                      )}
-                      {item.revisionCount > 0 && (
-                        <div className="flex justify-between">
-                          <span>Revisions:</span>
-                          <span className="text-amber-600 font-medium">{item.revisionCount}</span>
+                      ) : null}
+                      {item.revisionCount > 0 ? (
+                        <div className="flex justify-between gap-3">
+                          <span>Revisions</span>
+                          <span className="font-medium text-amber-700">
+                            {item.revisionCount}
+                          </span>
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="mt-5 flex flex-col gap-3">
                       {(item.stage === WorkflowStage.DRAFT ||
                         item.stage === WorkflowStage.NEEDS_REVISION) &&
                       canGenerateContent(session.role) ? (
-                        <form action={submitForReviewAction} className="flex flex-col gap-3 bg-[color:var(--surface)] p-4 rounded-xl border border-[color:var(--border)]">
+                        <form
+                          action={submitForReviewAction}
+                          className="rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
+                        >
                           <input type="hidden" name="id" value={item.id} />
-                          <div className="flex flex-col gap-2">
-                             <select
+                          <div className="grid gap-3">
+                            <select
                               name="reviewerId"
                               defaultValue={item.reviewerId ?? reviewers[0]?.id ?? ""}
-                              className="text-sm py-2 px-3 bg-white"
-                             >
+                              className="bg-white text-sm"
+                            >
                               <option value="">Assign reviewer</option>
                               {reviewers.map((reviewer) => (
                                 <option key={reviewer.id} value={reviewer.id}>
@@ -242,50 +341,47 @@ export default async function WorkflowPage() {
                             </select>
                             <input
                               name="reviewNotes"
-                              placeholder="Review focus or context"
-                              className="text-sm py-2 px-3 bg-white"
+                              placeholder="What should the reviewer focus on?"
+                              className="bg-white text-sm"
                             />
+                            <SubmitButton
+                              className="w-full"
+                              pendingLabel="Sending..."
+                            >
+                              Send to review
+                            </SubmitButton>
                           </div>
-                          <SubmitButton className="w-full text-xs" pendingLabel="Sending...">
-                            Send to review
-                          </SubmitButton>
                         </form>
                       ) : null}
 
                       {item.stage === WorkflowStage.IN_REVIEW &&
                       canReviewContent(session.role) ? (
-                        <div className="flex flex-col gap-3 bg-[color:var(--surface)] p-4 rounded-xl border border-[color:var(--border)]">
-                          <form action={approveContentAction} className="flex flex-col gap-2">
+                        <div className="grid gap-3 rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
+                          <form action={approveContentAction} className="grid gap-2">
                             <input type="hidden" name="id" value={item.id} />
                             <input
                               name="approvalNotes"
                               placeholder="Approval notes (optional)"
-                              className="text-sm py-2 px-3 bg-white"
+                              className="bg-white text-sm"
                             />
-                            <SubmitButton variant="primary" className="w-full text-xs" pendingLabel="Approving...">
-                              Approve Draft
+                            <SubmitButton className="w-full" pendingLabel="Approving...">
+                              Approve draft
                             </SubmitButton>
                           </form>
-
-                          <div className="relative py-2 flex items-center justify-center">
-                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[color:var(--border-strong)]"></div></div>
-                            <div className="relative bg-[color:var(--surface)] px-2 text-[10px] uppercase font-bold tracking-widest text-[color:var(--muted)]">Or</div>
-                          </div>
-
-                          <form action={sendBackToDraftAction} className="flex flex-col gap-2">
+                          <form action={sendBackToDraftAction} className="grid gap-2">
                             <input type="hidden" name="id" value={item.id} />
                             <input
                               name="revisionNotes"
                               placeholder="What needs to change?"
                               required
-                              className="text-sm py-2 px-3 bg-white"
+                              className="bg-white text-sm"
                             />
                             <SubmitButton
                               variant="secondary"
-                              className="w-full text-xs hover:border-amber-400 hover:text-amber-700"
+                              className="w-full"
                               pendingLabel="Returning..."
                             >
-                              Request Revision
+                              Request revision
                             </SubmitButton>
                           </form>
                         </div>
@@ -293,11 +389,17 @@ export default async function WorkflowPage() {
 
                       {item.stage === WorkflowStage.APPROVED &&
                       canPublishContent(session.role) ? (
-                        <form action={publishContentAction} className="bg-[color:var(--surface)] p-4 rounded-xl border border-[color:var(--border)]">
+                        <form
+                          action={publishContentAction}
+                          className="rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
+                        >
                           <input type="hidden" name="id" value={item.id} />
                           <input type="hidden" name="channel" value={item.channel} />
-                          <SubmitButton className="w-full text-xs" pendingLabel="Publishing...">
-                            Publish Immediately
+                          <SubmitButton
+                            className="w-full"
+                            pendingLabel="Publishing..."
+                          >
+                            Publish immediately
                           </SubmitButton>
                         </form>
                       ) : null}
@@ -305,59 +407,59 @@ export default async function WorkflowPage() {
                   </div>
                 ))
               ) : (
-                <div className="empty-state">
-                  Nothing is currently in this stage.
-                </div>
-              )}
-            </div>
-          </SectionCard>
-        ))}
-      </div>
-
-      <section className="grid gap-6 xl:grid-cols-2">
-        {closedStages.map((stage) => (
-          <SectionCard
-            key={stage}
-            title={humanizeEnum(stage)}
-            description={`${closedGroups[stage].length} item${closedGroups[stage].length === 1 ? "" : "s"} in the closed loop.`}
-          >
-            <div className="flex flex-col gap-4 mt-4">
-              {closedGroups[stage].length ? (
-                closedGroups[stage].map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/content/${item.id}`}
-                    className="nested-panel card-hover group p-5"
-                  >
-                    <div className="flex flex-wrap items-center gap-2 mb-3">
-                      <Badge variant={stageVariant(item.stage)}>
-                        {humanizeEnum(item.stage)}
-                      </Badge>
-                      <Badge variant="cyan-subtle">
-                        {humanizeEnum(item.channel)}
-                      </Badge>
-                    </div>
-                    <h3 className="font-display text-base font-semibold text-[color:var(--foreground)] group-hover:text-brand transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-[color:var(--muted)] line-clamp-2">
-                      {item.brief}
-                    </p>
-                    <div className="mt-4 pt-4 border-t border-[color:var(--border)] flex items-center justify-between text-xs text-[color:var(--muted)]">
-                      <span>Owner: <span className="font-medium text-[color:var(--foreground)]">{item.owner.name}</span></span>
-                      <span>Last updated {formatRelativeDate(item.updatedAt)}</span>
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <div className="empty-state">
-                  Nothing has reached this stage yet.
-                </div>
+                <div className="empty-state">{lane.empty}</div>
               )}
             </div>
           </SectionCard>
         ))}
       </section>
+
+      <SectionCard
+        title="Closed loop"
+        description="Published work and archived items stay easy to revisit without cluttering the active queue."
+        action={
+          <Link
+            href="/library"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+          >
+            Open library
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {publishedQueue.length ? (
+            publishedQueue.map((item) => (
+              <Link
+                key={item.id}
+                href={`/content/${item.id}`}
+                className="nested-panel card-hover group p-5"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={stageVariant(item.stage)}>
+                    {humanizeEnum(item.stage)}
+                  </Badge>
+                  <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
+                </div>
+                <h3 className="mt-3 font-display text-base font-semibold text-[color:var(--foreground)] transition-colors group-hover:text-brand">
+                  {item.title}
+                </h3>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[color:var(--muted)]">
+                  {item.brief}
+                </p>
+                <div className="mt-4 flex items-center justify-between text-xs text-[color:var(--muted)]">
+                  <span>{item.owner.name}</span>
+                  <span>{formatRelativeDate(item.updatedAt)}</span>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="empty-state md:col-span-2 xl:col-span-3">
+              Nothing has reached the published or archived lane yet.
+            </div>
+          )}
+        </div>
+      </SectionCard>
     </div>
   );
 }

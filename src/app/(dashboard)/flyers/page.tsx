@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   AssetStatus,
   ContentTone,
@@ -6,6 +7,13 @@ import {
   PublishingChannel,
 } from "@prisma/client";
 import { redirect } from "next/navigation";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ImagePlus,
+  Layers3,
+  WandSparkles,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
@@ -138,13 +146,25 @@ export default async function FlyersPage({
   const selectedProjectId = firstValue(params.project);
   const featuredProject =
     projects.find((project) => project.id === selectedProjectId) ?? projects[0] ?? null;
+  const referenceCount = assets.filter(
+    (asset) => asset.kind === "FLYER_REFERENCE",
+  ).length;
+  const generatedConceptCount = projects.reduce(
+    (sum, project) => sum + project.concepts.length,
+    0,
+  );
+  const nextStep = referenceCount === 0
+    ? "Upload one strong Sika Prime flyer first so the studio learns your brand before it generates fresh work."
+    : !featuredProject
+      ? "Your references are ready. Write a brief and let the studio create three clear directions."
+      : "You already have generated concepts. Compare them, then convert the strongest one into a content draft.";
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-8">
       {firstValue(params.asset) === "uploaded" ? (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-          Brand reference uploaded and analyzed. It is now available to guide
-          the next flyer generation run.
+          Brand reference uploaded and analyzed. It is now ready to guide the
+          next flyer generation run.
         </div>
       ) : null}
       {firstValue(params.error) ? (
@@ -159,48 +179,163 @@ export default async function FlyersPage({
 
       <SectionCard
         title="Flyer studio"
-        description="Upload original Sika Prime flyers, learn the brand system from them, generate 3 creative directions, preview the images, then convert the best option into a publish-ready post."
+        description="Move from reference flyer to generated concepts to a publish-ready draft with one guided studio flow."
+        action={
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href="#studio-brief"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+            >
+              Open brief
+              <ArrowRight className="h-4 w-4" />
+            </a>
+            {featuredProject ? (
+              <a
+                href="#studio-concepts"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+              >
+                View concepts
+                <ArrowRight className="h-4 w-4" />
+              </a>
+            ) : null}
+          </div>
+        }
       >
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-              Reference flyers
-            </p>
-            <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-              {assets.filter((asset) => asset.kind === "FLYER_REFERENCE").length}
-            </p>
+        <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "Reference flyers",
+                value: referenceCount,
+                hint: "Brand examples uploaded",
+              },
+              {
+                label: "Templates",
+                value: templates.length,
+                hint: "Reusable campaign structures",
+              },
+              {
+                label: "Flyer runs",
+                value: projects.length,
+                hint: "Briefs already generated",
+              },
+              {
+                label: "Concepts made",
+                value: generatedConceptCount,
+                hint: "Directions ready to compare",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                  {stat.label}
+                </p>
+                <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">
+                  {stat.hint}
+                </p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-              Campaign templates
+
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="brand-subtle">Studio flow</Badge>
+              {featuredProject ? (
+                <Badge variant="success">Concepts ready</Badge>
+              ) : (
+                <Badge variant="muted">Waiting for brief</Badge>
+              )}
+            </div>
+            <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
+              {nextStep}
             </p>
-            <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-              {templates.length}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-              Occasion cues
-            </p>
-            <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-              {assistant.occasionOpportunities.length}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
-            <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-              Recent flyer runs
-            </p>
-            <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-              {projects.length}
-            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  label: "Add reference",
+                  detail: "Upload an original flyer",
+                  icon: ImagePlus,
+                },
+                {
+                  label: "Write brief",
+                  detail: "Pick objective, audience, and tone",
+                  icon: Layers3,
+                },
+                {
+                  label: "Generate 3",
+                  detail: "Compare different directions",
+                  icon: WandSparkles,
+                },
+                {
+                  label: "Use one",
+                  detail: "Convert it into a content draft",
+                  icon: CheckCircle2,
+                },
+              ].map((step) => (
+                <div
+                  key={step.label}
+                  className="rounded-[20px] border border-[color:var(--border)] bg-white p-4"
+                >
+                  <step.icon className="h-5 w-5 text-brand" />
+                  <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
+                    {step.label}
+                  </p>
+                  <p className="mt-1 text-xs text-[color:var(--muted)]">
+                    {step.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </SectionCard>
 
+      {projects.length > 1 ? (
+        <SectionCard
+          title="Recent flyer runs"
+          description="Jump between recent briefs without losing the current studio context."
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {projects.map((project) => (
+              <Link
+                key={project.id}
+                href={`/flyers?project=${project.id}`}
+                className={`card-hover rounded-[24px] border p-4 shadow-sm transition-all ${
+                  featuredProject?.id === project.id
+                    ? "border-brand bg-brand-soft/40"
+                    : "border-[color:var(--border)] bg-white"
+                }`}
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="muted">{humanizeEnum(project.channel)}</Badge>
+                  <Badge variant="brand-subtle">
+                    {project.concepts.length} concepts
+                  </Badge>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                  {project.title}
+                </h3>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[color:var(--muted)]">
+                  {project.objective}
+                </p>
+                <p className="mt-4 text-xs text-[color:var(--muted)]">
+                  Updated {formatDateTime(project.updatedAt)}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </SectionCard>
+      ) : null}
+
       <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
         <SectionCard
-          title="Upload a reference flyer"
-          description="Add original Sika Prime creative so the system can read recurring colors, CTA style, layout cues, and brand tone."
+          title="Step 1: Upload a reference flyer"
+          description="Add an original Sika Prime flyer so the studio can learn your layout, CTA style, and brand mood."
         >
           <form action={uploadBrandAssetAction} className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -235,10 +370,14 @@ export default async function FlyersPage({
         </SectionCard>
 
         <SectionCard
-          title="Generate 3 flyer options"
-          description="Choose the campaign objective, occasion, product, and audience. The studio will produce 3 branded flyer concepts, captions, hashtags, and 4 engagement comments."
+          title="Step 2: Brief the flyer set"
+          description="Describe the campaign once, then let the studio return three branded options with caption and comment support."
         >
-          <form action={generateFlyerProjectAction} className="grid gap-4">
+          <form
+            id="studio-brief"
+            action={generateFlyerProjectAction}
+            className="grid gap-4"
+          >
             <div className="grid gap-4 md:grid-cols-2">
               <label>
                 Project title
@@ -353,148 +492,20 @@ export default async function FlyersPage({
         </SectionCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+      {featuredProject ? (
         <SectionCard
-          title="Campaign templates"
-          description="Repeatable sequences for common loan moments like school fees, month-end pressure, and SME restocking."
+          title="Step 3: Compare concepts"
+          description="Review the current flyer run, compare all three directions, then pick one to convert into a working content draft."
+          action={
+            <Badge variant="brand-subtle">
+              {featuredProject.concepts.length} concepts
+            </Badge>
+          }
         >
-          <div className="grid gap-4">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="brand-subtle">Template</Badge>
-                  <Badge variant="muted">Priority {template.priority}</Badge>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
-                  {template.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                  {template.summary}
-                </p>
-                <p className="mt-3 text-sm font-medium text-[color:var(--foreground)]">
-                  Objective
-                </p>
-                <p className="mt-1 text-sm text-[color:var(--muted)]">
-                  {template.objective}
-                </p>
-                <p className="mt-3 text-sm font-medium text-[color:var(--foreground)]">
-                  Sequence
-                </p>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-[color:var(--muted)]">
-                  {template.sequenceSteps}
-                </p>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="Seasonal opportunities"
-          description="The proactive assistant can suggest flyer directions even before a social trend appears."
-        >
-          <div className="grid gap-4 md:grid-cols-2">
-            {assistant.occasionOpportunities.map((opportunity) => (
-              <div
-                key={opportunity.key}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="cyan-subtle">{humanizeEnum(opportunity.lane)}</Badge>
-                  <Badge variant="muted">{humanizeEnum(opportunity.tone)}</Badge>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
-                  {opportunity.title}
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                  {opportunity.summary}
-                </p>
-                <p className="mt-3 text-sm text-[color:var(--foreground)]">
-                  {opportunity.rationale}
-                </p>
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-      </section>
-
-      <SectionCard
-        title="Brand asset library"
-        description="Reference flyers stay reusable, approval-aware, and linked to the creative system."
-      >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {assets.length ? (
-            assets.map((asset) => (
-              <div
-                key={asset.id}
-                className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
-              >
-                <div className="overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
-                  <img
-                    src={asset.imageData}
-                    alt={asset.title}
-                    className="h-56 w-full object-cover"
-                  />
-                </div>
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <Badge variant={assetBadgeVariant(asset.status)}>
-                    {humanizeEnum(asset.status)}
-                  </Badge>
-                  <Badge variant="muted">{humanizeEnum(asset.kind)}</Badge>
-                </div>
-                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
-                  {asset.title}
-                </h3>
-                <p className="mt-2 text-sm text-[color:var(--muted)]">
-                  {asset.fileName}
-                </p>
-                {asset.analysisSummary ? (
-                  <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
-                    {asset.analysisSummary}
-                  </p>
-                ) : null}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {asset.status !== AssetStatus.APPROVED ? (
-                    <form action={updateBrandAssetStatusAction}>
-                      <input type="hidden" name="assetId" value={asset.id} />
-                      <input type="hidden" name="status" value={AssetStatus.APPROVED} />
-                      <SubmitButton pendingLabel="Approving..." variant="secondary">
-                        Approve
-                      </SubmitButton>
-                    </form>
-                  ) : null}
-                  {asset.status !== AssetStatus.ARCHIVED ? (
-                    <form action={updateBrandAssetStatusAction}>
-                      <input type="hidden" name="assetId" value={asset.id} />
-                      <input type="hidden" name="status" value={AssetStatus.ARCHIVED} />
-                      <SubmitButton pendingLabel="Archiving..." variant="ghost">
-                        Archive
-                      </SubmitButton>
-                    </form>
-                  ) : null}
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-state md:col-span-2 xl:col-span-3">
-              No flyer references yet. Upload one original Sika Prime flyer to
-              start teaching the studio your visual system.
-            </div>
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="Generated flyer previews"
-        description="Each concept includes the image preview, recommended caption, hashtags, and 4 starter comments designed to lift engagement."
-      >
-        {featuredProject ? (
           <div className="grid gap-6">
             <div className="rounded-[28px] border border-[color:var(--border)] bg-white p-5 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="brand-subtle">Project</Badge>
+                <Badge variant="brand-subtle">Current run</Badge>
                 <Badge variant="muted">{humanizeEnum(featuredProject.channel)}</Badge>
                 <Badge variant="muted">{humanizeEnum(featuredProject.tone)}</Badge>
               </div>
@@ -515,7 +526,7 @@ export default async function FlyersPage({
               </div>
             </div>
 
-            <div className="grid gap-6 xl:grid-cols-3">
+            <div id="studio-concepts" className="grid gap-6 xl:grid-cols-3">
               {featuredProject.concepts.map((concept) => (
                 <article
                   key={concept.id}
@@ -523,9 +534,12 @@ export default async function FlyersPage({
                 >
                   <div className="overflow-hidden rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
                     {concept.imageData ? (
-                      <img
+                      <Image
                         src={concept.imageData}
                         alt={concept.title}
+                        width={960}
+                        height={1280}
+                        unoptimized
                         className="h-[360px] w-full object-cover"
                       />
                     ) : (
@@ -595,46 +609,154 @@ export default async function FlyersPage({
               ))}
             </div>
           </div>
-        ) : (
-          <div className="empty-state">
-            No flyer set has been generated yet. Upload a reference flyer, choose
-            an objective, and the studio will generate three branded options here.
-          </div>
-        )}
-      </SectionCard>
-
-      {projects.length > 1 ? (
+        </SectionCard>
+      ) : (
         <SectionCard
-          title="Recent flyer projects"
-          description="Jump between recent runs and compare how different occasions, audiences, or products changed the output."
+          title="Step 3: Compare concepts"
+          description="Generated concepts will appear here after you upload a reference and submit a brief."
         >
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/flyers?project=${project.id}`}
-                className="card-hover rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+          <div className="empty-state">
+            No flyer set has been generated yet. Add a reference, write the
+            brief, and the studio will return three branded options here.
+          </div>
+        </SectionCard>
+      )}
+
+      <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+        <SectionCard
+          title="Campaign templates"
+          description="Repeatable flyer structures for school fees, month-end pressure, SME restocking, and other common borrowing moments."
+        >
+          <div className="grid gap-4">
+            {templates.map((template) => (
+              <div
+                key={template.id}
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
               >
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="muted">{humanizeEnum(project.channel)}</Badge>
-                  <Badge variant="brand-subtle">
-                    {project.concepts.length} concepts
-                  </Badge>
+                  <Badge variant="brand-subtle">Template</Badge>
+                  <Badge variant="muted">Priority {template.priority}</Badge>
                 </div>
                 <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
-                  {project.title}
+                  {template.title}
                 </h3>
-                <p className="mt-2 line-clamp-3 text-sm leading-6 text-[color:var(--muted)]">
-                  {project.objective}
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  {template.summary}
                 </p>
-                <p className="mt-4 text-xs text-[color:var(--muted)]">
-                  Updated {formatDateTime(project.updatedAt)}
+                <p className="mt-3 text-sm font-medium text-[color:var(--foreground)]">
+                  Objective
                 </p>
-              </Link>
+                <p className="mt-1 text-sm text-[color:var(--muted)]">
+                  {template.objective}
+                </p>
+                <p className="mt-3 text-sm font-medium text-[color:var(--foreground)]">
+                  Sequence
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-[color:var(--muted)]">
+                  {template.sequenceSteps}
+                </p>
+              </div>
             ))}
           </div>
         </SectionCard>
-      ) : null}
+
+        <SectionCard
+          title="Occasion suggestions"
+          description="Use proactive occasions when there is no strong social trend but the page still needs timely, relevant flyer content."
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            {assistant.occasionOpportunities.map((opportunity) => (
+              <div
+                key={opportunity.key}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="cyan-subtle">{humanizeEnum(opportunity.lane)}</Badge>
+                  <Badge variant="muted">{humanizeEnum(opportunity.tone)}</Badge>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                  {opportunity.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  {opportunity.summary}
+                </p>
+                <p className="mt-3 text-sm text-[color:var(--foreground)]">
+                  {opportunity.rationale}
+                </p>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+      </section>
+
+      <SectionCard
+        title="Brand asset library"
+        description="Reference flyers stay reusable, approval-aware, and visible in one place instead of being lost in folders or chat."
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {assets.length ? (
+            assets.map((asset) => (
+              <div
+                key={asset.id}
+                className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+              >
+                <div className="overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
+                  <Image
+                    src={asset.imageData}
+                    alt={asset.title}
+                    width={960}
+                    height={720}
+                    unoptimized
+                    className="h-56 w-full object-cover"
+                  />
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <Badge variant={assetBadgeVariant(asset.status)}>
+                    {humanizeEnum(asset.status)}
+                  </Badge>
+                  <Badge variant="muted">{humanizeEnum(asset.kind)}</Badge>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                  {asset.title}
+                </h3>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">
+                  {asset.fileName}
+                </p>
+                {asset.analysisSummary ? (
+                  <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                    {asset.analysisSummary}
+                  </p>
+                ) : null}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {asset.status !== AssetStatus.APPROVED ? (
+                    <form action={updateBrandAssetStatusAction}>
+                      <input type="hidden" name="assetId" value={asset.id} />
+                      <input type="hidden" name="status" value={AssetStatus.APPROVED} />
+                      <SubmitButton pendingLabel="Approving..." variant="secondary">
+                        Approve
+                      </SubmitButton>
+                    </form>
+                  ) : null}
+                  {asset.status !== AssetStatus.ARCHIVED ? (
+                    <form action={updateBrandAssetStatusAction}>
+                      <input type="hidden" name="assetId" value={asset.id} />
+                      <input type="hidden" name="status" value={AssetStatus.ARCHIVED} />
+                      <SubmitButton pendingLabel="Archiving..." variant="ghost">
+                        Archive
+                      </SubmitButton>
+                    </form>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state md:col-span-2 xl:col-span-3">
+              No flyer references yet. Upload one original Sika Prime flyer to
+              start teaching the studio your visual system.
+            </div>
+          )}
+        </div>
+      </SectionCard>
     </div>
   );
 }

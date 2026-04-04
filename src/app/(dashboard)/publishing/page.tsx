@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { CheckCircle2, Clock3, History, Send } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
@@ -15,6 +16,22 @@ import {
   runDuePublicationsAction,
   syncPerformanceAction,
 } from "@/server/actions/publishing";
+
+function publicationVariant(status: string) {
+  if (status === "PUBLISHED") {
+    return "success" as const;
+  }
+
+  if (status === "FAILED") {
+    return "warning" as const;
+  }
+
+  if (status === "SIMULATED") {
+    return "brand-subtle" as const;
+  }
+
+  return "muted" as const;
+}
 
 export default async function PublishingPage() {
   const session = await requireSession();
@@ -45,108 +62,159 @@ export default async function PublishingPage() {
     getCalendarSnapshot(),
   ]);
 
+  const approvedNow = readyItems.filter(
+    (item) => item.stage === WorkflowStage.APPROVED,
+  );
+  const scheduledQueue = readyItems.filter(
+    (item) => item.stage === WorkflowStage.SCHEDULED,
+  );
   const whatsappItems = readyItems.filter((item) => item.channel === "WHATSAPP");
+  const failedPublications = publications.filter(
+    (publication) => publication.status === "FAILED",
+  );
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-8">
       <SectionCard
-        title="Publish content"
-        description="Send approved posts live, run due items, and keep WhatsApp messages ready to share."
+        title="Publishing control center"
+        description="See what can go live now, what is scheduled next, and where the queue still needs guidance."
         action={
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/calendar"
-              className="text-sm font-semibold text-[color:var(--brand)]"
-            >
-              Open calendar
-            </Link>
             <form action={syncPerformanceAction}>
               <SubmitButton pendingLabel="Syncing...">
-                Sync live performance
+                Sync performance
               </SubmitButton>
             </form>
             <form action={runDuePublicationsAction}>
-              <SubmitButton pendingLabel="Running job...">
-                Run due publications
+              <SubmitButton pendingLabel="Running...">
+                Run due items
               </SubmitButton>
             </form>
           </div>
         }
       >
-        <div className="grid gap-3 text-sm text-[color:var(--muted)] md:grid-cols-3">
-          <p>Facebook items can auto-post when live credentials are configured.</p>
-          <p>WhatsApp items remain easy to copy, package, and distribute safely.</p>
-          <p>Every scheduled, simulated, failed, or successful event is stored in history.</p>
+        <div className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr]">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                label: "Publish now",
+                value: approvedNow.length,
+                hint: "Approved and ready",
+              },
+              {
+                label: "Scheduled",
+                value: scheduledQueue.length,
+                hint: "Waiting for time slot",
+              },
+              {
+                label: "WhatsApp",
+                value: whatsappItems.length,
+                hint: "Manual or assisted send",
+              },
+              {
+                label: "Recent failures",
+                value: failedPublications.length,
+                hint: "Needs follow-up",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                  {stat.label}
+                </p>
+                <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">{stat.hint}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="brand-subtle">Flow</Badge>
+              <Badge variant="muted">{"Ready -> Schedule -> History"}</Badge>
+            </div>
+            <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
+              {approvedNow.length
+                ? "Strongest next move: publish the approved queue or schedule it into the best windows below."
+                : scheduledQueue.length
+                  ? "The queue is mostly scheduled. Check timing guidance and let the runner clear due posts."
+                  : "The publishing board is calm. Push more work through review when the next batch is ready."}
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              {[
+                {
+                  label: "Now",
+                  icon: Send,
+                  detail: "Immediate manual release",
+                },
+                {
+                  label: "Later",
+                  icon: Clock3,
+                  detail: "Scheduled queue",
+                },
+                {
+                  label: "History",
+                  icon: History,
+                  detail: "Track results",
+                },
+              ].map((step) => (
+                <div
+                  key={step.label}
+                  className="rounded-[20px] border border-[color:var(--border)] bg-white p-4"
+                >
+                  <step.icon className="h-5 w-5 text-brand" />
+                  <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
+                    {step.label}
+                  </p>
+                  <p className="mt-1 text-xs text-[color:var(--muted)]">
+                    {step.detail}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
         <SectionCard
-          title="Ready to publish"
-          description="Approved or scheduled items waiting for distribution."
+          title="Publish now"
+          description="Items already approved and waiting for a final destination."
+          action={<Badge variant="muted">{approvedNow.length} item{approvedNow.length === 1 ? "" : "s"}</Badge>}
         >
           <div className="grid gap-4">
-            {readyItems.length ? (
-              readyItems.map((item) => (
+            {approvedNow.length ? (
+              approvedNow.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
                 >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge
-                      variant={item.stage === "SCHEDULED" ? "warning" : "success"}
-                    >
-                      {humanizeEnum(item.stage)}
-                    </Badge>
-                    <Badge>{humanizeEnum(item.channel)}</Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="success">Approved</Badge>
+                    <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
+                    <Badge variant="muted">{humanizeEnum(item.contentType)}</Badge>
                   </div>
-                  <h3 className="mt-3 font-display text-lg font-semibold">
+                  <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
                     {item.title}
                   </h3>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--muted)]">
-                    {(item.finalCopy ?? item.draft).slice(0, 280)}
+                  <p className="mt-2 line-clamp-4 text-sm leading-6 text-[color:var(--muted)]">
+                    {item.finalCopy ?? item.draft}
                   </p>
                   <div className="mt-4 grid gap-1 text-sm text-[color:var(--muted)]">
-                    <span>
-                      Schedule:{" "}
-                      {item.scheduledFor
-                        ? formatDateTime(item.scheduledFor)
-                        : "Not scheduled yet"}
-                    </span>
                     {item.product ? <span>Product: {item.product.name}</span> : null}
-                    <span>
-                      Asset reference: {item.assetReference ?? "No asset attached"}
-                    </span>
                     <span>
                       Distribution target:{" "}
                       {item.distributionTarget ?? "No destination configured"}
                     </span>
-                  </div>
-                  {item.assetReference &&
-                  (item.assetReference.startsWith("data:image/") ||
-                    /^https?:\/\//i.test(item.assetReference)) ? (
-                    <div className="mt-4 overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
-                      <img
-                        src={item.assetReference}
-                        alt={item.title}
-                        className="h-64 w-full object-cover"
-                      />
-                    </div>
-                  ) : null}
-                  <div className="mt-4 rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
-                      Publish preview
-                    </p>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
-                      {item.finalCopy ?? item.draft}
-                    </p>
                     {item.hashtags ? (
-                      <p className="mt-3 text-sm font-medium text-[color:var(--brand-strong)]">
-                        {item.hashtags}
-                      </p>
+                      <span className="font-medium text-brand-strong">{item.hashtags}</span>
                     ) : null}
                   </div>
-                  <form action={publishContentAction} className="mt-4 grid gap-3">
+                  <form action={publishContentAction} className="mt-5 grid gap-3">
                     <input type="hidden" name="id" value={item.id} />
                     <input type="hidden" name="channel" value={item.channel} />
                     <label>
@@ -168,69 +236,83 @@ export default async function PublishingPage() {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
-                No items are currently approved or scheduled.
-              </p>
+              <div className="empty-state">
+                No approved items are waiting for immediate release.
+              </div>
             )}
           </div>
         </SectionCard>
 
         <SectionCard
-          title="Schedule guidance"
-          description="Recommended posting windows and queue warnings."
+          title="Queue guidance"
+          description="Balance checks, timing suggestions, and unscheduled work that still needs placement."
         >
           <div className="grid gap-4">
-            {calendar.recommendedWindows.length ? (
-              <div className="grid gap-3">
-                {calendar.recommendedWindows.map((window) => (
+            <div className="grid gap-3 md:grid-cols-2">
+              {calendar.recommendedWindows.length ? (
+                calendar.recommendedWindows.map((window) => (
                   <div
                     key={window.label}
-                    className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4"
+                    className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
                   >
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                      Suggested posting slot
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                      Suggested window
                     </p>
-                    <p className="mt-2 font-display text-2xl font-semibold">
+                    <p className="mt-2 font-display text-2xl font-semibold text-[color:var(--foreground)]">
                       {window.label}
                     </p>
                     <p className="mt-2 text-sm text-[color:var(--muted)]">
                       {window.supportingReason}
                     </p>
                   </div>
-                ))}
-              </div>
-            ) : null}
+                ))
+              ) : (
+                <div className="empty-state md:col-span-2">
+                  Posting windows will appear once more live performance data is available.
+                </div>
+              )}
+            </div>
 
             {calendar.warnings.length ? (
-              calendar.warnings.map((warning) => (
-                <div
-                  key={warning.message}
-                  className={
-                    warning.level === "warning"
-                      ? "rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
-                      : "rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4 text-sm text-[color:var(--muted)]"
-                  }
-                >
-                  {warning.message}
-                </div>
-              ))
+              <div className="grid gap-3">
+                {calendar.warnings.map((warning) => (
+                  <div
+                    key={warning.message}
+                    className={
+                      warning.level === "warning"
+                        ? "rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+                        : "rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[color:var(--muted)]"
+                    }
+                  >
+                    {warning.message}
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-                The current publishing queue looks balanced.
+              <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                The current queue looks balanced.
               </div>
             )}
 
             <div className="rounded-[24px] border border-dashed border-[color:var(--border)] p-4">
-              <p className="text-sm font-semibold text-[color:var(--foreground)]">
-                Unscheduled approved items
-              </p>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-[color:var(--foreground)]">
+                  Unscheduled approved items
+                </p>
+                <Link
+                  href="/calendar"
+                  className="text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+                >
+                  Open calendar
+                </Link>
+              </div>
               <div className="mt-3 grid gap-2 text-sm text-[color:var(--muted)]">
                 {calendar.unscheduledApproved.length ? (
                   calendar.unscheduledApproved.map((item) => (
                     <Link
                       key={item.id}
                       href={`/content/${item.id}`}
-                      className="hover:text-[color:var(--brand)]"
+                      className="rounded-[16px] bg-white px-3 py-2 transition-colors hover:text-brand"
                     >
                       {item.title}
                     </Link>
@@ -244,45 +326,57 @@ export default async function PublishingPage() {
         </SectionCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
         <SectionCard
-          title="WhatsApp Preparation"
-          description="Short, clear, and compliant messages ready for manual or assisted sharing."
+          title="Scheduled queue"
+          description="Items already placed on the calendar and waiting for their publish window."
+          action={<Badge variant="muted">{scheduledQueue.length} scheduled</Badge>}
         >
           <div className="grid gap-4">
-            {whatsappItems.length ? (
-              whatsappItems.map((item) => (
+            {scheduledQueue.length ? (
+              scheduledQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
                 >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge>{humanizeEnum(item.stage)}</Badge>
-                    <Badge variant="muted">WhatsApp</Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="warning">Scheduled</Badge>
+                    <Badge variant="cyan-subtle">{humanizeEnum(item.channel)}</Badge>
                   </div>
-                  <h3 className="mt-3 font-display text-lg font-semibold">
+                  <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
                     {item.title}
                   </h3>
-                  <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--muted)]">
-                    {item.finalCopy ?? item.draft}
+                  <p className="mt-2 text-sm text-[color:var(--muted)]">
+                    Scheduled for{" "}
+                    {item.scheduledFor
+                      ? formatDateTime(item.scheduledFor)
+                      : "No time selected"}
                   </p>
-                  <p className="mt-3 text-sm text-[color:var(--muted)]">
-                    Team use: copy this message into WhatsApp Business flows, pair it
-                    with a flyer if needed, and keep the official CTA unchanged.
+                  <p className="mt-3 line-clamp-3 text-sm leading-6 text-[color:var(--muted)]">
+                    {item.finalCopy ?? item.draft}
                   </p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
-                No WhatsApp-ready content is currently queued.
-              </p>
+              <div className="empty-state">
+                Nothing is waiting in the scheduled queue right now.
+              </div>
             )}
           </div>
         </SectionCard>
 
         <SectionCard
-          title="Publishing History"
-          description="Stored platform history for scheduled, simulated, failed, and published events."
+          title="Publishing history"
+          description="Recent published, simulated, queued, and failed delivery attempts."
+          action={
+            <Link
+              href="/analytics"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              View analytics
+            </Link>
+          }
         >
           <div className="grid gap-4">
             {publications.length ? (
@@ -291,11 +385,15 @@ export default async function PublishingPage() {
                   key={publication.id}
                   className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
                 >
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant="muted">{humanizeEnum(publication.status)}</Badge>
-                    <Badge>{humanizeEnum(publication.channel)}</Badge>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={publicationVariant(publication.status)}>
+                      {humanizeEnum(publication.status)}
+                    </Badge>
+                    <Badge variant="cyan-subtle">
+                      {humanizeEnum(publication.channel)}
+                    </Badge>
                   </div>
-                  <h3 className="mt-3 font-display text-lg font-semibold">
+                  <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
                     {publication.contentItem.title}
                   </h3>
                   <p className="mt-2 text-sm text-[color:var(--muted)]">
@@ -303,7 +401,7 @@ export default async function PublishingPage() {
                       ? `Published ${formatDateTime(publication.publishedAt)}`
                       : publication.scheduledFor
                         ? `Scheduled for ${formatDateTime(publication.scheduledFor)}`
-                        : "Awaiting publish"}
+                        : "Waiting for next action"}
                   </p>
                   {publication.errorMessage ? (
                     <p className="mt-2 text-sm text-amber-700">
@@ -315,21 +413,55 @@ export default async function PublishingPage() {
                       href={publication.publishUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-3 inline-flex text-sm font-semibold text-[color:var(--brand)]"
+                      className="mt-3 inline-flex text-sm font-semibold text-brand"
                     >
-                      Open external post
+                      Open live post
                     </a>
                   ) : null}
                 </div>
               ))
             ) : (
-              <p className="text-sm text-[color:var(--muted)]">
+              <div className="empty-state">
                 No publishing history exists yet.
-              </p>
+              </div>
             )}
           </div>
         </SectionCard>
       </section>
+
+      <SectionCard
+        title="WhatsApp handoff"
+        description="Keep WhatsApp messaging short, consistent, and easy for the team to copy into manual or assisted distribution."
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {whatsappItems.length ? (
+            whatsappItems.map((item) => (
+              <div
+                key={item.id}
+                className="nested-panel p-5"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="muted">{humanizeEnum(item.stage)}</Badge>
+                  <Badge variant="cyan-subtle">WhatsApp</Badge>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--muted)]">
+                  {item.finalCopy ?? item.draft}
+                </p>
+                <p className="mt-4 text-xs uppercase tracking-widest text-[color:var(--muted)]">
+                  Keep the CTA unchanged when sharing.
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state md:col-span-2 xl:col-span-3">
+              No WhatsApp-ready content is currently queued.
+            </div>
+          )}
+        </div>
+      </SectionCard>
     </div>
   );
 }
