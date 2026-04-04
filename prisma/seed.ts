@@ -200,6 +200,29 @@ const integrationSettings = [
     helpText:
       "Optional JSON or RSS provider endpoint for approved social listening tools.",
   },
+  {
+    key: "social.live_keywords",
+    label: "Live trend keyword override",
+    groupLabel: "Social listening",
+    helpText:
+      "Optional comma-separated keywords that should be mixed with knowledge-base terms when fetching live trends.",
+  },
+  {
+    key: "social.gnews_api_key",
+    label: "GNews API key",
+    groupLabel: "Social listening",
+    helpText:
+      "Optional API key for GNews live-search enrichment. Leave empty to rely on Reddit search plus internal fallback.",
+    isSecret: true,
+  },
+  {
+    key: "social.reddit_enabled",
+    label: "Reddit live search",
+    groupLabel: "Social listening",
+    helpText:
+      "Enable Reddit search as a live signal source for conversations around finance, lending, and small business.",
+    value: "true",
+  },
 ] satisfies readonly IntegrationSettingSeed[];
 
 function envFlag(name: string, fallback = false) {
@@ -218,6 +241,7 @@ async function resetWorkspaceData(adminEmail: string) {
   await prisma.brandAsset.deleteMany();
   await prisma.campaignTemplate.deleteMany();
   await prisma.integrationSetting.deleteMany();
+  await prisma.generationLog.deleteMany();
   await prisma.performanceSnapshot.deleteMany();
   await prisma.publication.deleteMany();
   await prisma.contentReview.deleteMany();
@@ -225,6 +249,7 @@ async function resetWorkspaceData(adminEmail: string) {
   await prisma.authToken.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.contentItem.deleteMany();
+  await prisma.liveTrend.deleteMany();
   await prisma.recommendation.deleteMany();
   await prisma.trendSignal.deleteMany();
   await prisma.guardrailTerm.deleteMany();

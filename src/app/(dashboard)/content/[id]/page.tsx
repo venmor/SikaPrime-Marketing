@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   ContentTone,
   ContentType,
@@ -11,6 +12,7 @@ import { notFound, redirect } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { parseChannelPayload, stringifyComments } from "@/lib/ai/payload";
 import { getEntityActivity } from "@/lib/audit/service";
 import {
   canGenerateContent,
@@ -21,6 +23,7 @@ import {
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatRelativeDate, humanizeEnum } from "@/lib/utils";
+import { updateAiChannelPayloadAction } from "@/server/actions/aiGenerate";
 import {
   approveContentAction,
   archiveContentAction,
@@ -126,7 +129,11 @@ export default async function ContentDetailPage({
       (content.assetReference.startsWith("data:image/") ||
         /^https?:\/\//i.test(content.assetReference)),
   );
-  const suggestedComments = getSuggestedComments(content.notes);
+  const structuredPayload = parseChannelPayload(content.channelPayload);
+  const suggestedComments =
+    structuredPayload?.kind === "FACEBOOK"
+      ? structuredPayload.engagementComments
+      : getSuggestedComments(content.notes);
 
   return (
     <div className="grid gap-6">
@@ -195,18 +202,22 @@ export default async function ContentDetailPage({
               Brief
               <textarea name="brief" defaultValue={content.brief} required />
             </label>
-            <label>
-              {isIdea ? "Idea outline" : "Draft copy"}
-              <textarea name="draft" defaultValue={content.draft} required />
-            </label>
-            {!isIdea ? (
-              <label>
-                Final copy
-                <textarea
-                  name="finalCopy"
-                  defaultValue={content.finalCopy ?? ""}
-                />
-              </label>
+            {!structuredPayload ? (
+              <>
+                <label>
+                  {isIdea ? "Idea outline" : "Draft copy"}
+                  <textarea name="draft" defaultValue={content.draft} required />
+                </label>
+                {!isIdea ? (
+                  <label>
+                    Final copy
+                    <textarea
+                      name="finalCopy"
+                      defaultValue={content.finalCopy ?? ""}
+                    />
+                  </label>
+                ) : null}
+              </>
             ) : null}
             <div className="grid gap-4 md:grid-cols-2">
               <label>
@@ -262,6 +273,77 @@ export default async function ContentDetailPage({
               </SubmitButton>
             ) : null}
           </form>
+
+          {canEdit && structuredPayload ? (
+            <form action={updateAiChannelPayloadAction} className="mt-6 grid gap-4 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
+              <input type="hidden" name="contentItemId" value={content.id} />
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                AI channel fields
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <label>
+                  Title
+                  <input name="title" defaultValue={content.title} required />
+                </label>
+                <label>
+                  Theme label
+                  <input name="themeLabel" defaultValue={content.themeLabel ?? ""} />
+                </label>
+              </div>
+              {structuredPayload.kind === "FACEBOOK" ? (
+                <>
+                  <label>
+                    Facebook body
+                    <textarea name="body" defaultValue={structuredPayload.body} required />
+                  </label>
+                  <label>
+                    Facebook caption
+                    <textarea
+                      name="caption"
+                      defaultValue={structuredPayload.caption}
+                      required
+                    />
+                  </label>
+                  <label>
+                    Suggested engagement comments
+                    <textarea
+                      name="engagementComments"
+                      defaultValue={stringifyComments(structuredPayload.engagementComments)}
+                    />
+                  </label>
+                </>
+              ) : (
+                <label>
+                  WhatsApp message
+                  <textarea
+                    name="message"
+                    defaultValue={structuredPayload.message}
+                    required
+                  />
+                </label>
+              )}
+              <div className="grid gap-4 md:grid-cols-2">
+                <label>
+                  Call to action
+                  <input
+                    name="callToAction"
+                    defaultValue={content.callToAction ?? ""}
+                  />
+                </label>
+                <label>
+                  Hashtags
+                  <input name="hashtags" defaultValue={content.hashtags ?? ""} />
+                </label>
+              </div>
+              <label>
+                AI rationale
+                <textarea name="rationale" defaultValue={content.aiSummary ?? ""} />
+              </label>
+              <SubmitButton pendingLabel="Updating AI fields...">
+                Update AI fields
+              </SubmitButton>
+            </form>
+          ) : null}
         </SectionCard>
 
         <div className="grid gap-6">
@@ -272,9 +354,12 @@ export default async function ContentDetailPage({
             <div className="grid gap-4">
               {hasImagePreview ? (
                 <div className="overflow-hidden rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
-                  <img
+                  <Image
                     src={content.assetReference ?? ""}
                     alt={content.title}
+                    width={1280}
+                    height={960}
+                    unoptimized
                     className="h-[360px] w-full object-cover"
                   />
                 </div>
@@ -289,9 +374,36 @@ export default async function ContentDetailPage({
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
                   Post preview
                 </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
-                  {content.finalCopy ?? content.draft}
-                </p>
+                {structuredPayload?.kind === "FACEBOOK" ? (
+                  <div className="mt-3 grid gap-4">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                        Body
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                        {structuredPayload.body}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                        Caption
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                        {structuredPayload.caption}
+                      </p>
+                    </div>
+                  </div>
+                ) : structuredPayload?.kind === "WHATSAPP" ? (
+                  <div className="mt-3 flex justify-start">
+                    <div className="max-w-[92%] rounded-[22px] bg-emerald-500 px-4 py-3 text-sm leading-6 text-white shadow-sm">
+                      {structuredPayload.message}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                    {content.finalCopy ?? content.draft}
+                  </p>
+                )}
                 {content.hashtags ? (
                   <p className="mt-3 text-sm font-medium text-[color:var(--brand-strong)]">
                     {content.hashtags}

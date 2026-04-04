@@ -53,6 +53,11 @@ export const navigationSections: NavigationSection[] = [
         summary: "Review current signals before turning them into marketing content.",
       },
       {
+        href: "/trends/live",
+        label: "Live trends",
+        summary: "Watch real-time finance and market signals that can feed directly into AI content generation.",
+      },
+      {
         href: "/calendar",
         label: "Schedule",
         summary: "Plan a balanced posting rhythm across channels and campaigns.",

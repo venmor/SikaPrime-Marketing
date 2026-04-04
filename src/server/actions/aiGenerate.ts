@@ -1,0 +1,419 @@
+"use server";
+
+import { ContentType, PublishingChannel, ReviewStatus, WorkflowStage } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+
+import { parseCommentText, normalizeHashtagList } from "@/lib/ai/payload";
+import { generateMarketingContent } from "@/lib/ai/generationService";
+import type {
+  AIGenerationResult,
+  AIGenerationSaveInput,
+  AIGenerationSubjectDetails,
+  GeneratedChannelPayload,
+} from "@/lib/ai/types";
+import { logActivity } from "@/lib/audit/service";
+import { canGenerateContent } from "@/lib/auth/access";
+import { requireSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
+import { createGeneratedContentItem } from "@/lib/engines/content/service";
+
+function contentTypeForChannel(channel: PublishingChannel) {
+  return channel === PublishingChannel.FACEBOOK
+    ? ContentType.FACEBOOK_POST
+    : ContentType.WHATSAPP_MESSAGE;
+}
+
+function buildBrief(input: {
+  subjectDetails: AIGenerationSubjectDetails;
+  objective: string;
+  trendTitles: string[];
+}) {
+  return [
+    input.objective,
+    input.subjectDetails.customInstructions?.trim()
+      ? `Additional direction: ${input.subjectDetails.customInstructions.trim()}`
+      : null,
+    input.trendTitles.length
+      ? `Live trend context: ${input.trendTitles.join(", ")}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function serializePayloadForPreview(
+  contentItemId: string,
+  channel: PublishingChannel,
+  payload: GeneratedChannelPayload,
+  input: {
+    title: string;
+    callToAction: string;
+    hashtags: string[];
+    themeLabel: string;
+    rationale: string;
+    objective: string;
+    productName?: string | null;
+    offerName?: string | null;
+    audienceName?: string | null;
+    goalTitle?: string | null;
+    selectedTrendIds: string[];
+    selectedTrendTitles: string[];
+  },
+) {
+  return {
+    contentItemId,
+    channel,
+    title: input.title,
+    stage: "DRAFT" as const,
+    callToAction: input.callToAction,
+    hashtags: input.hashtags,
+    themeLabel: input.themeLabel,
+    rationale: input.rationale,
+    promptMetadata: {
+      objective: input.objective,
+      productName: input.productName ?? null,
+      offerName: input.offerName ?? null,
+      audienceName: input.audienceName ?? null,
+      goalTitle: input.goalTitle ?? null,
+      selectedTrendIds: input.selectedTrendIds,
+      selectedTrendTitles: input.selectedTrendTitles,
+    },
+    payload,
+  };
+}
+
+export async function generateAiContentAction(input: {
+  channel: "FACEBOOK" | "WHATSAPP" | "BOTH";
+  subjectDetails: AIGenerationSubjectDetails;
+  trendIds?: string[];
+}): Promise<AIGenerationResult> {
+  const session = await requireSession();
+
+  if (!canGenerateContent(session.role)) {
+    return {
+      status: "error",
+      message: "Your role cannot generate AI content.",
+    };
+  }
+
+  try {
+    const generation = await generateMarketingContent({
+      channelSelection: input.channel,
+      subjectDetails: input.subjectDetails,
+      trendIds: input.trendIds ?? [],
+    });
+
+    const items = await Promise.all(
+      generation.outputs.map(async (output, index) => {
+        const liveTrend = generation.usedLiveTrends[index] ?? generation.usedLiveTrends[0] ?? null;
+        const brief = buildBrief({
+          subjectDetails: input.subjectDetails,
+          objective: generation.objective,
+          trendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+        });
+        const contentItem = await createGeneratedContentItem({
+          title: output.title,
+          brief,
+          objective: generation.context.goal?.title ?? generation.objective,
+          campaignLabel: generation.context.offer?.name ?? generation.context.goal?.title ?? null,
+          distributionTarget: null,
+          contentType: contentTypeForChannel(output.channel),
+          tone: input.subjectDetails.tone,
+          channel: output.channel,
+          draft:
+            output.payload.kind === "FACEBOOK"
+              ? output.payload.body
+              : output.payload.message,
+          finalCopy:
+            output.payload.kind === "FACEBOOK"
+              ? output.payload.caption
+              : null,
+          callToAction: output.callToAction,
+          hashtags: output.hashtags,
+          aiModel: generation.model,
+          aiSummary: output.rationale,
+          themeLabel: output.themeLabel,
+          ownerId: session.userId,
+          reviewerId: null,
+          productId: generation.context.product?.id ?? null,
+          audienceSegmentId: generation.context.audience?.id ?? null,
+          liveTrendId: liveTrend?.id ?? null,
+          promptMetadata: {
+            objective: generation.objective,
+            productName: generation.context.product?.name ?? null,
+            offerName: generation.context.offer?.name ?? null,
+            audienceName: generation.context.audience?.name ?? null,
+            goalTitle: generation.context.goal?.title ?? null,
+            selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
+            selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+          },
+          channelPayload: output.payload,
+        });
+
+        const trace = generation.traces.find((item) => item.channel === output.channel);
+
+        await prisma.generationLog.create({
+          data: {
+            contentItemId: contentItem.id,
+            actorId: session.userId,
+            provider: generation.provider,
+            model: generation.model,
+            channel: output.channel,
+            status: "SUCCESS",
+            prompt: trace?.prompt ?? "",
+            requestPayload: trace?.requestPayload,
+            responsePayload: trace?.responsePayload,
+            responseText: trace?.responseText,
+            promptTokens: trace?.promptTokens,
+            completionTokens: trace?.completionTokens,
+            totalTokens: trace?.totalTokens,
+          },
+        });
+
+        return serializePayloadForPreview(contentItem.id, output.channel, output.payload, {
+          title: output.title,
+          callToAction: output.callToAction,
+          hashtags: output.hashtags,
+          themeLabel: output.themeLabel,
+          rationale: output.rationale,
+          objective: generation.objective,
+          productName: generation.context.product?.name,
+          offerName: generation.context.offer?.name,
+          audienceName: generation.context.audience?.name,
+          goalTitle: generation.context.goal?.title,
+          selectedTrendIds: generation.usedLiveTrends.map((trend) => trend.id),
+          selectedTrendTitles: generation.usedLiveTrends.map((trend) => trend.title),
+        });
+      }),
+    );
+
+    await logActivity({
+      actorId: session.userId,
+      entityType: "ai_generation",
+      entityId: items[0]?.contentItemId ?? session.userId,
+      action: "content.ai_generated",
+      summary: `Generated ${items.length} AI draft${items.length === 1 ? "" : "s"}.`,
+      details: generation.usedLiveTrends.map((trend) => trend.title).join(", ") || null,
+    });
+
+    revalidatePath("/content");
+    revalidatePath("/workflow");
+    revalidatePath("/dashboard");
+    revalidatePath("/trends");
+    revalidatePath("/trends/live");
+
+    return {
+      status: "success",
+      message:
+        items.length === 2
+          ? "Two channel-specific drafts are ready to review."
+          : "AI draft is ready to review.",
+      items,
+      usedLiveTrends: generation.usedLiveTrends,
+    };
+  } catch (error) {
+    await prisma.generationLog.create({
+      data: {
+        actorId: session.userId,
+        provider: "openai",
+        model: "unknown",
+        channel: input.channel === "BOTH" ? PublishingChannel.FACEBOOK : input.channel,
+        status: "FAILED",
+        prompt: JSON.stringify(input),
+        responseText: error instanceof Error ? error.message : "Unknown generation error",
+      },
+    });
+
+    return {
+      status: "error",
+      message:
+        error instanceof Error
+          ? error.message
+          : "AI generation failed. Please retry or continue with manual creation.",
+    };
+  }
+}
+
+export async function saveAiGeneratedContentAction(input: AIGenerationSaveInput) {
+  const session = await requireSession();
+
+  if (!canGenerateContent(session.role)) {
+    return {
+      status: "error" as const,
+      message: "Your role cannot update AI-generated content.",
+    };
+  }
+
+  for (const item of input.items) {
+    const existing = await prisma.contentItem.findUnique({
+      where: { id: item.contentItemId },
+      select: {
+        id: true,
+        ownerId: true,
+        reviewerId: true,
+      },
+    });
+
+    if (!existing || existing.ownerId !== session.userId) {
+      continue;
+    }
+
+    const normalizedPayload =
+      item.payload.kind === "FACEBOOK"
+        ? {
+            kind: "FACEBOOK" as const,
+            body: item.payload.body.trim(),
+            caption: item.payload.caption.trim(),
+            engagementComments: item.payload.engagementComments.map((comment) =>
+              comment.trim(),
+            ).filter(Boolean),
+          }
+        : {
+            kind: "WHATSAPP" as const,
+            message: item.payload.message.trim(),
+            buttons: item.payload.buttons?.map((button) => button.trim()).filter(Boolean),
+          };
+
+    await prisma.contentItem.update({
+      where: { id: item.contentItemId },
+      data: {
+        title: item.title.trim(),
+        stage: input.submitForReview ? WorkflowStage.IN_REVIEW : WorkflowStage.DRAFT,
+        draft:
+          normalizedPayload.kind === "FACEBOOK"
+            ? normalizedPayload.body
+            : normalizedPayload.message,
+        finalCopy:
+          normalizedPayload.kind === "FACEBOOK"
+            ? normalizedPayload.caption
+            : null,
+        callToAction: item.callToAction.trim() || null,
+        hashtags: normalizeHashtagList(item.hashtags).join(" ") || null,
+        themeLabel: item.themeLabel.trim(),
+        aiSummary: item.rationale.trim(),
+        promptMetadata: item.promptMetadata,
+        channelPayload: normalizedPayload,
+      },
+    });
+
+    if (input.submitForReview && existing.reviewerId) {
+      await prisma.contentReview.create({
+        data: {
+          contentItemId: item.contentItemId,
+          reviewerId: existing.reviewerId,
+          status: ReviewStatus.REQUESTED,
+          notes: "Submitted from AI preview.",
+        },
+      });
+    }
+  }
+
+  await logActivity({
+    actorId: session.userId,
+    entityType: "ai_generation",
+    entityId: input.items[0]?.contentItemId ?? session.userId,
+    action: input.submitForReview ? "content.ai_submitted" : "content.ai_saved",
+    summary: input.submitForReview
+      ? "Submitted AI-generated content for review."
+      : "Saved AI-generated content as draft.",
+  });
+
+  revalidatePath("/content");
+  revalidatePath("/workflow");
+  revalidatePath("/dashboard");
+
+  return {
+    status: "success" as const,
+    message: input.submitForReview
+      ? "AI content submitted for review."
+      : "AI content saved as draft.",
+  };
+}
+
+export async function updateAiChannelPayloadAction(input: {
+  contentItemId: string;
+  title: string;
+  callToAction: string;
+  hashtags: string;
+  themeLabel: string;
+  rationale: string;
+  body?: string;
+  caption?: string;
+  engagementComments?: string;
+  message?: string;
+} | FormData) {
+  const session = await requireSession();
+
+  if (!canGenerateContent(session.role)) {
+    return;
+  }
+
+  const normalizedInput =
+    input instanceof FormData
+      ? {
+          contentItemId: String(input.get("contentItemId") ?? "").trim(),
+          title: String(input.get("title") ?? "").trim(),
+          callToAction: String(input.get("callToAction") ?? "").trim(),
+          hashtags: String(input.get("hashtags") ?? "").trim(),
+          themeLabel: String(input.get("themeLabel") ?? "").trim(),
+          rationale: String(input.get("rationale") ?? "").trim(),
+          body: String(input.get("body") ?? "").trim(),
+          caption: String(input.get("caption") ?? "").trim(),
+          engagementComments: String(input.get("engagementComments") ?? "").trim(),
+          message: String(input.get("message") ?? "").trim(),
+        }
+      : input;
+
+  const content = await prisma.contentItem.findUnique({
+    where: { id: normalizedInput.contentItemId },
+    select: {
+      id: true,
+      ownerId: true,
+      channel: true,
+      promptMetadata: true,
+    },
+  });
+
+  if (!content || content.ownerId !== session.userId) {
+    return;
+  }
+
+  const channelPayload =
+    content.channel === PublishingChannel.FACEBOOK
+      ? {
+          kind: "FACEBOOK" as const,
+          body: normalizedInput.body?.trim() || "",
+          caption: normalizedInput.caption?.trim() || "",
+          engagementComments: parseCommentText(
+            normalizedInput.engagementComments ?? "",
+          ),
+        }
+      : {
+          kind: "WHATSAPP" as const,
+          message: normalizedInput.message?.trim() || "",
+        };
+
+  await prisma.contentItem.update({
+    where: { id: content.id },
+    data: {
+      title: normalizedInput.title.trim(),
+      draft:
+        channelPayload.kind === "FACEBOOK"
+          ? channelPayload.body
+          : channelPayload.message,
+      finalCopy:
+        channelPayload.kind === "FACEBOOK"
+          ? channelPayload.caption
+          : null,
+      callToAction: normalizedInput.callToAction.trim() || null,
+      hashtags: normalizeHashtagList(normalizedInput.hashtags).join(" ") || null,
+      themeLabel: normalizedInput.themeLabel.trim() || null,
+      aiSummary: normalizedInput.rationale.trim() || null,
+      promptMetadata: (content.promptMetadata ?? undefined) as never,
+      channelPayload: channelPayload as never,
+    },
+  });
+
+  revalidatePath(`/content/${content.id}`);
+  revalidatePath("/content");
+}

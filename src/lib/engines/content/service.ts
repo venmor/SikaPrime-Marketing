@@ -489,3 +489,58 @@ export async function convertIdeaToDraft(
     },
   });
 }
+
+export async function createGeneratedContentItem(input: {
+  title: string;
+  brief: string;
+  objective?: string | null;
+  campaignLabel?: string | null;
+  distributionTarget?: string | null;
+  contentType: ContentType;
+  tone: ContentTone;
+  channel: PublishingChannel;
+  draft: string;
+  finalCopy?: string | null;
+  callToAction?: string | null;
+  hashtags?: string[] | null;
+  aiModel?: string | null;
+  aiSummary?: string | null;
+  themeLabel?: string | null;
+  ownerId: string;
+  reviewerId?: string | null;
+  productId?: string | null;
+  audienceSegmentId?: string | null;
+  trendId?: string | null;
+  liveTrendId?: string | null;
+  promptMetadata?: unknown;
+  channelPayload?: unknown;
+}) {
+  return prisma.contentItem.create({
+    data: {
+      title: input.title,
+      brief: input.brief,
+      objective: input.objective ?? null,
+      campaignLabel: input.campaignLabel ?? null,
+      distributionTarget: input.distributionTarget ?? null,
+      contentType: input.contentType,
+      tone: input.tone,
+      channel: input.channel,
+      stage: WorkflowStage.DRAFT,
+      draft: input.draft,
+      finalCopy: input.finalCopy ?? null,
+      callToAction: input.callToAction ?? null,
+      hashtags: input.hashtags?.join(" ") ?? null,
+      aiModel: input.aiModel ?? null,
+      aiSummary: input.aiSummary ?? null,
+      themeLabel: input.themeLabel ?? null,
+      ownerId: input.ownerId,
+      reviewerId: input.reviewerId ?? null,
+      productId: input.productId ?? null,
+      audienceSegmentId: input.audienceSegmentId ?? null,
+      trendId: input.trendId ?? null,
+      liveTrendId: input.liveTrendId ?? null,
+      promptMetadata: input.promptMetadata as never,
+      channelPayload: input.channelPayload as never,
+    },
+  });
+}

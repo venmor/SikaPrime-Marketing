@@ -1,5 +1,8 @@
 import { refreshRecommendations } from "@/lib/engines/recommendations/service";
-import { refreshTrendSignals } from "@/lib/engines/trends/service";
+import {
+  refreshLiveTrends,
+  refreshTrendSignals,
+} from "@/lib/engines/trends/service";
 import { logOperationalEvent } from "@/lib/operations/service";
 import {
   runDuePublications,
@@ -10,6 +13,7 @@ export type DailyMaintenanceResult = {
   completedAt: string;
   localTrendCount: number;
   globalTrendCount: number;
+  liveTrendCount: number;
   recommendationCount: number;
   publishedCount: number;
   syncedPerformanceCount: number;
@@ -23,11 +27,13 @@ export async function runDailyMaintenance(): Promise<DailyMaintenanceResult> {
   const [trendRefreshResult, publishingResult] = await Promise.allSettled([
     (async () => {
       const trends = await refreshTrendSignals();
+      const liveTrends = await refreshLiveTrends();
       const recommendations = await refreshRecommendations();
 
       return {
         localTrendCount: trends.local.length,
         globalTrendCount: trends.global.length,
+        liveTrendCount: liveTrends.length,
         recommendationCount: recommendations.length,
       };
     })(),
@@ -83,6 +89,10 @@ export async function runDailyMaintenance(): Promise<DailyMaintenanceResult> {
       trendRefreshResult.status === "fulfilled"
         ? trendRefreshResult.value.globalTrendCount
         : 0,
+    liveTrendCount:
+      trendRefreshResult.status === "fulfilled"
+        ? trendRefreshResult.value.liveTrendCount
+        : 0,
     recommendationCount:
       trendRefreshResult.status === "fulfilled"
         ? trendRefreshResult.value.recommendationCount
@@ -96,5 +106,14 @@ export async function runDailyMaintenance(): Promise<DailyMaintenanceResult> {
         ? publishingResult.value.syncedPerformanceCount
         : 0,
     errors,
+  };
+}
+
+export async function runLiveTrendRefreshJob() {
+  const liveTrends = await refreshLiveTrends();
+
+  return {
+    completedAt: new Date().toISOString(),
+    liveTrendCount: liveTrends.length,
   };
 }

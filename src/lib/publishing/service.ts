@@ -15,13 +15,35 @@ import {
   getPublishRetryCount,
   logOperationalEvent,
 } from "@/lib/operations/service";
+import { parseChannelPayload } from "@/lib/ai/payload";
 
 function buildMessage(input: {
+  channel: PublishingChannel;
   draft: string;
   finalCopy?: string | null;
   callToAction?: string | null;
   hashtags?: string | null;
+  channelPayload?: unknown;
 }) {
+  const structuredPayload = parseChannelPayload(input.channelPayload);
+
+  if (structuredPayload?.kind === "FACEBOOK") {
+    return [
+      structuredPayload.body,
+      structuredPayload.caption,
+      input.callToAction,
+      input.hashtags,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
+  if (structuredPayload?.kind === "WHATSAPP") {
+    return [structuredPayload.message, input.callToAction]
+      .filter(Boolean)
+      .join("\n\n");
+  }
+
   return [input.finalCopy ?? input.draft, input.callToAction, input.hashtags]
     .filter(Boolean)
     .join("\n\n");
@@ -506,7 +528,14 @@ export async function publishContentItem(
   const targetChannel = channel ?? content.channel;
   const distributionTarget =
     overrides?.distributionTarget ?? content.distributionTarget;
-  const message = buildMessage(content);
+  const message = buildMessage({
+    channel: content.channel,
+    draft: content.draft,
+    finalCopy: content.finalCopy,
+    callToAction: content.callToAction,
+    hashtags: content.hashtags,
+    channelPayload: content.channelPayload,
+  });
   let result:
     | Awaited<ReturnType<typeof publishToFacebook>>
     | Awaited<ReturnType<typeof publishToWhatsApp>>;

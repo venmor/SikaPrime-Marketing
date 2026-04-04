@@ -138,6 +138,7 @@ model User {
   activityLogs      ActivityLog[] @relation("ActivityActor")
   authTokens        AuthToken[]   @relation("AuthTokenUser")
   createdAuthTokens AuthToken[]   @relation("AuthTokenCreator")
+  generationLogs    GenerationLog[] @relation("GenerationActor")
   brandAssets       BrandAsset[]  @relation("BrandAssetOwner")
   flyerProjects     FlyerProject[] @relation("FlyerProjectOwner")
 }
@@ -269,6 +270,17 @@ model TrendSignal {
   contentItems    ContentItem[]
 }
 
+model LiveTrend {
+  id             String        @id @default(cuid())
+  title          String
+  description    String?
+  source         String
+  sourceUrl      String?
+  relevanceScore Float
+  createdAt      DateTime      @default(now())
+  usedInContent  ContentItem[] @relation("LiveTrendContent")
+}
+
 model ContentItem {
   id                String            @id @default(cuid())
   title             String
@@ -289,6 +301,8 @@ model ContentItem {
   aiModel           String?
   aiSummary         String?
   themeLabel        String?
+  promptMetadata    Json?
+  channelPayload    Json?
   revisionCount     Int               @default(0)
   scheduledFor      DateTime?
   publishedAt       DateTime?
@@ -296,6 +310,7 @@ model ContentItem {
   ownerId           String
   reviewerId        String?
   trendId           String?
+  liveTrendId       String?
   productId         String?
   audienceSegmentId String?
   createdAt         DateTime          @default(now())
@@ -303,10 +318,12 @@ model ContentItem {
   owner             User              @relation("ContentOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   reviewer          User?             @relation("ContentReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
   trend             TrendSignal?      @relation(fields: [trendId], references: [id], onDelete: SetNull)
+  liveTrend         LiveTrend?        @relation("LiveTrendContent", fields: [liveTrendId], references: [id], onDelete: SetNull)
   product           Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
   audienceSegment   AudienceSegment?  @relation(fields: [audienceSegmentId], references: [id], onDelete: SetNull)
   reviews           ContentReview[]
   publications      Publication[]
+  generationLogs    GenerationLog[]
 }
 
 model ContentReview {
@@ -375,6 +392,29 @@ model ActivityLog {
   details    String?
   createdAt  DateTime @default(now())
   actor      User?    @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model GenerationLog {
+  id              String            @id @default(cuid())
+  contentItemId   String?
+  actorId         String?
+  provider        String
+  model           String
+  channel         PublishingChannel
+  status          String            @default("SUCCESS")
+  prompt          String
+  requestPayload  String?
+  responsePayload String?
+  responseText    String?
+  promptTokens    Int?
+  completionTokens Int?
+  totalTokens     Int?
+  createdAt       DateTime          @default(now())
+  contentItem     ContentItem?      @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+  actor           User?             @relation("GenerationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([contentItemId, createdAt])
 }
 
 model BrandAsset {

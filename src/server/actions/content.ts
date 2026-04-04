@@ -117,6 +117,17 @@ export async function updateContentAction(formData: FormData) {
   }
 
   const id = value(formData, "id");
+  const existing = await prisma.contentItem.findUnique({
+    where: { id },
+    select: {
+      draft: true,
+      finalCopy: true,
+    },
+  });
+
+  if (!existing) {
+    redirect("/content");
+  }
 
   await prisma.contentItem.update({
     where: { id },
@@ -126,8 +137,10 @@ export async function updateContentAction(formData: FormData) {
       objective: optionalValue(formData, "objective"),
       campaignLabel: optionalValue(formData, "campaignLabel"),
       distributionTarget: optionalValue(formData, "distributionTarget"),
-      draft: value(formData, "draft"),
-      finalCopy: optionalValue(formData, "finalCopy"),
+      draft: formData.has("draft") ? value(formData, "draft") : existing.draft,
+      finalCopy: formData.has("finalCopy")
+        ? optionalValue(formData, "finalCopy")
+        : existing.finalCopy,
       callToAction: optionalValue(formData, "callToAction"),
       hashtags: optionalValue(formData, "hashtags"),
       assetReference: optionalValue(formData, "assetReference"),

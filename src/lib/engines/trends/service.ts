@@ -19,6 +19,11 @@ import {
   logOperationalEvent,
 } from "@/lib/operations/service";
 import { humanizeEnum, splitList, truncate } from "@/lib/utils";
+export {
+  getLiveTrends,
+  getLiveTrendsByIds,
+  refreshLiveTrends,
+} from "@/lib/engines/trends/liveTrendService";
 
 type FeedItem = {
   title?: string;

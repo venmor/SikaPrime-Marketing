@@ -7,6 +7,7 @@ import {
   WorkflowStage,
 } from "@prisma/client";
 
+import { AIGenerateModal } from "@/components/ai/ai-generate-modal";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -19,6 +20,7 @@ import {
   generationModeOptions,
   getContentLaneLabel,
 } from "@/lib/engines/content/strategy";
+import { getLiveTrends } from "@/lib/engines/trends/service";
 import { formatRelativeDate, humanizeEnum } from "@/lib/utils";
 import {
   generateContentAction,
@@ -35,6 +37,7 @@ export default async function ContentPage() {
     audiences,
     profile,
     trends,
+    liveTrends,
     workingItems,
     ideaItems,
     recentAssistantSource,
@@ -61,6 +64,7 @@ export default async function ContentPage() {
       prisma.businessProfile.findUnique({
         where: { id: 1 },
         include: {
+          values: true,
           offers: {
             where: { active: true },
             orderBy: { priority: "desc" },
@@ -75,6 +79,7 @@ export default async function ContentPage() {
         orderBy: [{ totalScore: "desc" }, { freshnessScore: "desc" }],
         take: 12,
       }),
+      getLiveTrends(6),
       prisma.contentItem.findMany({
         where: {
           stage: {
@@ -135,6 +140,105 @@ export default async function ContentPage() {
 
   return (
     <div className="grid gap-6">
+      <SectionCard
+        title="AI generation lane"
+        description="Use the guided AI flow when you want a fast, channel-ready draft shaped by live trends, business knowledge, and compliance context."
+        action={
+          isGenerator ? (
+            <AIGenerateModal
+              products={products.map((product) => ({
+                id: product.id,
+                name: product.name,
+                description: product.description,
+              }))}
+              offers={(profile?.offers ?? []).map((offer) => ({
+                id: offer.id,
+                name: offer.name,
+                description: offer.description,
+              }))}
+              audiences={audiences.map((audience) => ({
+                id: audience.id,
+                name: audience.name,
+                description: audience.description,
+              }))}
+              goals={(profile?.goals ?? []).map((goal) => ({
+                id: goal.id,
+                title: goal.title,
+                description: goal.description,
+              }))}
+              values={(profile?.values ?? []).map((value) => ({
+                id: value.id,
+                name: value.name,
+                description: value.description,
+              }))}
+              liveTrends={liveTrends.map((trend) => ({
+                id: trend.id,
+                title: trend.title,
+                description: trend.description,
+                source: trend.source,
+                sourceUrl: trend.sourceUrl,
+                relevanceScore: trend.relevanceScore,
+                createdAt: trend.createdAt.toISOString(),
+              }))}
+              triggerLabel="Generate with AI"
+            />
+          ) : null
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                label: "Live trends",
+                value: liveTrends.length,
+                hint: "Fresh signals ready to feed the prompt",
+              },
+              {
+                label: "Active offers",
+                value: profile?.offers.length ?? 0,
+                hint: "Offer context pulled from the knowledge base",
+              },
+              {
+                label: "Audience segments",
+                value: audiences.length,
+                hint: "Target groups available in the guided form",
+              },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
+                  {stat.label}
+                </p>
+                <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
+                  {stat.value}
+                </p>
+                <p className="mt-2 text-sm text-[color:var(--muted)]">
+                  {stat.hint}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="brand-subtle">Guided flow</Badge>
+              <Badge variant="muted">{"Channel -> Subject -> Preview"}</Badge>
+            </div>
+            <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
+              The AI flow reads products, audiences, offers, goals, live trends,
+              and compliance guidance before it generates publication-ready drafts
+              for Facebook, WhatsApp, or both.
+            </p>
+            <p className="mt-4 text-sm leading-6 text-[color:var(--muted)]">
+              Manual idea creation and direct drafting stay available below, so the
+              team can choose between guided AI speed and full manual control.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
       <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard
           title="Create ideas"

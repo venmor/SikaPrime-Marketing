@@ -1,15 +1,21 @@
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import {
   explainTrendOpportunity,
+  getLiveTrends,
   getTrendCollections,
 } from "@/lib/engines/trends/service";
 import { formatRelativeDate, humanizeEnum } from "@/lib/utils";
 import { refreshTrendSignalsAction } from "@/server/actions/trends";
 
 export default async function TrendsPage() {
-  const trends = await getTrendCollections();
+  const [trends, liveTrends] = await Promise.all([
+    getTrendCollections(),
+    getLiveTrends(4),
+  ]);
 
   return (
     <div className="grid gap-6">
@@ -17,11 +23,19 @@ export default async function TrendsPage() {
         title="Trend watch"
         description="Review live signals that are fresh, relevant, and safe to adapt."
         action={
-          <form action={refreshTrendSignalsAction}>
-            <SubmitButton pendingLabel="Refreshing trends...">
-              Refresh trends
-            </SubmitButton>
-          </form>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/trends/live"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+            >
+              Open live trends
+            </Link>
+            <form action={refreshTrendSignalsAction}>
+              <SubmitButton pendingLabel="Refreshing trends...">
+                Refresh trends
+              </SubmitButton>
+            </form>
+          </div>
         }
       >
         <div className="flex flex-wrap gap-4 text-sm text-[color:var(--muted)]">
@@ -29,6 +43,46 @@ export default async function TrendsPage() {
           <span>Local signals: {trends.local.length}</span>
           <span>Global signals: {trends.global.length}</span>
           <span>Unsafe or low-value topics are filtered out before recommendation use</span>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Live trend handoff"
+        description="Fresh external signals feed directly into AI generation so the team can move from trend watch to content creation without losing context."
+        action={
+          <Link
+            href="/trends/live"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-brand transition-colors hover:text-brand-strong"
+          >
+            View all live trends
+          </Link>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {liveTrends.length ? (
+            liveTrends.map((trend) => (
+              <div
+                key={trend.id}
+                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="brand-subtle">{trend.source}</Badge>
+                  <Badge variant="muted">Score {Math.round(trend.relevanceScore)}</Badge>
+                </div>
+                <h3 className="mt-3 font-display text-lg font-semibold text-[color:var(--foreground)]">
+                  {trend.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                  {trend.description ?? "This live trend is ready to be used as AI prompt context."}
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="empty-state md:col-span-2 xl:col-span-4">
+              No live trends are stored yet. Open the live trends screen and
+              refresh the external feed to start using them in AI generation.
+            </div>
+          )}
         </div>
       </SectionCard>
 

@@ -2,6 +2,34 @@ import "server-only";
 
 import { prisma } from "@/lib/db";
 
+const requiredIntegrationSettings = [
+  {
+    key: "social.live_keywords",
+    label: "Live trend keyword override",
+    groupLabel: "Social listening",
+    helpText:
+      "Optional comma-separated keywords that should be mixed with knowledge-base terms when fetching live trends.",
+    isSecret: false,
+  },
+  {
+    key: "social.gnews_api_key",
+    label: "GNews API key",
+    groupLabel: "Social listening",
+    helpText:
+      "Optional API key for GNews live-search enrichment. Leave empty to rely on Reddit search plus internal fallback.",
+    isSecret: true,
+  },
+  {
+    key: "social.reddit_enabled",
+    label: "Reddit live search",
+    groupLabel: "Social listening",
+    helpText:
+      "Enable Reddit search as a live signal source for conversations around finance, lending, and small business.",
+    isSecret: false,
+    value: "true",
+  },
+] as const;
+
 const runtimeEnvDefaults: Record<string, string | undefined> = {
   "openai.api_key": process.env.OPENAI_API_KEY,
   "openai.text_model": process.env.OPENAI_MODEL,
@@ -18,9 +46,34 @@ const runtimeEnvDefaults: Record<string, string | undefined> = {
   "email.smtp_secure": process.env.EMAIL_SMTP_SECURE,
   "email.from_email": process.env.EMAIL_FROM_EMAIL,
   "email.from_name": process.env.EMAIL_FROM_NAME,
+  "social.live_keywords": process.env.SOCIAL_LIVE_KEYWORDS,
+  "social.gnews_api_key": process.env.GNEWS_API_KEY,
+  "social.reddit_enabled": process.env.SOCIAL_REDDIT_ENABLED,
 };
 
 export async function getIntegrationSettings() {
+  await Promise.all(
+    requiredIntegrationSettings.map((setting) =>
+      prisma.integrationSetting.upsert({
+        where: { key: setting.key },
+        update: {
+          label: setting.label,
+          groupLabel: setting.groupLabel,
+          helpText: setting.helpText,
+          isSecret: setting.isSecret,
+        },
+        create: {
+          key: setting.key,
+          label: setting.label,
+          groupLabel: setting.groupLabel,
+          helpText: setting.helpText,
+          isSecret: setting.isSecret,
+          value: "value" in setting ? setting.value ?? null : null,
+        },
+      }),
+    ),
+  );
+
   const settings = await prisma.integrationSetting.findMany({
     orderBy: [{ groupLabel: "asc" }, { label: "asc" }],
   });
