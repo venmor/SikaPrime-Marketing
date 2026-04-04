@@ -1,7 +1,7 @@
 import "server-only";
 
 import { AuthTokenType } from "@prisma/client";
-import { addDays, addHours, isAfter } from "date-fns";
+import { addDays, addHours, addMinutes, isAfter } from "date-fns";
 import { createHash, randomBytes } from "node:crypto";
 import { headers } from "next/headers";
 
@@ -13,6 +13,10 @@ function hashToken(token: string) {
 
 function generateRawToken() {
   return randomBytes(32).toString("base64url");
+}
+
+function generateEmailOtpCode() {
+  return randomBytes(4).toString("hex").toUpperCase();
 }
 
 async function getRequestOrigin() {
@@ -41,13 +45,18 @@ export async function createAuthToken(input: {
   name?: string | null;
   jobTitle?: string | null;
   role?: import("@prisma/client").UserRole | null;
+  rawToken?: string;
+  expiresAt?: Date;
 }) {
-  const rawToken = generateRawToken();
+  const rawToken = input.rawToken ?? generateRawToken();
   const tokenHash = hashToken(rawToken);
   const expiresAt =
-    input.type === AuthTokenType.INVITE
+    input.expiresAt ??
+    (input.type === AuthTokenType.INVITE
       ? addDays(new Date(), 7)
-      : addHours(new Date(), 2);
+      : input.type === AuthTokenType.EMAIL_OTP
+        ? addMinutes(new Date(), 10)
+        : addHours(new Date(), 2));
 
   await prisma.authToken.create({
     data: {
@@ -121,4 +130,42 @@ export async function revokeAuthToken(tokenId: string) {
       revokedAt: new Date(),
     },
   });
+}
+
+export async function revokeOutstandingAuthTokens(input: {
+  type: AuthTokenType;
+  email?: string | null;
+  userId?: string | null;
+}) {
+  return prisma.authToken.updateMany({
+    where: {
+      type: input.type,
+      email: input.email?.toLowerCase() ?? undefined,
+      userId: input.userId ?? undefined,
+      consumedAt: null,
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+}
+
+export async function createEmailOtpToken(input: {
+  email: string;
+  userId: string;
+}) {
+  const rawToken = generateEmailOtpCode();
+  const result = await createAuthToken({
+    type: AuthTokenType.EMAIL_OTP,
+    email: input.email,
+    userId: input.userId,
+    rawToken,
+    expiresAt: addMinutes(new Date(), 10),
+  });
+
+  return {
+    code: rawToken,
+    expiresAt: result.expiresAt,
+  };
 }

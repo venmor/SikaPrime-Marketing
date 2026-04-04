@@ -50,28 +50,45 @@ cp .env.example .env
 
 3. Create a Neon project, then paste your pooled and direct Postgres URLs into `.env`.
 
-4. Initialize the database and seed demo data:
+4. Set your initial admin account in `.env`, then initialize the database:
+
+```env
+INITIAL_ADMIN_EMAIL="admin@example.com"
+INITIAL_ADMIN_PASSWORD="ChangeThisAdminPassword123!"
+INITIAL_ADMIN_NAME="Platform Administrator"
+INITIAL_ADMIN_JOB_TITLE="Administrator"
+```
+
+5. Initialize the database and bootstrap the workspace:
 
 ```bash
 npm run db:generate
 npm run db:init
 ```
 
-5. Start the app:
+6. Start the app:
 
 ```bash
 npm run dev
 ```
 
-5. Open `http://localhost:3000`
+7. Open `http://localhost:3000`
 
-## Demo Accounts
+## Initial Admin Bootstrap
 
-- `admin@sikaprime.local / SikaPrime123!`
-- `strategist@sikaprime.local / SikaPrime123!`
-- `creator@sikaprime.local / SikaPrime123!`
-- `reviewer@sikaprime.local / SikaPrime123!`
-- `analyst@sikaprime.local / SikaPrime123!`
+The seed no longer creates demo users. It creates or updates one initial admin
+from:
+
+- `INITIAL_ADMIN_EMAIL`
+- `INITIAL_ADMIN_PASSWORD`
+- `INITIAL_ADMIN_NAME`
+- `INITIAL_ADMIN_JOB_TITLE`
+
+To wipe demo/sample data and keep only the bootstrap admin, run:
+
+```bash
+RESET_DEMO_DATA=true npm run db:seed
+```
 
 ## Environment Variables
 
@@ -85,6 +102,18 @@ npm run dev
   Optional. Session lifetime in hours. Defaults to `168` (7 days).
 - `ADMIN_REAUTH_MAX_AGE_HOURS`
   Optional. Freshness window for sensitive admin-only screens and actions such as invites, resets, and session revocation. Defaults to `12`.
+- `INITIAL_ADMIN_EMAIL`
+  Initial admin email used by the bootstrap seed.
+- `INITIAL_ADMIN_PASSWORD`
+  Initial admin password used by the bootstrap seed.
+- `INITIAL_ADMIN_NAME`
+  Optional display name for the bootstrap admin.
+- `INITIAL_ADMIN_JOB_TITLE`
+  Optional job title for the bootstrap admin.
+- `INITIAL_ADMIN_MFA_ENABLED`
+  Optional. Enables email OTP for the bootstrap admin when email delivery is configured.
+- `RESET_DEMO_DATA`
+  Optional. When `true`, removes sample workspace data and all non-admin users before reseeding the baseline workspace.
 - `OPENAI_API_KEY`
   Optional. Enables live AI generation instead of the built-in fallback generator.
 - `OPENAI_MODEL`
@@ -99,6 +128,20 @@ npm run dev
   Optional. Enables WhatsApp Cloud API delivery when paired with a destination number.
 - `WHATSAPP_ACCESS_TOKEN`
   Optional. Required with `WHATSAPP_PHONE_NUMBER_ID`.
+- `EMAIL_SMTP_HOST`
+  Optional. SMTP host for invite, password reset, and OTP delivery.
+- `EMAIL_SMTP_PORT`
+  Optional. SMTP port. Defaults to `587`.
+- `EMAIL_SMTP_USER`
+  Optional. SMTP username.
+- `EMAIL_SMTP_PASSWORD`
+  Optional. SMTP password or app password.
+- `EMAIL_SMTP_SECURE`
+  Optional. Set `true` for SMTPS or port `465`.
+- `EMAIL_FROM_EMAIL`
+  Optional. Sender email shown on transactional messages.
+- `EMAIL_FROM_NAME`
+  Optional. Sender label shown on transactional messages. Defaults to `Sika Prime Loans`.
 - `SLACK_WEBHOOK_URL`
   Optional. Sends workflow and publishing alerts to Slack.
 - `OBSERVABILITY_SLOW_API_THRESHOLD_MS`
@@ -111,6 +154,8 @@ npm run dev
   Optional. Maximum number of due scheduled items processed in one publish job run. Defaults to `10`.
 - `CRON_SECRET`
   Protects the refresh and publishing job endpoints.
+- `PRISMA_SYNC_ON_BUILD`
+  Optional. When `true`, runs `prisma db push --skip-generate` during `npm run build`. On Vercel production builds this sync runs by default.
 
 ## Useful Commands
 
@@ -179,8 +224,9 @@ docs/
 - Creator workflow visibility is intentionally scoped to content they own.
 - Operational telemetry records slow external responses, trend refresh issues, publishing failures, and publish backlog warnings in the existing activity log.
 - Business profile data is the shared source of truth for content generation and scoring.
-- The included `db:init` helper pushes the Prisma schema to PostgreSQL and then seeds the database. For Neon, use the pooled URL in `DATABASE_URL` and the direct URL in `DIRECT_URL`.
+- The included `db:init` helper pushes the Prisma schema to PostgreSQL and then bootstraps the workspace. For Neon, use the pooled URL in `DATABASE_URL` and the direct URL in `DIRECT_URL`.
 - During `db:init`, the seed step automatically uses `DIRECT_URL` to avoid Neon pooler issues on one-off setup tasks.
+- Production Vercel builds sync additive Prisma schema changes automatically before `next build`, which helps avoid build failures when the live Neon schema is behind the repo.
 - Facebook publishing falls back to a simulated publish record when Meta credentials are not configured.
 - OpenAI generation falls back to a structured template generator when no API key is present.
 - WhatsApp delivery falls back to a manual-ready simulated publish unless Cloud API credentials and a destination number are provided.

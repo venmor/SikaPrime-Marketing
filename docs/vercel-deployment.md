@@ -247,7 +247,7 @@ Monthly:
 These are the next high-value improvements after the first Vercel deployment:
 
 1. Keep Neon on a stable branch or upgrade plans as traffic grows
-2. Add production auth accounts instead of seeded demo-only usage
+2. Configure SMTP delivery and invite real production users through `/access`
 3. Add a custom domain
 4. Add Vercel Analytics or logs monitoring
 5. Add WhatsApp Cloud API credentials if direct messaging is required

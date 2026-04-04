@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { isEmailDeliveryConfigured } from "@/lib/email/service";
 import { getSession } from "@/lib/auth/session";
 import { requestPasswordResetAction } from "@/server/actions/auth";
 
-function helperMessage(params: { error?: string; sent?: string }) {
+function helperMessage(params: { error?: string; sent?: string; mode?: string }) {
   if (params.error === "rate") {
     return {
       tone: "warning",
@@ -15,10 +16,20 @@ function helperMessage(params: { error?: string; sent?: string }) {
     };
   }
 
+  if (params.error === "email") {
+    return {
+      tone: "warning",
+      text: "We could not send a reset email right now. Please try again shortly or contact the administrator.",
+    };
+  }
+
   if (params.sent) {
     return {
       tone: "success",
-      text: "If that account exists, the request has been logged. An admin can now issue a secure reset link from Access control.",
+      text:
+        params.mode === "admin"
+          ? "If that account exists, the request has been logged. An admin can now issue a secure reset link from Access control."
+          : "If that account exists, a secure reset email has been sent.",
     };
   }
 
@@ -28,9 +39,13 @@ function helperMessage(params: { error?: string; sent?: string }) {
 export default async function ForgotPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; sent?: string }>;
+  searchParams: Promise<{ error?: string; sent?: string; mode?: string }>;
 }) {
-  const [session, params] = await Promise.all([getSession(), searchParams]);
+  const [session, params, emailConfigured] = await Promise.all([
+    getSession(),
+    searchParams,
+    isEmailDeliveryConfigured(),
+  ]);
 
   if (session) {
     redirect("/dashboard");
@@ -51,9 +66,9 @@ export default async function ForgotPasswordPage({
           Request password help
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[color:var(--muted)]">
-          Because this workspace does not yet send email automatically, reset
-          requests are routed through an admin. Enter your work email and the
-          request will appear in the Access control panel.
+          {emailConfigured
+            ? "Enter your work email and the system will send a secure reset link if the account exists."
+            : "Email delivery is not configured yet, so reset requests are routed through an admin. Enter your work email and the request will appear in the Access control panel."}
         </p>
 
         {message ? (

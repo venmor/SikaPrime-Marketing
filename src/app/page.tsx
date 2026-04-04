@@ -13,7 +13,6 @@ import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { getSession } from "@/lib/auth/session";
-import { demoCredentials } from "@/lib/constants";
 
 const heroPoints = [
   {
@@ -97,16 +96,20 @@ export default async function Home() {
 
         <section className="grid gap-8 lg:grid-cols-2">
           <SectionCard
-            title="Demo Access"
-            description="Seeded roles are ready to explore."
+            title="Secure team access"
+            description="Built for real users, not a public demo list."
           >
-            <div className="flex flex-col gap-3 mt-2">
-              {demoCredentials.map((credential) => (
-                <div
-                  key={credential}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 text-sm font-mono text-[color:var(--foreground)] shadow-sm"
-                >
-                  {credential}
+            <div className="flex flex-col gap-6 mt-2">
+              {[
+                "Administrators can invite team members with secure, expiring links.",
+                "Password recovery can be emailed directly when SMTP is configured.",
+                "Optional email OTP adds another step for higher-risk accounts.",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-4">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand-strong">
+                    <BadgeCheck className="h-4 w-4" />
+                  </div>
+                  <p className="text-sm leading-relaxed text-[color:var(--muted-strong)]">{item}</p>
                 </div>
               ))}
             </div>

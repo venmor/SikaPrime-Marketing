@@ -14,6 +14,15 @@ npm run dev
 
 Before `db:init`, update `.env` with your Neon `DATABASE_URL` and `DIRECT_URL`.
 
+Add your bootstrap admin details before the first seed:
+
+```env
+INITIAL_ADMIN_EMAIL="admin@example.com"
+INITIAL_ADMIN_PASSWORD="ChangeThisAdminPassword123!"
+INITIAL_ADMIN_NAME="Platform Administrator"
+INITIAL_ADMIN_JOB_TITLE="Administrator"
+```
+
 ### Verification
 
 ```bash
@@ -36,17 +45,11 @@ Why `db:init` exists:
 - For Neon, `db:init` seeds through `DIRECT_URL` to avoid pooler-related setup failures
 - This gives the team a repeatable setup path for Neon and other hosted Postgres providers
 
-## Seeded Demo Users
+## Workspace Bootstrap
 
-- `admin@sikaprime.local`
-- `strategist@sikaprime.local`
-- `creator@sikaprime.local`
-- `reviewer@sikaprime.local`
-- `analyst@sikaprime.local`
-
-Password for all demo users:
-
-- `SikaPrime123!`
+- `db:init` creates or updates one initial admin from the `INITIAL_ADMIN_*` environment variables.
+- `RESET_DEMO_DATA=true npm run db:seed` removes sample workspace data and all non-admin users, then reapplies the baseline company profile and integration-setting metadata.
+- SMTP-backed invite, password reset, and optional email OTP flows become live when the `EMAIL_SMTP_*` and `EMAIL_FROM_*` values are configured.
 
 ## Scheduled Jobs
 
@@ -189,8 +192,8 @@ For a full production deployment sequence, use [vercel-deployment.md](/home/char
 
 - Run lint, tests, and build
 - Run the Vercel smoke test against the latest deployment URL
-- Push the latest Prisma schema to the active database before testing if the release adds tables or columns
-- Re-seed a clean local database only if schema changes touched demo assumptions
+- Confirm the production build script or a manual `npx prisma db push --skip-generate` has applied any new tables or columns before testing
+- Re-seed a clean local database only if schema changes touched bootstrap assumptions
 - Verify role-based access on knowledge, review, analytics, and publishing flows
 - Smoke-test trend refresh and scheduled publishing endpoints
 
@@ -198,11 +201,11 @@ For a full production deployment sequence, use [vercel-deployment.md](/home/char
 
 Use this sequence to validate the end-to-end operating model after major workflow changes:
 
-1. Log in as `admin@sikaprime.local` and update a product, guardrail term, or audience segment in `/knowledge`.
+1. Log in as the configured bootstrap admin and update a product, guardrail term, or audience segment in `/knowledge`.
 2. Open `/trends` and refresh the trend engine.
 3. Open `/content`, generate a few ideas, and convert one idea into a draft.
 4. Edit the draft and submit it for review.
-5. Log in as `reviewer@sikaprime.local`, open `/workflow`, and either approve it or send it for revision.
+5. Invite a reviewer account, accept the invite, then open `/workflow` as that reviewer and either approve the draft or send it for revision.
 6. Open `/calendar` and confirm warnings or timing suggestions appear when the queue is unbalanced.
 7. Open `/publishing`, publish an approved item, and verify a history record is created.
 8. If WhatsApp Cloud API is configured, publish a WhatsApp item with a destination number and confirm it creates a live publish record.

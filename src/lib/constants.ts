@@ -216,14 +216,6 @@ export function getNavigationState(pathname: string) {
   };
 }
 
-export const demoCredentials = [
-  "admin@sikaprime.local / SikaPrime123!",
-  "strategist@sikaprime.local / SikaPrime123!",
-  "creator@sikaprime.local / SikaPrime123!",
-  "reviewer@sikaprime.local / SikaPrime123!",
-  "analyst@sikaprime.local / SikaPrime123!",
-];
-
 export const trendSourcePage = "/trends";
 export const planningPage = "/recommendations";
 export const contentPage = "/content";

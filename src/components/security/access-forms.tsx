@@ -87,7 +87,7 @@ export function InviteIssuerForm() {
         </label>
       </div>
       <SubmitButton pendingLabel="Generating invite...">
-        Create invite link
+        Create invite email or link
       </SubmitButton>
       <ResultPanel message={state.message} link={state.link} />
     </form>
@@ -108,7 +108,7 @@ export function PasswordResetIssuerForm({
     <form action={formAction} className="grid gap-3">
       <input type="hidden" name="userId" value={userId} />
       <SubmitButton pendingLabel="Creating link..." variant="secondary">
-        Create reset link
+        Send reset email or link
       </SubmitButton>
       <ResultPanel message={state.message} link={state.link} />
     </form>

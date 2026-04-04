@@ -6,7 +6,6 @@ import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { getSession } from "@/lib/auth/session";
-import { demoCredentials } from "@/lib/constants";
 import { signInAction } from "@/server/actions/auth";
 
 const featureRows = [
@@ -43,12 +42,16 @@ export default async function LoginPage({
       ? "Too many sign-in attempts were made recently. Please wait a few minutes and try again."
       : params.error === "reauth"
         ? "Please sign in again to continue with sensitive admin access."
+      : params.error === "otp-unavailable"
+        ? "This account requires email verification, but email delivery is not available right now. Contact the administrator."
+      : params.error === "otp-expired"
+        ? "Your verification step expired. Sign in again to request a fresh code."
       : params.error === "inactive"
         ? "This account is currently inactive. Contact an administrator for help."
         : params.error === "locked"
           ? "This account is temporarily locked after repeated failed sign-in attempts."
           : params.error
-            ? "Invalid email or password. Try one of the seeded demo users below."
+            ? "Invalid email or password. Please try again."
             : null;
 
   return (
@@ -117,7 +120,7 @@ export default async function LoginPage({
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@sikaprime.local"
+                placeholder="you@company.com"
                 required
                 className="peer pt-6 pb-2 placeholder-transparent focus:placeholder-transparent"
               />
@@ -134,7 +137,7 @@ export default async function LoginPage({
                 id="password"
                 name="password"
                 type="password"
-                placeholder="SikaPrime123!"
+                placeholder="Enter your password"
                 required
                 className="peer pt-6 pb-2 placeholder-transparent focus:placeholder-transparent"
               />
@@ -161,23 +164,18 @@ export default async function LoginPage({
             </Link>
           </div>
 
-          <div className="mt-10 flex flex-col gap-4 rounded-2xl bg-[color:var(--surface-soft)] p-6">
+          <div className="mt-10 rounded-2xl bg-[color:var(--surface-soft)] p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-                Demo accounts
+                Secure access
               </h3>
-              <Badge variant="muted">Seeded access</Badge>
+              <Badge variant="muted">Invite-only</Badge>
             </div>
-            <div className="flex flex-col gap-3">
-              {demoCredentials.map((credential) => (
-                <div
-                  key={credential}
-                  className="rounded-xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm font-mono text-[color:var(--foreground)] shadow-sm transition-colors hover:border-[color:var(--border-strong)]"
-                >
-                  {credential}
-                </div>
-              ))}
-            </div>
+            <p className="mt-4 text-sm leading-relaxed text-[color:var(--muted)]">
+              New team members join through secure invite links. Password help
+              and verification codes are delivered through the access flow when
+              email delivery is configured.
+            </p>
           </div>
 
           <p className="mt-8 text-center text-sm text-[color:var(--muted)]">

@@ -15,7 +15,7 @@ Use it for:
 | Area | Purpose | Key Files |
 | --- | --- | --- |
 | Public landing | Product overview and entry into login | `src/app/page.tsx` |
-| Login | Session creation for seeded or real users | `src/app/(auth)/login/page.tsx`, `src/server/actions/auth.ts` |
+| Login | Session creation for invited or bootstrap users | `src/app/(auth)/login/page.tsx`, `src/server/actions/auth.ts` |
 | App shell | Shared navigation, breadcrumbs, profile menu, mobile drawer | `src/app/(dashboard)/layout.tsx`, `src/components/layout/shell-chrome.tsx`, `src/components/layout/sidebar-nav.tsx`, `src/lib/constants.ts` |
 
 ### Main Product Modules
@@ -40,7 +40,7 @@ Use it for:
 | --- | --- | --- |
 | Auth | Session cookie, sign-in/out, capability checks | `src/lib/auth/session.ts`, `src/lib/auth/access.ts`, `src/lib/auth/roles.ts` |
 | Persistence | Prisma client and database schema | `src/lib/db.ts`, `prisma/schema.prisma` |
-| Seed / bootstrap | Demo users and demo business data | `prisma/seed.ts`, `scripts/db-init.mjs` |
+| Seed / bootstrap | Initial admin bootstrap, baseline business profile, and integration-setting metadata | `prisma/seed.ts`, `scripts/db-init.mjs` |
 | Audit | Traceability for key mutations | `src/lib/audit/service.ts` |
 | Notifications | Slack workflow/publishing alerts | `src/lib/notifications/service.ts` |
 | Jobs / automation | Cron auth and daily maintenance workflows | `src/lib/jobs/auth.ts`, `src/lib/jobs/service.ts`, `src/app/api/jobs/*/route.ts`, `vercel.json` |

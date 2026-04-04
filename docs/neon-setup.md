@@ -55,6 +55,8 @@ Open your local [`.env`](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/.env) an
 ```env
 DATABASE_URL="YOUR_NEON_POOLED_URL"
 DIRECT_URL="YOUR_NEON_DIRECT_URL"
+INITIAL_ADMIN_EMAIL="admin@example.com"
+INITIAL_ADMIN_PASSWORD="ChangeThisAdminPassword123!"
 ```
 
 Do not remove your existing app secrets such as:
@@ -78,7 +80,7 @@ What this does:
 
 - generates Prisma Client
 - pushes the schema to Neon
-- seeds demo data into Neon
+- bootstraps the workspace with one initial admin and baseline business metadata
 - uses `DIRECT_URL` for the seed step so one-off setup does not depend on the Neon pooler
 
 ## 5. Start the App
@@ -95,7 +97,7 @@ Then open:
 
 Check these flows:
 
-1. Log in with a seeded demo account
+1. Log in with the bootstrap admin account from your `.env`
 2. Open `/dashboard`
 3. Open `/content` and generate a draft
 4. Open `/knowledge` and confirm data appears
@@ -146,3 +148,13 @@ npm run db:init
 ```
 
 against the Neon database you want to use.
+
+### The database still has old demo/sample data
+
+Run:
+
+```bash
+RESET_DEMO_DATA=true npm run db:seed
+```
+
+This removes sample workspace content and keeps only the configured bootstrap admin.

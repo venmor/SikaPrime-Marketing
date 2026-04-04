@@ -9,8 +9,10 @@ import { canManageAccess } from "@/lib/auth/access";
 import { prisma } from "@/lib/db";
 
 const cookieName = "sika-prime-session";
+const pendingCookieName = "sika-prime-pending-auth";
 const defaultSessionMaxAgeHours = 24 * 7;
 const defaultAdminReauthHours = 12;
+const defaultPendingAuthMinutes = 15;
 
 type SessionPayload = {
   userId: string;
@@ -22,6 +24,10 @@ type SessionPayload = {
 
 export type AuthSession = SessionPayload & {
   issuedAt: Date;
+};
+
+type PendingAuthPayload = SessionPayload & {
+  purpose: "email_otp";
 };
 
 function getSessionSecret() {
@@ -60,6 +66,10 @@ function getAdminReauthMaxAgeSeconds() {
   );
 }
 
+function getPendingAuthMaxAgeSeconds() {
+  return Math.round(defaultPendingAuthMinutes * 60);
+}
+
 export async function createSession(session: SessionPayload) {
   const maxAgeSeconds = getSessionMaxAgeSeconds();
   const token = await new SignJWT(session)
@@ -82,6 +92,90 @@ export async function createSession(session: SessionPayload) {
 export async function clearSession() {
   const cookieStore = await cookies();
   cookieStore.delete(cookieName);
+}
+
+export async function createPendingAuthSession(session: SessionPayload) {
+  const maxAgeSeconds = getPendingAuthMaxAgeSeconds();
+  const token = await new SignJWT({
+    ...session,
+    purpose: "email_otp",
+  } satisfies PendingAuthPayload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(`${maxAgeSeconds}s`)
+    .sign(getSessionSecret());
+
+  const cookieStore = await cookies();
+
+  cookieStore.set(pendingCookieName, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: maxAgeSeconds,
+  });
+}
+
+export async function clearPendingAuthSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(pendingCookieName);
+}
+
+export async function getPendingAuthSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(pendingCookieName)?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, getSessionSecret());
+    const session = payload as PendingAuthPayload;
+
+    if (session.purpose !== "email_otp") {
+      cookieStore.delete(pendingCookieName);
+      return null;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        sessionVersion: true,
+        isActive: true,
+        mfaEnabled: true,
+      },
+    });
+
+    if (
+      !user ||
+      !user.isActive ||
+      !user.mfaEnabled ||
+      user.sessionVersion !== session.sessionVersion
+    ) {
+      cookieStore.delete(pendingCookieName);
+      return null;
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+      sessionVersion: user.sessionVersion,
+      issuedAt:
+        typeof payload.iat === "number"
+          ? new Date(payload.iat * 1000)
+          : new Date(),
+    };
+  } catch {
+    cookieStore.delete(pendingCookieName);
+    return null;
+  }
 }
 
 export async function getSession() {

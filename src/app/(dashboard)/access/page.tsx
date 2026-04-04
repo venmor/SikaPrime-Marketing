@@ -4,12 +4,14 @@ import { PasswordResetIssuerForm, InviteIssuerForm } from "@/components/security
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { isEmailDeliveryConfigured } from "@/lib/email/service";
 import { requireRecentAdminSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { formatDateTime, formatRelativeDate, humanizeEnum } from "@/lib/utils";
 import {
   revokeAuthTokenAction,
   revokeUserSessionsAction,
+  toggleUserMfaAction,
   toggleUserActiveAction,
 } from "@/server/actions/access";
 
@@ -23,12 +25,15 @@ export default async function AccessPage({
     searchParams,
   ]);
 
-  const [users, pendingTokens, resetRequests] = await Promise.all([
+  const [users, pendingTokens, resetRequests, emailConfigured] = await Promise.all([
     prisma.user.findMany({
       orderBy: [{ isActive: "desc" }, { role: "asc" }, { name: "asc" }],
     }),
     prisma.authToken.findMany({
       where: {
+        type: {
+          in: [AuthTokenType.INVITE, AuthTokenType.PASSWORD_RESET],
+        },
         consumedAt: null,
         revokedAt: null,
         expiresAt: {
@@ -51,6 +56,7 @@ export default async function AccessPage({
       },
       take: 8,
     }),
+    isEmailDeliveryConfigured(),
   ]);
 
   const requestUsers = await prisma.user.findMany({
@@ -67,6 +73,10 @@ export default async function AccessPage({
       {params.error === "self-lockout" ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           Your own admin account cannot be suspended from this page.
+        </div>
+      ) : params.error === "email-required" ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Configure SMTP email delivery before enabling email OTP for a user.
         </div>
       ) : null}
 
@@ -97,10 +107,10 @@ export default async function AccessPage({
           </div>
           <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
-              Reset requests
+              Email delivery
             </p>
             <p className="mt-3 font-display text-3xl font-semibold text-[color:var(--foreground)]">
-              {resetRequests.length}
+              {emailConfigured ? "Ready" : "Offline"}
             </p>
           </div>
         </div>
@@ -109,14 +119,14 @@ export default async function AccessPage({
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <SectionCard
           title="Invite a teammate"
-          description="Admins can create secure invite links for new or inactive users. Links expire automatically and never store plain tokens in the database."
+          description="Admins can create secure invite links for new or inactive users. Links expire automatically, never store plain tokens, and are emailed when delivery is configured."
         >
           <InviteIssuerForm />
         </SectionCard>
 
         <SectionCard
-          title="Password reset requests"
-          description="Users can request help from the login screen. Generate a secure reset link here when you are ready to issue one."
+          title="Password recovery"
+          description="Users can request help from the login screen. You can also issue a reset email or secure link here at any time."
         >
           <div className="grid gap-3">
             {resetRequests.length ? (
@@ -157,6 +167,12 @@ export default async function AccessPage({
                 No password reset requests have been logged recently.
               </div>
             )}
+
+            {!emailConfigured ? (
+              <div className="rounded-2xl border border-dashed border-[color:var(--border)] p-4 text-sm text-[color:var(--muted)]">
+                SMTP is not configured yet, so reset links will need to be copied and shared manually.
+              </div>
+            ) : null}
           </div>
         </SectionCard>
       </section>
@@ -184,6 +200,9 @@ export default async function AccessPage({
                       {user.isActive ? "Active" : "Suspended"}
                     </Badge>
                     <Badge variant="cyan-subtle">{humanizeEnum(user.role)}</Badge>
+                    <Badge variant={user.mfaEnabled ? "warning" : "muted"}>
+                      {user.mfaEnabled ? "Email OTP on" : "Email OTP off"}
+                    </Badge>
                     {isCurrentUser ? <Badge variant="muted">You</Badge> : null}
                   </div>
                   <p className="mt-2 text-sm text-[color:var(--muted)]">{user.email}</p>
@@ -236,6 +255,22 @@ export default async function AccessPage({
                       </SubmitButton>
                     </form>
                   )}
+
+                  <form action={toggleUserMfaAction}>
+                    <input type="hidden" name="userId" value={user.id} />
+                    <input
+                      type="hidden"
+                      name="nextState"
+                      value={user.mfaEnabled ? "disabled" : "enabled"}
+                    />
+                    <SubmitButton
+                      pendingLabel={user.mfaEnabled ? "Disabling..." : "Enabling..."}
+                      variant="secondary"
+                      className="w-full sm:col-span-2"
+                    >
+                      {user.mfaEnabled ? "Disable email OTP" : "Enable email OTP"}
+                    </SubmitButton>
+                  </form>
                 </div>
               </div>
               </div>

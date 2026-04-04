@@ -93,6 +93,7 @@ enum GuardrailType {
 enum AuthTokenType {
   INVITE
   PASSWORD_RESET
+  EMAIL_OTP
 }
 
 enum AssetKind {
@@ -123,6 +124,7 @@ model User {
   jobTitle          String
   avatarSeed        String
   isActive          Boolean       @default(true)
+  mfaEnabled        Boolean       @default(false)
   sessionVersion    Int           @default(1)
   failedSignInAttempts Int        @default(0)
   lockedUntil       DateTime?

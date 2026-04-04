@@ -9,8 +9,18 @@ import { redirect } from "next/navigation";
 import { logActivity } from "@/lib/audit/service";
 import { buildRateLimitKey, consumeRateLimit } from "@/lib/auth/rate-limit";
 import { requireRecentAdminSession } from "@/lib/auth/session";
-import { buildAbsoluteAppUrl, createAuthToken, revokeAuthToken } from "@/lib/auth/tokens";
+import {
+  buildAbsoluteAppUrl,
+  createAuthToken,
+  revokeAuthToken,
+  revokeOutstandingAuthTokens,
+} from "@/lib/auth/tokens";
 import { prisma } from "@/lib/db";
+import {
+  isEmailDeliveryConfigured,
+  sendInviteEmail,
+  sendPasswordResetEmail,
+} from "@/lib/email/service";
 
 export type LinkActionState = {
   status: "idle" | "success" | "error";
@@ -84,6 +94,7 @@ export async function createInviteAction(
         jobTitle,
         avatarSeed: "brand",
         isActive: false,
+        mfaEnabled: false,
       },
     }));
 
@@ -99,16 +110,10 @@ export async function createInviteAction(
     });
   }
 
-  await prisma.authToken.updateMany({
-    where: {
-      type: AuthTokenType.INVITE,
-      email,
-      consumedAt: null,
-      revokedAt: null,
-    },
-    data: {
-      revokedAt: new Date(),
-    },
+  await revokeOutstandingAuthTokens({
+    type: AuthTokenType.INVITE,
+    userId: user.id,
+    email,
   });
 
   const token = await createAuthToken({
@@ -123,6 +128,16 @@ export async function createInviteAction(
   const inviteLink = await buildAbsoluteAppUrl(
     `/accept-invite?token=${encodeURIComponent(token.rawToken)}`,
   );
+  const emailConfigured = await isEmailDeliveryConfigured();
+  const delivery = emailConfigured
+    ? await sendInviteEmail({
+        to: email,
+        recipientName: name,
+        inviteLink,
+        expiresAt: token.expiresAt,
+        invitedByName: session.name,
+      })
+    : { delivered: false, reason: "Email delivery is not configured." };
 
   await logActivity({
     actorId: session.userId,
@@ -139,7 +154,9 @@ export async function createInviteAction(
 
   return {
     status: "success",
-    message: `Invite link ready for ${email}. It expires on ${token.expiresAt.toLocaleString()}.`,
+    message: delivery.delivered
+      ? `Invitation emailed to ${email}. The secure link expires on ${token.expiresAt.toLocaleString()}.`
+      : `Invite link ready for ${email}. ${emailConfigured ? "Email delivery failed, so share the secure link manually." : "Email delivery is not configured, so share the secure link manually."} It expires on ${token.expiresAt.toLocaleString()}.`,
     link: inviteLink,
   };
 }
@@ -179,16 +196,10 @@ export async function createPasswordResetLinkAction(
     };
   }
 
-  await prisma.authToken.updateMany({
-    where: {
-      type: AuthTokenType.PASSWORD_RESET,
-      userId: user.id,
-      consumedAt: null,
-      revokedAt: null,
-    },
-    data: {
-      revokedAt: new Date(),
-    },
+  await revokeOutstandingAuthTokens({
+    type: AuthTokenType.PASSWORD_RESET,
+    userId: user.id,
+    email: user.email,
   });
 
   const token = await createAuthToken({
@@ -200,6 +211,15 @@ export async function createPasswordResetLinkAction(
   const resetLink = await buildAbsoluteAppUrl(
     `/reset-password?token=${encodeURIComponent(token.rawToken)}`,
   );
+  const emailConfigured = await isEmailDeliveryConfigured();
+  const delivery = emailConfigured
+    ? await sendPasswordResetEmail({
+        to: user.email,
+        recipientName: user.name,
+        resetLink,
+        expiresAt: token.expiresAt,
+      })
+    : { delivered: false, reason: "Email delivery is not configured." };
 
   await logActivity({
     actorId: session.userId,
@@ -215,7 +235,9 @@ export async function createPasswordResetLinkAction(
 
   return {
     status: "success",
-    message: `Reset link ready for ${user.email}. It expires on ${token.expiresAt.toLocaleString()}.`,
+    message: delivery.delivered
+      ? `Password reset email sent to ${user.email}. The secure link expires on ${token.expiresAt.toLocaleString()}.`
+      : `Reset link ready for ${user.email}. ${emailConfigured ? "Email delivery failed, so share the secure link manually." : "Email delivery is not configured, so share the secure link manually."} It expires on ${token.expiresAt.toLocaleString()}.`,
     link: resetLink,
   };
 }
@@ -303,6 +325,56 @@ export async function revokeUserSessionsAction(formData: FormData) {
     action: "auth.sessions_revoked",
     summary: `Revoked active sessions for ${updatedUser.email}.`,
   });
+  revalidatePath("/access");
+  redirect("/access");
+}
+
+export async function toggleUserMfaAction(formData: FormData) {
+  const session = await requireAdminSession();
+  const userId = value(formData, "userId");
+  const nextState = value(formData, "nextState");
+
+  if (!userId || !nextState) {
+    redirect("/access");
+  }
+
+  if (!(await isEmailDeliveryConfigured()) && nextState === "enabled") {
+    redirect("/access?error=email-required");
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      mfaEnabled: nextState === "enabled",
+      sessionVersion:
+        nextState === "enabled"
+          ? {
+              increment: 1,
+            }
+          : undefined,
+    },
+  });
+
+  if (nextState !== "enabled") {
+    await revokeOutstandingAuthTokens({
+      type: AuthTokenType.EMAIL_OTP,
+      userId: user.id,
+      email: user.email,
+    });
+  }
+
+  await logActivity({
+    actorId: session.userId,
+    entityType: "user",
+    entityId: user.id,
+    action:
+      nextState === "enabled" ? "auth.mfa_enabled" : "auth.mfa_disabled",
+    summary:
+      nextState === "enabled"
+        ? `Enabled email OTP for ${user.email}.`
+        : `Disabled email OTP for ${user.email}.`,
+  });
+
   revalidatePath("/access");
   redirect("/access");
 }
