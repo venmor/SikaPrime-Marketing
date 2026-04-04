@@ -1,10 +1,20 @@
+import { redirect } from "next/navigation";
+
 import { PerformanceChart } from "@/components/charts/performance-chart";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { getAnalyticsSnapshot } from "@/lib/analytics/service";
+import { canViewAnalytics } from "@/lib/auth/access";
+import { requireSession } from "@/lib/auth/session";
 
 export default async function AnalyticsPage() {
+  const session = await requireSession();
+
+  if (!canViewAnalytics(session.role)) {
+    redirect("/dashboard");
+  }
+
   const analytics = await getAnalyticsSnapshot();
 
   return (

@@ -4,10 +4,15 @@ import { subDays } from "date-fns";
 
 import { prisma } from "@/lib/db";
 import {
+  configurableTrendFeeds,
   defaultTrendSources,
   interestKeywords,
   type TrendSourceConfig,
 } from "@/lib/engines/trends/source-registry";
+import {
+  getIntegrationSettingBoolean,
+  getIntegrationSettingValue,
+} from "@/lib/integrations/service";
 import { countKeywordMatches, scoreTrend } from "@/lib/engines/trends/scoring";
 import {
   fetchWithObservability,
@@ -26,6 +31,16 @@ type FeedItem = {
 };
 
 const parser = new Parser<Record<string, never>, FeedItem>();
+
+type JsonTrendFeedItem = {
+  title?: string;
+  summary?: string;
+  description?: string;
+  url?: string;
+  link?: string;
+  publishedAt?: string;
+  published_at?: string;
+};
 
 function stripHtml(value?: string) {
   return (value ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -46,6 +61,78 @@ function isSafeTrendText(text: string) {
   ];
 
   return !riskyPhrases.some((phrase) => normalized.includes(phrase));
+}
+
+function normalizeJsonItems(payload: unknown) {
+  if (Array.isArray(payload)) {
+    return payload as JsonTrendFeedItem[];
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { items?: unknown[] }).items)
+  ) {
+    return (payload as { items: JsonTrendFeedItem[] }).items;
+  }
+
+  return [];
+}
+
+function mapToScoredSignal(
+  source: TrendSourceConfig,
+  businessTerms: string[],
+  input: {
+    title?: string | null;
+    summary?: string | null;
+    sourceUrl?: string | null;
+    publishedAt?: Date | null;
+  },
+) {
+  const title = input.title?.trim();
+  const publishedAt = input.publishedAt ?? null;
+  const freshnessCutoff = subDays(new Date(), 45);
+  const summary = stripHtml(input.summary ?? "");
+
+  if (
+    !title ||
+    !publishedAt ||
+    Number.isNaN(publishedAt.getTime()) ||
+    publishedAt < freshnessCutoff
+  ) {
+    return null;
+  }
+
+  const combinedText = `${title} ${summary}`.trim();
+  const keywordHits = countKeywordMatches(
+    combinedText,
+    [...interestKeywords, ...source.keywords],
+  );
+
+  if (keywordHits === 0 || !isSafeTrendText(combinedText)) {
+    return null;
+  }
+
+  const score = scoreTrend({
+    text: combinedText,
+    publishedAt,
+    businessTerms,
+    interestTerms: interestKeywords,
+    sourceKeywords: source.keywords,
+  });
+
+  return {
+    title,
+    summary: truncate(summary || source.topic, 240),
+    sourceName: source.name,
+    sourceUrl: input.sourceUrl ?? source.url,
+    region: source.region,
+    topic: source.topic,
+    keywords: source.keywords.join(", "),
+    publishedAt,
+    detectedAt: new Date(),
+    ...score,
+  };
 }
 
 async function collectBusinessTerms() {
@@ -106,52 +193,34 @@ async function fetchSource(source: TrendSourceConfig, businessTerms: string[]) {
     throw new Error(`${source.name} returned HTTP ${response.status}.`);
   }
 
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return normalizeJsonItems(await response.json())
+      .map((item) =>
+        mapToScoredSignal(source, businessTerms, {
+          title: item.title,
+          summary: item.summary ?? item.description,
+          sourceUrl: item.url ?? item.link,
+          publishedAt: item.publishedAt || item.published_at
+            ? new Date(item.publishedAt ?? item.published_at ?? Date.now())
+            : new Date(),
+        }),
+      )
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  }
+
   const feed = await parser.parseString(await response.text());
-  const freshnessCutoff = subDays(new Date(), 45);
 
   return (feed.items ?? [])
-    .map((item) => {
-      const title = item.title?.trim();
-      const publishedAt = new Date(item.isoDate ?? item.pubDate ?? Date.now());
-      const summary = stripHtml(
-        item.contentSnippet ?? item.summary ?? item.content ?? "",
-      );
-
-      if (!title || Number.isNaN(publishedAt.getTime()) || publishedAt < freshnessCutoff) {
-        return null;
-      }
-
-      const combinedText = `${title} ${summary}`.trim();
-      const keywordHits = countKeywordMatches(
-        combinedText,
-        [...interestKeywords, ...source.keywords],
-      );
-
-      if (keywordHits === 0 || !isSafeTrendText(combinedText)) {
-        return null;
-      }
-
-      const score = scoreTrend({
-        text: combinedText,
-        publishedAt,
-        businessTerms,
-        interestTerms: interestKeywords,
-        sourceKeywords: source.keywords,
-      });
-
-      return {
-        title,
-        summary: truncate(summary || source.topic, 240),
-        sourceName: source.name,
-        sourceUrl: item.link ?? source.url,
-        region: source.region,
-        topic: source.topic,
-        keywords: source.keywords.join(", "),
-        publishedAt,
-        detectedAt: new Date(),
-        ...score,
-      };
-    })
+    .map((item) =>
+      mapToScoredSignal(source, businessTerms, {
+        title: item.title,
+        summary: item.contentSnippet ?? item.summary ?? item.content ?? "",
+        sourceUrl: item.link,
+        publishedAt: new Date(item.isoDate ?? item.pubDate ?? Date.now()),
+      }),
+    )
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
 }
 
@@ -216,13 +285,36 @@ export function explainTrendOpportunity(input: {
 
 export async function refreshTrendSignals() {
   const businessTerms = await collectBusinessTerms();
+  const configurableSources = (
+    await Promise.all(
+      configurableTrendFeeds.map(async (feed) => {
+        const [enabled, url] = await Promise.all([
+          getIntegrationSettingBoolean(feed.toggleKey, false),
+          getIntegrationSettingValue(feed.urlKey),
+        ]);
+
+        if (!enabled || !url) {
+          return null;
+        }
+
+        return {
+          name: feed.name,
+          url,
+          region: feed.region,
+          topic: feed.topic,
+          keywords: feed.keywords,
+        } satisfies TrendSourceConfig;
+      }),
+    )
+  ).filter((item): item is TrendSourceConfig => Boolean(item));
+  const activeSources = [...defaultTrendSources, ...configurableSources];
 
   const fetched = await Promise.allSettled(
-    defaultTrendSources.map((source) => fetchSource(source, businessTerms)),
+    activeSources.map((source) => fetchSource(source, businessTerms)),
   );
   const failedSources = fetched.flatMap((result, index) =>
-    result.status === "rejected" && defaultTrendSources[index]
-      ? [defaultTrendSources[index].name]
+    result.status === "rejected" && activeSources[index]
+      ? [activeSources[index].name]
       : [],
   );
 
@@ -254,7 +346,7 @@ export async function refreshTrendSignals() {
       message: "Trend refresh produced no safe or relevant signals.",
       metadata: {
         failedSources,
-        sourceCount: defaultTrendSources.length,
+        sourceCount: activeSources.length,
       },
     });
 

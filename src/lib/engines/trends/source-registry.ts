@@ -8,6 +8,15 @@ export type TrendSourceConfig = {
   keywords: string[];
 };
 
+export type ConfigurableTrendFeed = {
+  name: string;
+  toggleKey: string;
+  urlKey: string;
+  region: TrendRegion;
+  topic: string;
+  keywords: string[];
+};
+
 export const interestKeywords = [
   "loan",
   "lending",
@@ -91,5 +100,48 @@ export const defaultTrendSources: TrendSourceConfig[] = [
     region: TrendRegion.GLOBAL,
     topic: "Digital behavior, fintech, and online consumer trends",
     keywords: ["technology", "fintech", "payments", "digital", "mobile"],
+  },
+];
+
+export const configurableTrendFeeds: ConfigurableTrendFeed[] = [
+  {
+    name: "Google Trends Signals",
+    toggleKey: "social.google_trends_enabled",
+    urlKey: "social.google_trends_feed",
+    region: TrendRegion.GLOBAL,
+    topic: "Search momentum around finance, youth, school, and budgeting behavior",
+    keywords: ["trends", "search", "youth", "school fees", "money", "business"],
+  },
+  {
+    name: "Meta Insight Signals",
+    toggleKey: "social.meta_insights_enabled",
+    urlKey: "social.meta_signals_feed",
+    region: TrendRegion.LOCAL,
+    topic: "High-performing audience attention patterns from approved Meta insight feeds",
+    keywords: ["facebook", "meta", "engagement", "phrase", "audience", "conversation"],
+  },
+  {
+    name: "Instagram Signal Feed",
+    toggleKey: "social.instagram_signals_enabled",
+    urlKey: "social.instagram_signals_feed",
+    region: TrendRegion.GLOBAL,
+    topic: "Visual and phrase-based social attention patterns from Instagram-friendly monitoring feeds",
+    keywords: ["instagram", "reels", "caption", "phrase", "viral", "style"],
+  },
+  {
+    name: "TikTok Signal Feed",
+    toggleKey: "social.tiktok_signals_enabled",
+    urlKey: "social.tiktok_signals_feed",
+    region: TrendRegion.GLOBAL,
+    topic: "Short-form social phrases, challenges, and audience obsessions from TikTok monitoring feeds",
+    keywords: ["tiktok", "challenge", "sound", "viral", "phrase", "trend"],
+  },
+  {
+    name: "Approved Monitoring Feed",
+    toggleKey: "social.monitoring_enabled",
+    urlKey: "social.monitoring_webhook",
+    region: TrendRegion.LOCAL,
+    topic: "Approved monitoring provider feed for social-safe trend signals",
+    keywords: ["conversation", "audience", "hook", "engagement", "attention", "social"],
   },
 ];

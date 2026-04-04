@@ -65,6 +65,18 @@ export const navigationSections: NavigationSection[] = [
     label: "Create",
     summary: "Generate ideas and drafts for the next campaign.",
     icon: FileText,
+    children: [
+      {
+        href: "/content",
+        label: "Content lab",
+        summary: "Generate ideas and text-first drafts for campaign work.",
+      },
+      {
+        href: "/flyers",
+        label: "Flyer studio",
+        summary: "Upload branded references and generate flyer concepts with previews.",
+      },
+    ],
   },
   {
     id: "review",
@@ -106,6 +118,23 @@ export const navigationSections: NavigationSection[] = [
     summary: "Maintain products, offers, audiences, and compliance rules.",
     icon: Megaphone,
     placement: "secondary",
+    children: [
+      {
+        href: "/knowledge",
+        label: "Knowledge",
+        summary: "Maintain products, offers, audiences, and compliance rules.",
+      },
+      {
+        href: "/access",
+        label: "Access",
+        summary: "Manage invites, password recovery, sessions, and user status.",
+      },
+      {
+        href: "/integrations",
+        label: "Integrations",
+        summary: "Update AI, image, and social listening settings without editing code.",
+      },
+    ],
   },
 ];
 

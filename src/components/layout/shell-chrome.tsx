@@ -12,7 +12,12 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-import { canGenerateContent, canReviewContent, canViewAnalytics } from "@/lib/auth/access";
+import {
+  canAccessNavigationChild,
+  canGenerateContent,
+  canReviewContent,
+  canViewAnalytics,
+} from "@/lib/auth/access";
 import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
@@ -66,6 +71,9 @@ export function ShellChrome({
     currentPage,
     localNavigation,
   } = getNavigationState(pathname);
+  const visibleLocalNavigation = localNavigation.filter((item) =>
+    canAccessNavigationChild(user.role, item.href),
+  );
   const primaryAction = getPrimaryAction(user.role);
   const backTarget =
     breadcrumbs.length > 1 ? breadcrumbs[breadcrumbs.length - 2] : null;
@@ -173,9 +181,9 @@ export function ShellChrome({
               </h1>
             </div>
 
-            {localNavigation.length > 1 && (
+            {visibleLocalNavigation.length > 1 && (
               <nav aria-label={`${activeSection.label} pages`} className="flex gap-2 overflow-x-auto pb-2 border-b border-[color:var(--border)]">
-                {localNavigation.map((item: NavigationChild) => {
+                {visibleLocalNavigation.map((item: NavigationChild) => {
                   const active = pathname === item.href;
                   return (
                     <Link

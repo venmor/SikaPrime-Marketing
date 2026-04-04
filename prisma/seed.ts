@@ -24,9 +24,16 @@ function daysFromNow(days: number, hour = 9) {
 }
 
 async function main() {
+  await prisma.flyerConcept.deleteMany();
+  await prisma.flyerProject.deleteMany();
+  await prisma.brandAsset.deleteMany();
+  await prisma.campaignTemplate.deleteMany();
+  await prisma.integrationSetting.deleteMany();
   await prisma.performanceSnapshot.deleteMany();
   await prisma.publication.deleteMany();
   await prisma.contentReview.deleteMany();
+  await prisma.rateLimitBucket.deleteMany();
+  await prisma.authToken.deleteMany();
   await prisma.activityLog.deleteMany();
   await prisma.contentItem.deleteMany();
   await prisma.recommendation.deleteMany();
@@ -52,6 +59,7 @@ async function main() {
         role: UserRole.ADMIN,
         jobTitle: "Marketing Lead",
         avatarSeed: "amber",
+        passwordChangedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -62,6 +70,7 @@ async function main() {
         role: UserRole.STRATEGIST,
         jobTitle: "Growth Strategist",
         avatarSeed: "teal",
+        passwordChangedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -72,6 +81,7 @@ async function main() {
         role: UserRole.CREATOR,
         jobTitle: "Content Creator",
         avatarSeed: "emerald",
+        passwordChangedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -82,6 +92,7 @@ async function main() {
         role: UserRole.REVIEWER,
         jobTitle: "Compliance Reviewer",
         avatarSeed: "rose",
+        passwordChangedAt: new Date(),
       },
     }),
     prisma.user.create({
@@ -92,6 +103,7 @@ async function main() {
         role: UserRole.ANALYST,
         jobTitle: "Performance Analyst",
         avatarSeed: "slate",
+        passwordChangedAt: new Date(),
       },
     }),
   ]);
@@ -326,6 +338,188 @@ async function main() {
         ],
       },
     },
+  });
+
+  await prisma.campaignTemplate.createMany({
+    data: [
+      {
+        slug: "school-fees-support",
+        title: "School fees support sequence",
+        summary: "A repeatable flyer and caption sequence for term-start household pressure.",
+        objective: "Promote practical, responsible support around school-related expenses.",
+        triggerTags: "school fees, uniforms, term start, caregiver planning",
+        sequenceSteps:
+          "1. Awareness flyer about term-start pressure. 2. Educational post on planning. 3. Product-led support flyer with clear CTA.",
+        priority: 90,
+      },
+      {
+        slug: "month-end-relief",
+        title: "Month-end cash flow sequence",
+        summary: "A softer, trust-first sequence for salary-gap and transport pressure.",
+        objective: "Keep Sika Prime relevant during recurring month-end money stress.",
+        triggerTags: "month-end, salary gap, rent, transport, groceries",
+        sequenceSteps:
+          "1. Relatable month-end flyer. 2. Responsible borrowing explainer. 3. Offer-led conversion flyer with CTA.",
+        priority: 85,
+      },
+      {
+        slug: "sme-restock",
+        title: "SME restock sequence",
+        summary: "A business momentum sequence for traders and small business owners.",
+        objective: "Promote working-capital support for restocking and seasonal demand.",
+        triggerTags: "restock, stock pressure, traders, shop owners, working capital",
+        sequenceSteps:
+          "1. Business pain-point flyer. 2. Cash-flow education post. 3. Product promotion flyer for restocking.",
+        priority: 88,
+      },
+    ],
+  });
+
+  await prisma.integrationSetting.createMany({
+    data: [
+      {
+        key: "openai.api_key",
+        label: "OpenAI API key",
+        groupLabel: "AI generation",
+        helpText:
+          "Stored fallback API key for text and image generation when no environment variable override is preferred.",
+        value: "",
+        isSecret: true,
+      },
+      {
+        key: "openai.text_model",
+        label: "OpenAI text model",
+        groupLabel: "AI generation",
+        helpText: "Model used for captions, idea packs, and flyer concept copy.",
+        value: "gpt-4.1-mini",
+      },
+      {
+        key: "openai.image_model",
+        label: "OpenAI image model",
+        groupLabel: "AI generation",
+        helpText: "Model used for flyer rendering.",
+        value: "gpt-image-1",
+      },
+      {
+        key: "openai.image_size",
+        label: "OpenAI image size",
+        groupLabel: "AI generation",
+        helpText: "Default flyer output size for generated creatives.",
+        value: "1024x1536",
+      },
+      {
+        key: "facebook.page_id",
+        label: "Facebook page ID",
+        groupLabel: "Publishing",
+        helpText: "Page ID used for live Facebook publishing and metrics sync.",
+        value: "",
+      },
+      {
+        key: "facebook.page_access_token",
+        label: "Facebook page access token",
+        groupLabel: "Publishing",
+        helpText: "Token used to publish posts and upload flyer images to Facebook.",
+        value: "",
+        isSecret: true,
+      },
+      {
+        key: "whatsapp.phone_number_id",
+        label: "WhatsApp phone number ID",
+        groupLabel: "Publishing",
+        helpText: "WhatsApp Business phone number ID used for direct delivery.",
+        value: "",
+      },
+      {
+        key: "whatsapp.access_token",
+        label: "WhatsApp access token",
+        groupLabel: "Publishing",
+        helpText: "Token used for WhatsApp Business Cloud API delivery.",
+        value: "",
+        isSecret: true,
+      },
+      {
+        key: "meta.graph_api_version",
+        label: "Meta Graph API version",
+        groupLabel: "Publishing",
+        helpText: "Graph API version for Facebook, WhatsApp, and Meta metrics.",
+        value: "v22.0",
+      },
+      {
+        key: "social.google_trends_enabled",
+        label: "Google Trends",
+        groupLabel: "Social listening",
+        helpText: "Enable Google Trends signal ingestion when configured.",
+        value: "false",
+      },
+      {
+        key: "social.google_trends_feed",
+        label: "Google Trends feed URL",
+        groupLabel: "Social listening",
+        helpText:
+          "RSS or JSON feed endpoint for Google Trends-style signals. JSON should expose an array or { items: [] } with title, summary, url, and publishedAt.",
+        value: "",
+      },
+      {
+        key: "social.meta_insights_enabled",
+        label: "Meta insights",
+        groupLabel: "Social listening",
+        helpText: "Enable Meta insight signals when connected.",
+        value: "false",
+      },
+      {
+        key: "social.meta_signals_feed",
+        label: "Meta insights feed URL",
+        groupLabel: "Social listening",
+        helpText:
+          "Approved JSON or RSS endpoint that exposes Meta attention signals for trend scoring.",
+        value: "",
+      },
+      {
+        key: "social.instagram_signals_enabled",
+        label: "Instagram signals",
+        groupLabel: "Social listening",
+        helpText: "Enable Instagram trend signal collection when connected.",
+        value: "false",
+      },
+      {
+        key: "social.instagram_signals_feed",
+        label: "Instagram signal feed URL",
+        groupLabel: "Social listening",
+        helpText:
+          "Approved JSON or RSS endpoint for Instagram phrases, hooks, or theme signals.",
+        value: "",
+      },
+      {
+        key: "social.tiktok_signals_enabled",
+        label: "TikTok signals",
+        groupLabel: "Social listening",
+        helpText: "Enable TikTok trend signal collection when connected.",
+        value: "false",
+      },
+      {
+        key: "social.tiktok_signals_feed",
+        label: "TikTok signal feed URL",
+        groupLabel: "Social listening",
+        helpText:
+          "Approved JSON or RSS endpoint for TikTok phrase, challenge, or obsession signals.",
+        value: "",
+      },
+      {
+        key: "social.monitoring_enabled",
+        label: "Approved monitoring feed",
+        groupLabel: "Social listening",
+        helpText: "Enable the generic monitoring feed for approved social-listening providers.",
+        value: "false",
+      },
+      {
+        key: "social.monitoring_webhook",
+        label: "Social monitoring webhook",
+        groupLabel: "Social listening",
+        helpText:
+          "Optional JSON or RSS provider endpoint for approved social listening tools. JSON should expose title, summary, url, and publishedAt.",
+        value: "",
+      },
+    ],
   });
 
   const products = await prisma.product.findMany({ orderBy: { priority: "desc" } });

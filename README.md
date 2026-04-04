@@ -81,6 +81,10 @@ npm run dev
   Direct PostgreSQL connection URL used by Prisma CLI commands. For Neon, use the non-pooled direct connection string.
 - `AUTH_SECRET`
   Session signing key.
+- `AUTH_SESSION_MAX_AGE_HOURS`
+  Optional. Session lifetime in hours. Defaults to `168` (7 days).
+- `ADMIN_REAUTH_MAX_AGE_HOURS`
+  Optional. Freshness window for sensitive admin-only screens and actions such as invites, resets, and session revocation. Defaults to `12`.
 - `OPENAI_API_KEY`
   Optional. Enables live AI generation instead of the built-in fallback generator.
 - `OPENAI_MODEL`
@@ -170,6 +174,9 @@ docs/
 
 - The system is intentionally modular: generation, trends, recommendations, publishing, and analytics are separated into services.
 - Audit logging keeps major workflow actions traceable for future maintenance and team accountability.
+- Sensitive admin access requires a recent sign-in before invite, reset-link, suspension, or session-revocation actions can be used.
+- Analytics pages are intentionally limited to admin, strategist, and analyst roles.
+- Creator workflow visibility is intentionally scoped to content they own.
 - Operational telemetry records slow external responses, trend refresh issues, publishing failures, and publish backlog warnings in the existing activity log.
 - Business profile data is the shared source of truth for content generation and scoring.
 - The included `db:init` helper pushes the Prisma schema to PostgreSQL and then seeds the database. For Neon, use the pooled URL in `DATABASE_URL` and the direct URL in `DIRECT_URL`.

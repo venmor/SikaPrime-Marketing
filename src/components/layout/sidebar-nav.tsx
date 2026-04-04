@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 
 import { AppLogo } from "@/components/branding/app-logo";
 import { Badge } from "@/components/ui/badge";
+import {
+  canAccessNavigationChild,
+  canAccessNavigationSection,
+} from "@/lib/auth/access";
 import type { UserRole } from "@/lib/auth/roles";
 import {
   getNavigationState,
@@ -24,6 +28,18 @@ export function SidebarNav({
   const pathname = usePathname();
   const { activeSection, primarySections, secondarySections } =
     getNavigationState(pathname);
+  const visiblePrimarySections = primarySections.filter((section) =>
+    canAccessNavigationSection(user.role, section.id),
+  );
+  const visibleSecondarySections = secondarySections
+    .filter((section) => canAccessNavigationSection(user.role, section.id))
+    .map((section) => ({
+      ...section,
+      children: section.children?.filter((child) =>
+        canAccessNavigationChild(user.role, child.href),
+      ),
+    }))
+    .filter((section) => (section.children?.length ?? 1) > 0);
 
   return (
     <aside
@@ -36,7 +52,7 @@ export function SidebarNav({
       </div>
 
       <nav aria-label="Primary destinations" className="flex flex-col gap-1">
-        {primarySections.map((section: NavigationSection) => {
+        {visiblePrimarySections.map((section: NavigationSection) => {
           const sectionActive = activeSection.id === section.id;
 
           return (
@@ -66,12 +82,12 @@ export function SidebarNav({
         })}
       </nav>
 
-      {secondarySections.length ? (
+      {visibleSecondarySections.length ? (
         <nav aria-label="Settings" className="flex flex-col gap-1">
           <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
             Setup
           </p>
-          {secondarySections.map((section: NavigationSection) => {
+          {visibleSecondarySections.map((section: NavigationSection) => {
             const active = isPathActive(pathname, section.href);
 
             return (

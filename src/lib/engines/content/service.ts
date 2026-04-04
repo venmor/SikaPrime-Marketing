@@ -19,6 +19,7 @@ import {
   type ContentLane,
   type GenerationMode,
 } from "@/lib/engines/content/strategy";
+import { getIntegrationSettingValue } from "@/lib/integrations/service";
 import { fetchWithObservability } from "@/lib/operations/service";
 
 const generationSchema = z.object({
@@ -159,16 +160,23 @@ function parseAiJson<T>(raw: string, schema: z.ZodType<T>) {
 }
 
 async function generateWithOpenAI(prompt: string) {
-  if (!process.env.OPENAI_API_KEY) return null;
+  const [apiKey, model] = await Promise.all([
+    getIntegrationSettingValue("openai.api_key", process.env.OPENAI_API_KEY ?? ""),
+    getIntegrationSettingValue(
+      "openai.text_model",
+      process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
+    ),
+  ]);
 
-  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  if (!apiKey) return null;
+
   const response = await fetchWithObservability(
     "https://api.openai.com/v1/responses",
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model,

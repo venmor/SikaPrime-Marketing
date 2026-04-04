@@ -1,8 +1,11 @@
 import { ContentType, PublishingChannel } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { canViewAnalytics } from "@/lib/auth/access";
+import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { getPublishedRepository } from "@/lib/repository/service";
 import { formatDateTime, humanizeEnum } from "@/lib/utils";
@@ -26,6 +29,12 @@ export default async function LibraryPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const session = await requireSession();
+
+  if (!canViewAnalytics(session.role)) {
+    redirect("/dashboard");
+  }
+
   const resolvedSearchParams = await searchParams;
   const filters = {
     query: firstValue(resolvedSearchParams.query).trim(),

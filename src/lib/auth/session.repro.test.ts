@@ -44,6 +44,7 @@ describe("Session Auth (Security Fix)", () => {
       email: "test@example.com",
       role: UserRole.ADMIN,
       name: "Test User",
+      sessionVersion: 1,
     };
 
     await expect(createSession(session)).rejects.toThrow("AUTH_SECRET environment variable is not set");
@@ -57,6 +58,7 @@ describe("Session Auth (Security Fix)", () => {
       email: "test@example.com",
       role: UserRole.ADMIN,
       name: "Test User",
+      sessionVersion: 1,
     };
 
     await expect(createSession(session)).resolves.not.toThrow();

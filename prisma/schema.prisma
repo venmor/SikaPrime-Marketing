@@ -90,6 +90,30 @@ enum GuardrailType {
   REVIEW_TRIGGER
 }
 
+enum AuthTokenType {
+  INVITE
+  PASSWORD_RESET
+}
+
+enum AssetKind {
+  FLYER_REFERENCE
+  GENERATED_FLYER
+}
+
+enum AssetStatus {
+  DRAFT
+  READY
+  APPROVED
+  ARCHIVED
+}
+
+enum FlyerConceptStatus {
+  IDEA
+  GENERATED
+  SELECTED
+  ARCHIVED
+}
+
 model User {
   id                String        @id @default(cuid())
   name              String
@@ -98,12 +122,22 @@ model User {
   role              UserRole
   jobTitle          String
   avatarSeed        String
+  isActive          Boolean       @default(true)
+  sessionVersion    Int           @default(1)
+  failedSignInAttempts Int        @default(0)
+  lockedUntil       DateTime?
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   contentItems      ContentItem[] @relation("ContentOwner")
   reviewAssignments ContentItem[] @relation("ContentReviewer")
   reviews           ContentReview[] @relation("ReviewAuthor")
   activityLogs      ActivityLog[] @relation("ActivityActor")
+  authTokens        AuthToken[]   @relation("AuthTokenUser")
+  createdAuthTokens AuthToken[]   @relation("AuthTokenCreator")
+  brandAssets       BrandAsset[]  @relation("BrandAssetOwner")
+  flyerProjects     FlyerProject[] @relation("FlyerProjectOwner")
 }
 
 model BusinessProfile {
@@ -150,6 +184,8 @@ model Product {
   active           Boolean         @default(true)
   profile          BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   contentItems     ContentItem[]
+  brandAssets      BrandAsset[]
+  flyerProjects    FlyerProject[]
 }
 
 model AudienceSegment {
@@ -164,6 +200,7 @@ model AudienceSegment {
   priority          Int             @default(50)
   profile           BusinessProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
   contentItems      ContentItem[]
+  flyerProjects     FlyerProject[]
 }
 
 model ComplianceRule {
@@ -336,4 +373,129 @@ model ActivityLog {
   details    String?
   createdAt  DateTime @default(now())
   actor      User?    @relation("ActivityActor", fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model BrandAsset {
+  id               String      @id @default(cuid())
+  title            String
+  fileName         String
+  mimeType         String
+  imageData        String
+  kind             AssetKind
+  status           AssetStatus @default(READY)
+  analysisSummary  String?
+  brandKeywords    String?
+  colorPalette     String?
+  ownerId          String?
+  productId        String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  owner            User?       @relation("BrandAssetOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  flyerConcepts    FlyerConcept[]
+}
+
+model FlyerProject {
+  id                String            @id @default(cuid())
+  title             String
+  objective         String
+  specialDayKey     String?
+  campaignTemplateId String?
+  distributionTarget String?
+  tone              ContentTone
+  channel           PublishingChannel
+  contentType       ContentType       @default(FACEBOOK_POST)
+  status            AssetStatus       @default(DRAFT)
+  productId         String?
+  audienceSegmentId String?
+  ownerId           String
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  product           Product?          @relation(fields: [productId], references: [id], onDelete: SetNull)
+  audienceSegment   AudienceSegment?  @relation(fields: [audienceSegmentId], references: [id], onDelete: SetNull)
+  owner             User              @relation("FlyerProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  concepts          FlyerConcept[]
+}
+
+model FlyerConcept {
+  id                 String             @id @default(cuid())
+  projectId          String
+  title              String
+  headline           String
+  bodyCopy           String
+  visualDirection    String
+  promptText         String
+  caption            String
+  hashtags           String
+  engagementComments String
+  imageData          String?
+  imageMimeType      String?
+  status             FlyerConceptStatus @default(IDEA)
+  assetId            String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  project            FlyerProject       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  asset              BrandAsset?        @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+model CampaignTemplate {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  title         String
+  summary       String
+  objective     String
+  triggerTags   String
+  sequenceSteps String
+  priority      Int      @default(50)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model IntegrationSetting {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  label      String
+  groupLabel String
+  helpText   String?
+  value      String?
+  isSecret   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model AuthToken {
+  id          String        @id @default(cuid())
+  type        AuthTokenType
+  tokenHash   String        @unique
+  email       String
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  revokedAt   DateTime?
+  name        String?
+  jobTitle    String?
+  role        UserRole?
+  userId      String?
+  createdById String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  user        User?         @relation("AuthTokenUser", fields: [userId], references: [id], onDelete: SetNull)
+  createdBy   User?         @relation("AuthTokenCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([email, type])
+  @@index([expiresAt])
+}
+
+model RateLimitBucket {
+  id           String   @id @default(cuid())
+  action       String
+  key          String
+  hits         Int      @default(0)
+  windowStart  DateTime
+  blockedUntil DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([action, key])
+  @@index([blockedUntil])
 }

@@ -38,6 +38,19 @@ export default async function LoginPage({
     redirect("/dashboard");
   }
 
+  const errorMessage =
+    params.error === "rate"
+      ? "Too many sign-in attempts were made recently. Please wait a few minutes and try again."
+      : params.error === "reauth"
+        ? "Please sign in again to continue with sensitive admin access."
+      : params.error === "inactive"
+        ? "This account is currently inactive. Contact an administrator for help."
+        : params.error === "locked"
+          ? "This account is temporarily locked after repeated failed sign-in attempts."
+          : params.error
+            ? "Invalid email or password. Try one of the seeded demo users below."
+            : null;
+
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[color:var(--background)] px-4 py-8 sm:px-6 lg:px-10">
       <div className="relative mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-2 lg:items-center">
@@ -92,9 +105,9 @@ export default async function LoginPage({
             </div>
           </div>
 
-          {params.error && (
+          {errorMessage && (
             <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
-              Invalid email or password. Try one of the seeded demo users below.
+              {errorMessage}
             </div>
           )}
 
@@ -137,6 +150,16 @@ export default async function LoginPage({
               Enter platform
             </SubmitButton>
           </form>
+
+          <div className="mt-4 flex items-center justify-between text-sm text-[color:var(--muted)]">
+            <span>Need help accessing your account?</span>
+            <Link
+              href="/forgot-password"
+              className="font-semibold text-brand transition-colors hover:text-brand-strong"
+            >
+              Request reset help
+            </Link>
+          </div>
 
           <div className="mt-10 flex flex-col gap-4 rounded-2xl bg-[color:var(--surface-soft)] p-6">
             <div className="flex items-center justify-between">

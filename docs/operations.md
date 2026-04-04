@@ -189,8 +189,9 @@ For a full production deployment sequence, use [vercel-deployment.md](/home/char
 
 - Run lint, tests, and build
 - Run the Vercel smoke test against the latest deployment URL
-- Re-seed a clean local database if schema changes touched demo assumptions
-- Verify role-based access on knowledge, review, and publishing flows
+- Push the latest Prisma schema to the active database before testing if the release adds tables or columns
+- Re-seed a clean local database only if schema changes touched demo assumptions
+- Verify role-based access on knowledge, review, analytics, and publishing flows
 - Smoke-test trend refresh and scheduled publishing endpoints
 
 ## Workflow Smoke Test

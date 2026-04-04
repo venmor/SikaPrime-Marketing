@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
@@ -8,6 +9,8 @@ import {
   canGenerateContent,
   canPublishContent,
   canReviewContent,
+  canViewWorkflow,
+  shouldScopeWorkflowToOwnedItems,
 } from "@/lib/auth/access";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
@@ -47,8 +50,18 @@ function stageVariant(stage: WorkflowStage) {
 
 export default async function WorkflowPage() {
   const session = await requireSession();
+
+  if (!canViewWorkflow(session.role)) {
+    redirect("/dashboard");
+  }
+
+  const contentScope = shouldScopeWorkflowToOwnedItems(session.role)
+    ? { ownerId: session.userId }
+    : undefined;
+
   const [items, reviewers] = await Promise.all([
     prisma.contentItem.findMany({
+      where: contentScope,
       include: {
         owner: true,
         reviewer: true,
@@ -80,6 +93,11 @@ export default async function WorkflowPage() {
         title="Content Workflow Manager"
         description="Ideas, drafts, reviews, approvals, scheduling, publishing, and archives stay visible in a shared workspace with role-based actions."
       >
+        {shouldScopeWorkflowToOwnedItems(session.role) ? (
+          <div className="mb-4 rounded-xl border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[color:var(--muted)]">
+            You are seeing the workflow items you own. Review and publishing teams keep the wider queue.
+          </div>
+        ) : null}
         <div className="grid gap-6 text-sm text-[color:var(--muted)] md:grid-cols-3 mt-4">
           <div className="rounded-xl bg-white p-4 shadow-sm border border-[color:var(--border)]">
             <span className="block font-semibold text-[color:var(--foreground)] mb-1">Creators</span>

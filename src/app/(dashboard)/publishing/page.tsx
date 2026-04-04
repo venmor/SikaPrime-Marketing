@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { canPublishContent } from "@/lib/auth/access";
+import { requireSession } from "@/lib/auth/session";
 import { getCalendarSnapshot } from "@/lib/calendar/service";
 import { prisma } from "@/lib/db";
 import { formatDateTime, humanizeEnum } from "@/lib/utils";
@@ -14,6 +17,12 @@ import {
 } from "@/server/actions/publishing";
 
 export default async function PublishingPage() {
+  const session = await requireSession();
+
+  if (!canPublishContent(session.role)) {
+    redirect("/dashboard");
+  }
+
   const [readyItems, publications, calendar] = await Promise.all([
     prisma.contentItem.findMany({
       where: {
@@ -112,6 +121,30 @@ export default async function PublishingPage() {
                       Distribution target:{" "}
                       {item.distributionTarget ?? "No destination configured"}
                     </span>
+                  </div>
+                  {item.assetReference &&
+                  (item.assetReference.startsWith("data:image/") ||
+                    /^https?:\/\//i.test(item.assetReference)) ? (
+                    <div className="mt-4 overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
+                      <img
+                        src={item.assetReference}
+                        alt={item.title}
+                        className="h-64 w-full object-cover"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="mt-4 rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                      Publish preview
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                      {item.finalCopy ?? item.draft}
+                    </p>
+                    {item.hashtags ? (
+                      <p className="mt-3 text-sm font-medium text-[color:var(--brand-strong)]">
+                        {item.hashtags}
+                      </p>
+                    ) : null}
                   </div>
                   <form action={publishContentAction} className="mt-4 grid gap-3">
                     <input type="hidden" name="id" value={item.id} />

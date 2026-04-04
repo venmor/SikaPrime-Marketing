@@ -16,6 +16,7 @@ import {
   canGenerateContent,
   canPublishContent,
   canReviewContent,
+  canViewContentItem,
 } from "@/lib/auth/access";
 import { requireSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
@@ -47,6 +48,17 @@ function stageVariant(stage: WorkflowStage) {
   }
 
   return "muted" as const;
+}
+
+function getSuggestedComments(notes?: string | null) {
+  if (!notes || !notes.toLowerCase().includes("suggested engagement comments")) {
+    return [];
+  }
+
+  return notes
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => /^\d+\.\s+/.test(line));
 }
 
 export default async function ContentDetailPage({
@@ -81,6 +93,15 @@ export default async function ContentDetailPage({
     notFound();
   }
 
+  if (
+    !canViewContentItem(session.role, {
+      sessionUserId: session.userId,
+      ownerId: content.ownerId,
+    })
+  ) {
+    redirect("/dashboard");
+  }
+
   const [reviewers, activity] = await Promise.all([
     prisma.user.findMany({
       where: {
@@ -100,10 +121,12 @@ export default async function ContentDetailPage({
   const scheduledValue = content.scheduledFor
     ? format(content.scheduledFor, "yyyy-MM-dd'T'HH:mm")
     : "";
-
-  if (!canEdit && !canReview && !canPublish) {
-    redirect("/dashboard");
-  }
+  const hasImagePreview = Boolean(
+    content.assetReference &&
+      (content.assetReference.startsWith("data:image/") ||
+        /^https?:\/\//i.test(content.assetReference)),
+  );
+  const suggestedComments = getSuggestedComments(content.notes);
 
   return (
     <div className="grid gap-6">
@@ -242,6 +265,60 @@ export default async function ContentDetailPage({
         </SectionCard>
 
         <div className="grid gap-6">
+          <SectionCard
+            title="Creative preview"
+            description="Preview the visual, caption, and engagement prompts before publishing."
+          >
+            <div className="grid gap-4">
+              {hasImagePreview ? (
+                <div className="overflow-hidden rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
+                  <img
+                    src={content.assetReference ?? ""}
+                    alt={content.title}
+                    className="h-[360px] w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="empty-state">
+                  No visual preview is attached yet. Add an image URL, flyer, or
+                  generated asset reference to preview it here.
+                </div>
+              )}
+
+              <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                  Post preview
+                </p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                  {content.finalCopy ?? content.draft}
+                </p>
+                {content.hashtags ? (
+                  <p className="mt-3 text-sm font-medium text-[color:var(--brand-strong)]">
+                    {content.hashtags}
+                  </p>
+                ) : null}
+              </div>
+
+              {suggestedComments.length ? (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
+                    Suggested engagement comments
+                  </p>
+                  <ul className="mt-3 grid gap-2">
+                    {suggestedComments.map((comment) => (
+                      <li
+                        key={comment}
+                        className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm text-[color:var(--muted)]"
+                      >
+                        {comment}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
+          </SectionCard>
+
           <SectionCard
             title="Context"
             description="The structured business data, trend signal, and AI notes behind this item."

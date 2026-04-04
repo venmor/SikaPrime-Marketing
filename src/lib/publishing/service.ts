@@ -1,3 +1,6 @@
+import "server-only";
+
+import { Buffer } from "node:buffer";
 import {
   PublicationStatus,
   PublishingChannel,
@@ -5,14 +8,13 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { getIntegrationSettingValue } from "@/lib/integrations/service";
 import {
   fetchWithObservability,
   getPublishBatchSize,
   getPublishRetryCount,
   logOperationalEvent,
 } from "@/lib/operations/service";
-
-const graphApiVersion = process.env.META_GRAPH_API_VERSION ?? "v22.0";
 
 function buildMessage(input: {
   draft: string;
@@ -40,8 +42,80 @@ function fallbackPublishUrl(
   return null;
 }
 
-async function publishToFacebook(message: string) {
-  if (!process.env.FACEBOOK_PAGE_ID || !process.env.FACEBOOK_PAGE_ACCESS_TOKEN) {
+function extractImageAsset(assetReference?: string | null) {
+  if (!assetReference) {
+    return null;
+  }
+
+  const dataUrlMatch = assetReference.match(
+    /^data:(image\/[a-zA-Z0-9.+-]+);base64,([\s\S]+)$/,
+  );
+
+  if (dataUrlMatch) {
+    return {
+      kind: "inline" as const,
+      mimeType: dataUrlMatch[1],
+      bytes: Buffer.from(dataUrlMatch[2], "base64"),
+    };
+  }
+
+  if (/^https?:\/\//i.test(assetReference)) {
+    return {
+      kind: "remote" as const,
+      url: assetReference,
+    };
+  }
+
+  return null;
+}
+
+async function getPublishingConfig() {
+  const [
+    graphApiVersion,
+    facebookPageId,
+    facebookToken,
+    whatsappPhoneNumberId,
+    whatsappAccessToken,
+  ] = await Promise.all([
+    getIntegrationSettingValue(
+      "meta.graph_api_version",
+      process.env.META_GRAPH_API_VERSION ?? "v22.0",
+    ),
+    getIntegrationSettingValue(
+      "facebook.page_id",
+      process.env.FACEBOOK_PAGE_ID ?? "",
+    ),
+    getIntegrationSettingValue(
+      "facebook.page_access_token",
+      process.env.FACEBOOK_PAGE_ACCESS_TOKEN ?? "",
+    ),
+    getIntegrationSettingValue(
+      "whatsapp.phone_number_id",
+      process.env.WHATSAPP_PHONE_NUMBER_ID ?? "",
+    ),
+    getIntegrationSettingValue(
+      "whatsapp.access_token",
+      process.env.WHATSAPP_ACCESS_TOKEN ?? "",
+    ),
+  ]);
+
+  return {
+    graphApiVersion,
+    facebookPageId,
+    facebookToken,
+    whatsappPhoneNumberId,
+    whatsappAccessToken,
+  };
+}
+
+async function publishToFacebook(input: {
+  message: string;
+  assetReference?: string | null;
+}) {
+  const { graphApiVersion, facebookPageId, facebookToken } =
+    await getPublishingConfig();
+
+  if (!facebookPageId || !facebookToken) {
     return {
       status: PublicationStatus.SIMULATED,
       externalId: `fb-sim-${Date.now()}`,
@@ -50,13 +124,96 @@ async function publishToFacebook(message: string) {
     };
   }
 
+  const asset = extractImageAsset(input.assetReference);
+
+  if (asset) {
+    let response: Response;
+
+    if (asset.kind === "inline") {
+      const body = new FormData();
+      body.set("caption", input.message);
+      body.set("published", "true");
+      body.set("access_token", facebookToken);
+      body.set(
+        "source",
+        new Blob([asset.bytes], { type: asset.mimeType }),
+        "sika-prime-flyer.png",
+      );
+
+      response = await fetchWithObservability(
+        `https://graph.facebook.com/${graphApiVersion}/${facebookPageId}/photos`,
+        {
+          method: "POST",
+          body,
+          cache: "no-store",
+        },
+        {
+          source: "facebook_graph_api",
+          operation: "publish_photo",
+          retries: getPublishRetryCount(),
+          metadata: {
+            channel: PublishingChannel.FACEBOOK,
+            assetKind: "inline-image",
+          },
+        },
+      );
+    } else {
+      const body = new URLSearchParams({
+        caption: input.message,
+        url: asset.url,
+        published: "true",
+        access_token: facebookToken,
+      });
+
+      response = await fetchWithObservability(
+        `https://graph.facebook.com/${graphApiVersion}/${facebookPageId}/photos`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: body.toString(),
+          cache: "no-store",
+        },
+        {
+          source: "facebook_graph_api",
+          operation: "publish_photo",
+          retries: getPublishRetryCount(),
+          metadata: {
+            channel: PublishingChannel.FACEBOOK,
+            assetKind: "remote-image",
+          },
+        },
+      );
+    }
+
+    if (!response.ok) {
+      return {
+        status: PublicationStatus.FAILED,
+        externalId: null,
+        publishUrl: null,
+        errorMessage: `Facebook photo publish failed with status ${response.status}`,
+      };
+    }
+
+    const payload = (await response.json()) as { id?: string; post_id?: string };
+    const referenceId = payload.post_id ?? payload.id ?? null;
+
+    return {
+      status: PublicationStatus.PUBLISHED,
+      externalId: referenceId,
+      publishUrl: referenceId ? `https://facebook.com/${referenceId}` : null,
+      errorMessage: null,
+    };
+  }
+
   const body = new URLSearchParams({
-    message,
-    access_token: process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
+    message: input.message,
+    access_token: facebookToken,
   });
 
   const response = await fetchWithObservability(
-    `https://graph.facebook.com/${graphApiVersion}/${process.env.FACEBOOK_PAGE_ID}/feed`,
+    `https://graph.facebook.com/${graphApiVersion}/${facebookPageId}/feed`,
     {
       method: "POST",
       headers: {
@@ -96,17 +253,17 @@ async function publishToFacebook(message: string) {
 
 async function publishToWhatsApp(input: {
   message: string;
+  assetReference?: string | null;
   distributionTarget?: string | null;
 }) {
+  const { graphApiVersion, whatsappPhoneNumberId, whatsappAccessToken } =
+    await getPublishingConfig();
+  const asset = extractImageAsset(input.assetReference);
   const recipient = input.distributionTarget
     ? normalizePhoneNumber(input.distributionTarget)
     : "";
 
-  if (
-    !process.env.WHATSAPP_PHONE_NUMBER_ID ||
-    !process.env.WHATSAPP_ACCESS_TOKEN ||
-    !recipient
-  ) {
+  if (!whatsappPhoneNumberId || !whatsappAccessToken || !recipient) {
     return {
       status: PublicationStatus.SIMULATED,
       externalId: `wa-sim-${Date.now()}`,
@@ -118,22 +275,32 @@ async function publishToWhatsApp(input: {
   }
 
   const response = await fetchWithObservability(
-    `https://graph.facebook.com/${graphApiVersion}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    `https://graph.facebook.com/${graphApiVersion}/${whatsappPhoneNumberId}/messages`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+        Authorization: `Bearer ${whatsappAccessToken}`,
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: recipient,
-        type: "text",
-        text: {
-          preview_url: false,
-          body: input.message,
-        },
+        ...(asset?.kind === "remote"
+          ? {
+              type: "image",
+              image: {
+                link: asset.url,
+                caption: input.message,
+              },
+            }
+          : {
+              type: "text",
+              text: {
+                preview_url: false,
+                body: input.message,
+              },
+            }),
       }),
       cache: "no-store",
     },
@@ -178,7 +345,9 @@ function getNumericInsightValue(
 }
 
 export async function syncFacebookPublicationMetrics(publicationId: string) {
-  if (!process.env.FACEBOOK_PAGE_ACCESS_TOKEN) {
+  const { graphApiVersion, facebookToken } = await getPublishingConfig();
+
+  if (!facebookToken) {
     return null;
   }
 
@@ -217,7 +386,7 @@ export async function syncFacebookPublicationMetrics(publicationId: string) {
       "insights.metric(post_impressions,post_clicks,post_engaged_users)",
     ].join(","),
   );
-  url.searchParams.set("access_token", process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
+  url.searchParams.set("access_token", facebookToken);
 
   const response = await fetchWithObservability(
     url,
@@ -345,9 +514,13 @@ export async function publishContentItem(
   try {
     result =
       targetChannel === PublishingChannel.FACEBOOK
-        ? await publishToFacebook(message)
+        ? await publishToFacebook({
+            message,
+            assetReference: content.assetReference,
+          })
         : await publishToWhatsApp({
             message,
+            assetReference: content.assetReference,
             distributionTarget,
           });
   } catch (error) {
@@ -372,6 +545,7 @@ export async function publishContentItem(
         title: content.title,
         message,
         hashtags: content.hashtags,
+        assetReference: content.assetReference,
         distributionTarget,
       }),
       externalId: result.externalId,
