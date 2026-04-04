@@ -43,11 +43,19 @@ Optional but recommended:
 - `WHATSAPP_PHONE_NUMBER_ID`
 - `WHATSAPP_ACCESS_TOKEN`
 - `SLACK_WEBHOOK_URL`
+- `OBSERVABILITY_SLOW_API_THRESHOLD_MS`
+- `EXTERNAL_API_TIMEOUT_MS`
+- `PUBLISH_MAX_RETRIES`
+- `PUBLISH_BATCH_SIZE`
 
 Recommended values:
 
 - `OPENAI_MODEL=gpt-4.1-mini`
 - `META_GRAPH_API_VERSION=v22.0`
+- `OBSERVABILITY_SLOW_API_THRESHOLD_MS=2500`
+- `EXTERNAL_API_TIMEOUT_MS=12000`
+- `PUBLISH_MAX_RETRIES=2`
+- `PUBLISH_BATCH_SIZE=10`
 
 Environment guidance:
 
@@ -135,6 +143,13 @@ Run this checklist after the first deployment:
 9. Open `/analytics` and confirm metrics render
 10. Open `/recommendations` and confirm planning suggestions render
 11. Open `/library` and test reuse or repurpose
+12. Open `/api/health` and confirm it reports a connected database
+
+Then run the automated read-only smoke test against the live deployment:
+
+```bash
+npm run smoke:vercel -- https://YOUR-PRODUCTION-DOMAIN
+```
 
 ## 8. Manual Job Checks
 
@@ -195,13 +210,29 @@ This enables:
 - post URL sync
 - performance snapshot refresh for recent live posts
 
-## 10. Maintenance Routine
+## 10. Operational Observability
+
+The app now logs operational warnings and errors for:
+
+- failed Facebook and WhatsApp publishes
+- trend source refresh failures
+- slow external API responses from OpenAI, Meta, and RSS sources
+- daily maintenance job failures
+- scheduled publish backlog warnings when due volume exceeds the configured batch size
+
+These signals are available through:
+
+- `/api/health` for deployment smoke tests
+- the activity log data in the database for deeper review
+
+## 11. Maintenance Routine
 
 Weekly:
 
 - Check Vercel Cron logs
 - Check failed function invocations
 - Review publishing failures
+- Review `/api/health` for recent operational warnings and errors
 - Review Slack alerts
 
 Monthly:
@@ -211,7 +242,7 @@ Monthly:
 - Audit environment variables
 - Review trend source quality and performance sync accuracy
 
-## 11. Recommended Production Follow-Up
+## 12. Recommended Production Follow-Up
 
 These are the next high-value improvements after the first Vercel deployment:
 
@@ -221,3 +252,4 @@ These are the next high-value improvements after the first Vercel deployment:
 4. Add Vercel Analytics or logs monitoring
 5. Add WhatsApp Cloud API credentials if direct messaging is required
 6. Add Slack webhook for operational alerts
+7. Move from batch-limited publishing to a dedicated queue if scheduled volume grows materially

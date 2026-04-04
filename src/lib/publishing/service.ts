@@ -5,6 +5,12 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import {
+  fetchWithObservability,
+  getPublishBatchSize,
+  getPublishRetryCount,
+  logOperationalEvent,
+} from "@/lib/operations/service";
 
 const graphApiVersion = process.env.META_GRAPH_API_VERSION ?? "v22.0";
 
@@ -23,6 +29,17 @@ function normalizePhoneNumber(value: string) {
   return value.replace(/[^\d]/g, "");
 }
 
+function fallbackPublishUrl(
+  channel: PublishingChannel,
+  distributionTarget?: string | null,
+) {
+  if (channel === PublishingChannel.WHATSAPP && distributionTarget) {
+    return `https://wa.me/${normalizePhoneNumber(distributionTarget)}`;
+  }
+
+  return null;
+}
+
 async function publishToFacebook(message: string) {
   if (!process.env.FACEBOOK_PAGE_ID || !process.env.FACEBOOK_PAGE_ACCESS_TOKEN) {
     return {
@@ -38,7 +55,7 @@ async function publishToFacebook(message: string) {
     access_token: process.env.FACEBOOK_PAGE_ACCESS_TOKEN,
   });
 
-  const response = await fetch(
+  const response = await fetchWithObservability(
     `https://graph.facebook.com/${graphApiVersion}/${process.env.FACEBOOK_PAGE_ID}/feed`,
     {
       method: "POST",
@@ -47,6 +64,14 @@ async function publishToFacebook(message: string) {
       },
       body: body.toString(),
       cache: "no-store",
+    },
+    {
+      source: "facebook_graph_api",
+      operation: "publish_post",
+      retries: getPublishRetryCount(),
+      metadata: {
+        channel: PublishingChannel.FACEBOOK,
+      },
     },
   );
 
@@ -92,7 +117,7 @@ async function publishToWhatsApp(input: {
     };
   }
 
-  const response = await fetch(
+  const response = await fetchWithObservability(
     `https://graph.facebook.com/${graphApiVersion}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
     {
       method: "POST",
@@ -111,6 +136,14 @@ async function publishToWhatsApp(input: {
         },
       }),
       cache: "no-store",
+    },
+    {
+      source: "whatsapp_cloud_api",
+      operation: "publish_message",
+      retries: getPublishRetryCount(),
+      metadata: {
+        channel: PublishingChannel.WHATSAPP,
+      },
     },
   );
 
@@ -186,9 +219,21 @@ export async function syncFacebookPublicationMetrics(publicationId: string) {
   );
   url.searchParams.set("access_token", process.env.FACEBOOK_PAGE_ACCESS_TOKEN);
 
-  const response = await fetch(url, {
-    cache: "no-store",
-  });
+  const response = await fetchWithObservability(
+    url,
+    {
+      cache: "no-store",
+    },
+    {
+      source: "facebook_graph_api",
+      operation: "sync_publication_metrics",
+      retries: 1,
+      metadata: {
+        publicationId: publication.id,
+        externalId: publication.externalId,
+      },
+    },
+  );
 
   if (!response.ok) {
     return null;
@@ -293,14 +338,29 @@ export async function publishContentItem(
   const distributionTarget =
     overrides?.distributionTarget ?? content.distributionTarget;
   const message = buildMessage(content);
+  let result:
+    | Awaited<ReturnType<typeof publishToFacebook>>
+    | Awaited<ReturnType<typeof publishToWhatsApp>>;
 
-  const result =
-    targetChannel === PublishingChannel.FACEBOOK
-      ? await publishToFacebook(message)
-      : await publishToWhatsApp({
-          message,
-          distributionTarget,
-        });
+  try {
+    result =
+      targetChannel === PublishingChannel.FACEBOOK
+        ? await publishToFacebook(message)
+        : await publishToWhatsApp({
+            message,
+            distributionTarget,
+          });
+  } catch (error) {
+    result = {
+      status: PublicationStatus.FAILED,
+      externalId: null,
+      publishUrl: fallbackPublishUrl(targetChannel, distributionTarget),
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : "Publishing failed due to an unexpected error.",
+    };
+  }
 
   const publication = await prisma.publication.create({
     data: {
@@ -339,20 +399,58 @@ export async function publishContentItem(
     });
   }
 
+  if (result.status === PublicationStatus.FAILED) {
+    await logOperationalEvent({
+      severity: "error",
+      source: "publishing",
+      operation: "publish_content_item",
+      message: `Publishing failed for content item ${content.id}.`,
+      metadata: {
+        channel: targetChannel,
+        contentItemId: content.id,
+        distributionTarget,
+        scheduled: content.stage === WorkflowStage.SCHEDULED,
+        errorMessage: result.errorMessage,
+      },
+    });
+  }
+
   return publication;
 }
 
 export async function runDuePublications() {
-  const dueItems = await prisma.contentItem.findMany({
-    where: {
-      stage: WorkflowStage.SCHEDULED,
-      scheduledFor: {
-        lte: new Date(),
-      },
+  const now = new Date();
+  const batchSize = getPublishBatchSize();
+  const dueWhere = {
+    stage: WorkflowStage.SCHEDULED,
+    scheduledFor: {
+      lte: now,
     },
+  } as const;
+  const dueCount = await prisma.contentItem.count({
+    where: dueWhere,
+  });
+  const dueItems = await prisma.contentItem.findMany({
+    where: dueWhere,
+    orderBy: [{ scheduledFor: "asc" }, { createdAt: "asc" }],
+    take: batchSize,
   });
 
-  const results = [];
+  if (dueCount > batchSize) {
+    await logOperationalEvent({
+      severity: "warning",
+      source: "publishing",
+      operation: "publish_queue_backlog",
+      message: `Scheduled publishing backlog detected: ${dueCount} items are due.`,
+      metadata: {
+        dueCount,
+        batchSize,
+        remainingCount: dueCount - dueItems.length,
+      },
+    });
+  }
+
+  const results: Awaited<ReturnType<typeof publishContentItem>>[] = [];
 
   for (const item of dueItems) {
     results.push(

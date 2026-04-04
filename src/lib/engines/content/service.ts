@@ -19,6 +19,7 @@ import {
   type ContentLane,
   type GenerationMode,
 } from "@/lib/engines/content/strategy";
+import { fetchWithObservability } from "@/lib/operations/service";
 
 const generationSchema = z.object({
   title: z.string().trim().optional().nullable(),
@@ -160,18 +161,30 @@ function parseAiJson<T>(raw: string, schema: z.ZodType<T>) {
 async function generateWithOpenAI(prompt: string) {
   if (!process.env.OPENAI_API_KEY) return null;
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+  const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+  const response = await fetchWithObservability(
+    "https://api.openai.com/v1/responses",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        input: prompt,
+      }),
+      cache: "no-store",
     },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
-      input: prompt,
-    }),
-    cache: "no-store",
-  });
+    {
+      source: "openai",
+      operation: "generate_content",
+      retries: 1,
+      metadata: {
+        model,
+      },
+    },
+  );
 
   if (!response.ok) {
     return null;

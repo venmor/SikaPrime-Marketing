@@ -1,5 +1,6 @@
 import { refreshRecommendations } from "@/lib/engines/recommendations/service";
 import { refreshTrendSignals } from "@/lib/engines/trends/service";
+import { logOperationalEvent } from "@/lib/operations/service";
 import {
   runDuePublications,
   syncRecentPublicationMetrics,
@@ -60,6 +61,15 @@ export async function runDailyMaintenance(): Promise<DailyMaintenanceResult> {
         publishingResult.reason instanceof Error
           ? publishingResult.reason.message
           : "Publishing sync failed.",
+    });
+  }
+
+  for (const error of errors) {
+    await logOperationalEvent({
+      severity: "error",
+      source: "daily_maintenance",
+      operation: error.step,
+      message: error.message,
     });
   }
 

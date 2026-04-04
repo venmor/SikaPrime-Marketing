@@ -9,6 +9,10 @@ import {
   type TrendSourceConfig,
 } from "@/lib/engines/trends/source-registry";
 import { countKeywordMatches, scoreTrend } from "@/lib/engines/trends/scoring";
+import {
+  fetchWithObservability,
+  logOperationalEvent,
+} from "@/lib/operations/service";
 import { humanizeEnum, splitList, truncate } from "@/lib/utils";
 
 type FeedItem = {
@@ -80,7 +84,29 @@ async function collectBusinessTerms() {
 }
 
 async function fetchSource(source: TrendSourceConfig, businessTerms: string[]) {
-  const feed = await parser.parseURL(source.url);
+  const response = await fetchWithObservability(
+    source.url,
+    {
+      headers: {
+        Accept: "application/rss+xml, application/xml, text/xml",
+      },
+    },
+    {
+      source: source.name,
+      operation: "refresh_trend_source",
+      retries: 1,
+      metadata: {
+        region: source.region,
+        topic: source.topic,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`${source.name} returned HTTP ${response.status}.`);
+  }
+
+  const feed = await parser.parseString(await response.text());
   const freshnessCutoff = subDays(new Date(), 45);
 
   return (feed.items ?? [])
@@ -194,6 +220,11 @@ export async function refreshTrendSignals() {
   const fetched = await Promise.allSettled(
     defaultTrendSources.map((source) => fetchSource(source, businessTerms)),
   );
+  const failedSources = fetched.flatMap((result, index) =>
+    result.status === "rejected" && defaultTrendSources[index]
+      ? [defaultTrendSources[index].name]
+      : [],
+  );
 
   const signals = dedupeSignals(
     fetched.flatMap((result) =>
@@ -203,7 +234,30 @@ export async function refreshTrendSignals() {
     .sort((left, right) => right.totalScore - left.totalScore)
     .slice(0, 24);
 
+  if (failedSources.length) {
+    await logOperationalEvent({
+      severity: "warning",
+      source: "trend_engine",
+      operation: "refresh_trends",
+      message: `Trend refresh completed with ${failedSources.length} source failure(s).`,
+      metadata: {
+        failedSources,
+      },
+    });
+  }
+
   if (!signals.length) {
+    await logOperationalEvent({
+      severity: "warning",
+      source: "trend_engine",
+      operation: "refresh_trends",
+      message: "Trend refresh produced no safe or relevant signals.",
+      metadata: {
+        failedSources,
+        sourceCount: defaultTrendSources.length,
+      },
+    });
+
     return getTrendCollections();
   }
 

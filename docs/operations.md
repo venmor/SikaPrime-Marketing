@@ -20,6 +20,7 @@ Before `db:init`, update `.env` with your Neon `DATABASE_URL` and `DIRECT_URL`.
 npm run lint
 npm run test
 npm run build
+npm run smoke:vercel -- https://your-deployment-url.vercel.app
 ```
 
 ## Database Notes
@@ -79,6 +80,45 @@ curl http://localhost:3000/api/jobs/sync-performance \
 
 On the Vercel free/Hobby plan, `vercel.json` uses only the daily maintenance route. The other job routes remain available for manual runs.
 
+## Observability And Resilience
+
+The system now records operational events into the existing activity log for:
+
+- failed Facebook and WhatsApp publish attempts
+- trend source refresh failures
+- daily maintenance step failures
+- slow external calls to OpenAI, Meta, and RSS sources
+- scheduled publishing backlog warnings when due volume exceeds the current batch size
+
+Default operational controls:
+
+- `OBSERVABILITY_SLOW_API_THRESHOLD_MS=2500`
+- `EXTERNAL_API_TIMEOUT_MS=12000`
+- `PUBLISH_MAX_RETRIES=2`
+- `PUBLISH_BATCH_SIZE=10`
+
+How retry and queue-lite behavior works:
+
+- publish requests to Facebook and WhatsApp retry transient failures with short backoff
+- scheduled publishing only processes `PUBLISH_BATCH_SIZE` due items per run
+- any remaining due items stay in `SCHEDULED` and are picked up on the next manual run or daily cron
+- when the due queue exceeds the batch size, the system records a backlog warning so the team can decide whether to increase the batch size or move to a proper queue
+
+### Health Check Endpoint
+
+Use the deployment health route to confirm the app is reachable and the database is connected:
+
+```bash
+curl http://localhost:3000/api/health
+```
+
+The response includes:
+
+- overall app health status
+- database connectivity
+- recent operational warning and error counts
+- latest operational events
+
 ## Live Integrations
 
 ### OpenAI
@@ -121,8 +161,7 @@ Without this value, workflow notifications stay in-app only.
 
 The repo includes [vercel.json](/home/charlie/SIKA%20PRIME%20MARKETING%20AGENT/vercel.json), which defines:
 
-- daily trend and recommendation refresh
-- 15-minute publishing checks plus Facebook performance sync
+- a single once-daily maintenance sweep
 
 Vercel cron sends `GET` requests, which is why the job routes support both `GET` and `POST`.
 
@@ -149,6 +188,7 @@ For a full production deployment sequence, use [vercel-deployment.md](/home/char
 ### Before releasing major changes
 
 - Run lint, tests, and build
+- Run the Vercel smoke test against the latest deployment URL
 - Re-seed a clean local database if schema changes touched demo assumptions
 - Verify role-based access on knowledge, review, and publishing flows
 - Smoke-test trend refresh and scheduled publishing endpoints
@@ -169,3 +209,19 @@ Use this sequence to validate the end-to-end operating model after major workflo
 10. Open `/library` and confirm a published item can be reused or repurposed into a new draft.
 11. Open `/analytics` and confirm product, trend, theme, and posting-window insights render.
 12. Open `/recommendations`, ask a planning question, and confirm the answer explains the next move.
+
+## Deployment Smoke Test
+
+Run this after each push that reaches Vercel:
+
+```bash
+npm run smoke:vercel -- https://your-deployment-url.vercel.app
+```
+
+The smoke test verifies:
+
+- home page loads
+- login page loads
+- `/api/health` reports a connected database
+- `/dashboard` still redirects unauthenticated users to `/login`
+- cron routes reject anonymous access

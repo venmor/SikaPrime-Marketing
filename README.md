@@ -97,6 +97,14 @@ npm run dev
   Optional. Required with `WHATSAPP_PHONE_NUMBER_ID`.
 - `SLACK_WEBHOOK_URL`
   Optional. Sends workflow and publishing alerts to Slack.
+- `OBSERVABILITY_SLOW_API_THRESHOLD_MS`
+  Optional. Warns when OpenAI, RSS, or Meta calls are slower than the threshold. Defaults to `2500`.
+- `EXTERNAL_API_TIMEOUT_MS`
+  Optional. Hard timeout for external API calls. Defaults to `12000`.
+- `PUBLISH_MAX_RETRIES`
+  Optional. Number of retries for Facebook and WhatsApp publish attempts. Defaults to `2`.
+- `PUBLISH_BATCH_SIZE`
+  Optional. Maximum number of due scheduled items processed in one publish job run. Defaults to `10`.
 - `CRON_SECRET`
   Protects the refresh and publishing job endpoints.
 
@@ -110,6 +118,7 @@ npm run build
 npm run db:generate
 npm run db:init
 npm run db:seed
+npm run smoke:vercel -- https://your-deployment-url.vercel.app
 ```
 
 ## Scheduled Jobs
@@ -124,6 +133,8 @@ The app exposes protected job routes that accept both `GET` and `POST`:
   Publishes items whose scheduled time has arrived and syncs recent Facebook performance.
 - `/api/jobs/sync-performance`
   Manually syncs recent Facebook publication metrics.
+- `/api/health`
+  Returns deployment health, database connectivity, and recent operational warning/error counts for smoke tests and monitoring.
 
 Use `Authorization: Bearer $CRON_SECRET` or `?secret=$CRON_SECRET`.
 
@@ -139,6 +150,7 @@ src/
     auth/                 session and access helpers
     analytics/            performance aggregation
     dashboard/            dashboard queries
+    operations/           operational telemetry and health checks
     engines/
       content/            AI prompt building and generation
       recommendations/    recommendation logic
@@ -158,6 +170,7 @@ docs/
 
 - The system is intentionally modular: generation, trends, recommendations, publishing, and analytics are separated into services.
 - Audit logging keeps major workflow actions traceable for future maintenance and team accountability.
+- Operational telemetry records slow external responses, trend refresh issues, publishing failures, and publish backlog warnings in the existing activity log.
 - Business profile data is the shared source of truth for content generation and scoring.
 - The included `db:init` helper pushes the Prisma schema to PostgreSQL and then seeds the database. For Neon, use the pooled URL in `DATABASE_URL` and the direct URL in `DIRECT_URL`.
 - During `db:init`, the seed step automatically uses `DIRECT_URL` to avoid Neon pooler issues on one-off setup tasks.
@@ -179,6 +192,7 @@ docs/
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [System Guide](docs/system-guide.md)
 - [Neon Free Setup](docs/neon-setup.md)
 - [Operations](docs/operations.md)
 - [Roadmap](docs/roadmap.md)
