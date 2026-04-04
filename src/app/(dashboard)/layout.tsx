@@ -4,7 +4,7 @@ import { ShellChrome } from "@/components/layout/shell-chrome";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { canManageAccess } from "@/lib/auth/access";
 import { getCurrentUser, requireSession } from "@/lib/auth/session";
-import { signOutAction } from "@/server/actions/auth";
+import { signOutAction } from "@/server/actions/session";
 
 export default async function DashboardLayout({
   children,

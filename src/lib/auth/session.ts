@@ -262,7 +262,28 @@ export async function getCurrentUser() {
 
   if (!session) return null;
 
-  return prisma.user.findUnique({
-    where: { id: session.userId },
-  });
+  try {
+    return await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        jobTitle: true,
+        avatarSeed: true,
+        isActive: true,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to load current user shell profile.", error);
+
+    return {
+      id: session.userId,
+      name: session.name,
+      role: session.role,
+      jobTitle: "Team Member",
+      avatarSeed: "fallback",
+      isActive: true,
+    };
+  }
 }
