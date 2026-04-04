@@ -89,7 +89,7 @@ export default async function AccessPage({
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               Active users
             </p>
@@ -97,7 +97,7 @@ export default async function AccessPage({
               {users.filter((user) => user.isActive).length}
             </p>
           </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               Pending invites
             </p>
@@ -105,7 +105,7 @@ export default async function AccessPage({
               {pendingTokens.filter((token) => token.type === AuthTokenType.INVITE).length}
             </p>
           </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               Email delivery
             </p>
@@ -136,7 +136,7 @@ export default async function AccessPage({
                 return (
                   <div
                     key={request.id}
-                    className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                    className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="warning">Reset requested</Badge>
@@ -188,7 +188,7 @@ export default async function AccessPage({
             return (
               <div
                 key={user.id}
-                className="rounded-2xl border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
               >
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                 <div className="min-w-0">
@@ -288,7 +288,7 @@ export default async function AccessPage({
             pendingTokens.map((token) => (
               <div
                 key={token.id}
-                className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
               >
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>

@@ -20,8 +20,8 @@ export function AppLogo({
           "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[22px] border shadow-[var(--shadow-soft)]",
           compact ? "h-12 w-12" : "h-14 w-14",
           theme === "dark"
-            ? "border-white/15 bg-white/10 backdrop-blur-xl"
-            : "border-[color:var(--border-strong)] bg-white/90 backdrop-blur-xl",
+            ? "border-white/15 bg-surface-strong/10 backdrop-blur-xl"
+            : "border-[color:var(--border-strong)] bg-surface-strong/90 backdrop-blur-xl",
         )}
       >
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(230,62,140,0.16),transparent_58%),radial-gradient(circle_at_bottom_right,rgba(33,198,217,0.18),transparent_55%)]" />

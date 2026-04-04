@@ -44,7 +44,7 @@ export function ChannelSelector({
             "rounded-[24px] border p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
             value === option.value
               ? "border-brand bg-brand-soft/60 shadow-[0_0_0_3px_var(--brand-soft)]"
-              : "border-[color:var(--border)] bg-white",
+              : "border-[color:var(--border)] bg-surface-strong",
           )}
           aria-pressed={value === option.value}
         >

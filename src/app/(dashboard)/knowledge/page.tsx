@@ -1,6 +1,7 @@
 import { GuardrailType } from "@prisma/client";
 import { redirect } from "next/navigation";
 
+import { OpenAssistantButton } from "@/components/assistant/open-assistant-button";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { canManageKnowledge } from "@/lib/auth/access";
@@ -274,7 +275,15 @@ export default async function KnowledgePage() {
                   />
                   Active
                 </label>
-                <SubmitButton pendingLabel="Saving product...">Save product</SubmitButton>
+                <div className="flex flex-wrap gap-3">
+                  <SubmitButton pendingLabel="Saving product...">Save product</SubmitButton>
+                  <OpenAssistantButton
+                    label="Create a post for this product"
+                    prompt={`Create the best post for ${product.name}. Pick the strongest channel automatically, keep it aligned with the current top trend, and make it ready to edit.`}
+                    autoSend
+                    className="bg-surface-strong text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+                  />
+                </div>
               </form>
             ))}
             <form
@@ -372,7 +381,15 @@ export default async function KnowledgePage() {
                     required
                   />
                 </label>
-                <SubmitButton pendingLabel="Saving audience...">Save audience</SubmitButton>
+                <div className="flex flex-wrap gap-3">
+                  <SubmitButton pendingLabel="Saving audience...">Save audience</SubmitButton>
+                  <OpenAssistantButton
+                    label="Create a post for this audience"
+                    prompt={`Create the best post for the ${segment.name} audience. Pick the strongest channel and product automatically, and keep the tone natural for this group.`}
+                    autoSend
+                    className="bg-surface-strong text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+                  />
+                </div>
               </form>
             ))}
             <form

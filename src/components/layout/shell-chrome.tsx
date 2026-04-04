@@ -12,18 +12,21 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
+import { AssistantDock } from "@/components/assistant/assistant-dock";
 import {
   canAccessNavigationChild,
   canGenerateContent,
   canReviewContent,
   canViewAnalytics,
 } from "@/lib/auth/access";
+import type { AssistantHomeSnapshot } from "@/lib/assistant/types";
 import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";
 import { cn, humanizeEnum } from "@/lib/utils";
 import { getNavigationState, type NavigationChild } from "@/lib/constants";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function getPrimaryAction(role: UserRole) {
   if (canGenerateContent(role)) {
@@ -55,10 +58,12 @@ function getPrimaryAction(role: UserRole) {
 
 export function ShellChrome({
   user,
+  assistantSnapshot,
   accountActions,
   children,
 }: {
   user: { name: string; role: UserRole; jobTitle: string; avatarSeed: string };
+  assistantSnapshot: AssistantHomeSnapshot | null;
   accountActions?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -110,7 +115,7 @@ export function ShellChrome({
                 <button
                   type="button"
                   aria-label="Open navigation"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-white text-[color:var(--foreground)] shadow-sm transition-all hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] xl:hidden"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[color:var(--border)] bg-surface-strong text-[color:var(--foreground)] shadow-sm transition-all hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] xl:hidden"
                   onClick={() => setMobileOpen(true)}
                 >
                   <Menu className="h-5 w-5" />
@@ -122,24 +127,39 @@ export function ShellChrome({
 
               <div className="flex items-center gap-3">
                 <details className="group relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-all hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-surface-strong pl-1 pr-4 py-1 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-all hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
+                    <div
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-strong font-bold"
+                      dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
+                    />
                     <span className="max-w-[120px] truncate sm:max-w-[160px]">{user.name}</span>
                     <ChevronDown className="h-4 w-4 text-[color:var(--muted)] transition-transform duration-200 group-open:rotate-180" />
                   </summary>
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 rounded-2xl border border-[color:var(--border-strong)] bg-white p-4 shadow-xl">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted)]">
-                      Account
-                    </p>
-                    <p className="mt-2 truncate text-sm font-semibold text-[color:var(--foreground)]">
-                      {user.name}
-                    </p>
-                    <p className="mt-1 text-sm text-[color:var(--muted)]">
-                      {user.jobTitle}
-                    </p>
-                    <div className="mt-3 flex items-center gap-2">
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-72 rounded-2xl border border-[color:var(--border-strong)] bg-surface-strong p-4 shadow-xl">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand-strong font-bold"
+                        dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
+                          {user.name}
+                        </p>
+                        <p className="truncate text-xs text-[color:var(--muted)]">
+                          {user.jobTitle}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 mb-4 flex items-center gap-2">
                       <Badge variant="muted">{humanizeEnum(user.role)}</Badge>
                     </div>
-                    {accountActions && <div className="mt-4 pt-4 border-t border-[color:var(--border)]">{accountActions}</div>}
+                    <div className="border-t border-[color:var(--border-strong)] py-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground">Theme</span>
+                        <ThemeToggle />
+                      </div>
+                    </div>
+                    {accountActions && <div className="pt-4 border-t border-[color:var(--border-strong)]">{accountActions}</div>}
                   </div>
                 </details>
 
@@ -210,6 +230,16 @@ export function ShellChrome({
           </main>
         </div>
       </div>
+
+      {assistantSnapshot ? (
+        <AssistantDock
+          canGenerate={canGenerateContent(user.role)}
+          canReview={canReviewContent(user.role)}
+          defaultsSummary={assistantSnapshot.defaults.summary}
+          suggestions={assistantSnapshot.suggestions}
+          reviewInbox={assistantSnapshot.reviewInbox}
+        />
+      ) : null}
     </div>
   );
 }

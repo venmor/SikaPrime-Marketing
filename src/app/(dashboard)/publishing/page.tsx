@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { WorkflowStage } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { CheckCircle2, Clock3, History, Send } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
@@ -12,6 +12,7 @@ import { getCalendarSnapshot } from "@/lib/calendar/service";
 import { prisma } from "@/lib/db";
 import { formatDateTime, humanizeEnum } from "@/lib/utils";
 import {
+  applyPublishingCommandAction,
   publishContentAction,
   runDuePublicationsAction,
   syncPerformanceAction,
@@ -77,7 +78,7 @@ export default async function PublishingPage() {
     <div className="grid gap-8">
       <SectionCard
         title="Publishing control center"
-        description="See what can go live now, what is scheduled next, and where the queue still needs guidance."
+        description="Use one command to batch publish or schedule the approved queue, then drop into details only when you need to."
         action={
           <div className="flex flex-wrap items-center gap-3">
             <form action={syncPerformanceAction}>
@@ -119,7 +120,7 @@ export default async function PublishingPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                   {stat.label}
@@ -134,48 +135,42 @@ export default async function PublishingPage() {
 
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="brand-subtle">Flow</Badge>
-              <Badge variant="muted">{"Ready -> Schedule -> History"}</Badge>
+              <Badge variant="brand-subtle">Command bar</Badge>
+              <Badge variant="muted">Publish or schedule in one sentence</Badge>
             </div>
             <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
               {approvedNow.length
-                ? "Strongest next move: publish the approved queue or schedule it into the best windows below."
+                ? "Try “Publish all approved Facebook posts tomorrow at 9 AM” or “Schedule the WhatsApp message for Friday 3 PM.”"
                 : scheduledQueue.length
                   ? "The queue is mostly scheduled. Check timing guidance and let the runner clear due posts."
                   : "The publishing board is calm. Push more work through review when the next batch is ready."}
             </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {[
-                {
-                  label: "Now",
-                  icon: Send,
-                  detail: "Immediate manual release",
-                },
-                {
-                  label: "Later",
-                  icon: Clock3,
-                  detail: "Scheduled queue",
-                },
-                {
-                  label: "History",
-                  icon: History,
-                  detail: "Track results",
-                },
-              ].map((step) => (
-                <div
-                  key={step.label}
-                  className="rounded-[20px] border border-[color:var(--border)] bg-white p-4"
-                >
-                  <step.icon className="h-5 w-5 text-brand" />
-                  <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
-                    {step.label}
-                  </p>
-                  <p className="mt-1 text-xs text-[color:var(--muted)]">
-                    {step.detail}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <form action={applyPublishingCommandAction} className="mt-5 grid gap-3">
+              <label>
+                Publishing command
+                <input
+                  name="command"
+                  placeholder="Publish all approved Facebook posts tomorrow at 9 AM"
+                  required
+                />
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Publish all approved Facebook posts tomorrow at 9 AM",
+                  "Schedule the WhatsApp message for Friday 3 PM",
+                ].map((example) => (
+                  <span
+                    key={example}
+                    className="rounded-full bg-surface-strong px-3 py-2 text-xs text-[color:var(--muted)]"
+                  >
+                    {example}
+                  </span>
+                ))}
+              </div>
+              <SubmitButton pendingLabel="Applying command...">
+                Run command
+              </SubmitButton>
+            </form>
           </div>
         </div>
       </SectionCard>
@@ -191,7 +186,7 @@ export default async function PublishingPage() {
               approvedNow.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="success">Approved</Badge>
@@ -253,7 +248,7 @@ export default async function PublishingPage() {
                 calendar.recommendedWindows.map((window) => (
                   <div
                     key={window.label}
-                    className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                    className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                   >
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                       Suggested window
@@ -312,7 +307,7 @@ export default async function PublishingPage() {
                     <Link
                       key={item.id}
                       href={`/content/${item.id}`}
-                      className="rounded-[16px] bg-white px-3 py-2 transition-colors hover:text-brand"
+                      className="rounded-[16px] bg-surface-strong px-3 py-2 transition-colors hover:text-brand"
                     >
                       {item.title}
                     </Link>
@@ -337,7 +332,7 @@ export default async function PublishingPage() {
               scheduledQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="warning">Scheduled</Badge>

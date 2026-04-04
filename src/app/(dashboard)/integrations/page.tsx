@@ -54,7 +54,7 @@ export default async function IntegrationsPage({
         description="Manage AI, publishing, email delivery, and social-signal settings without editing environment files or touching code."
       >
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               AI generation
             </p>
@@ -63,7 +63,7 @@ export default async function IntegrationsPage({
               one place.
             </p>
           </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               Publishing
             </p>
@@ -72,7 +72,7 @@ export default async function IntegrationsPage({
               need to redeploy for routine token changes.
             </p>
           </div>
-          <div className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
               Email + monitoring
             </p>

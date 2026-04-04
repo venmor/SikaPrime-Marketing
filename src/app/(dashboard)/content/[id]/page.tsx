@@ -420,7 +420,7 @@ export default async function ContentDetailPage({
                     {suggestedComments.map((comment) => (
                       <li
                         key={comment}
-                        className="rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-sm text-[color:var(--muted)]"
+                        className="rounded-2xl border border-[color:var(--border)] bg-surface-strong px-4 py-3 text-sm text-[color:var(--muted)]"
                       >
                         {comment}
                       </li>

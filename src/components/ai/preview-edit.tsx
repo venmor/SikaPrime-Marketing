@@ -22,7 +22,7 @@ export function PreviewEdit({
       {items.map((item) => (
         <article
           key={item.contentItemId}
-          className="rounded-[28px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+          className="rounded-[28px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-strong">
@@ -38,7 +38,7 @@ export function PreviewEdit({
               Publish preview
             </p>
             {item.payload.kind === "FACEBOOK" ? (
-              <div className="mt-4 rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-sm">
+              <div className="mt-4 rounded-[22px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
                 <p className="text-sm font-semibold text-[color:var(--foreground)]">
                   {item.title}
                 </p>

@@ -1,4 +1,4 @@
-import { AIGenerateModal } from "@/components/ai/ai-generate-modal";
+import { OpenAssistantButton } from "@/components/assistant/open-assistant-button";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -8,7 +8,7 @@ import { formatRelativeDate } from "@/lib/utils";
 import { refreshLiveTrendsAction } from "@/server/actions/trends";
 
 export default async function LiveTrendsPage() {
-  const [liveTrends, profile, products, audiences] = await Promise.all([
+  const [liveTrends, profile, audiences] = await Promise.all([
     getLiveTrends(18),
     prisma.businessProfile.findUnique({
       where: { id: 1 },
@@ -23,10 +23,6 @@ export default async function LiveTrendsPage() {
           orderBy: { priority: "desc" },
         },
       },
-    }),
-    prisma.product.findMany({
-      where: { active: true },
-      orderBy: { priority: "desc" },
     }),
     prisma.audienceSegment.findMany({
       orderBy: { priority: "desc" },
@@ -66,7 +62,7 @@ export default async function LiveTrendsPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
             >
               <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                 {stat.label}
@@ -88,45 +84,10 @@ export default async function LiveTrendsPage() {
               title={trend.title}
               description={trend.description ?? "Live trend signal without a summary."}
               action={
-                <AIGenerateModal
-                  products={products.map((product) => ({
-                    id: product.id,
-                    name: product.name,
-                    description: product.description,
-                  }))}
-                  offers={(profile?.offers ?? []).map((offer) => ({
-                    id: offer.id,
-                    name: offer.name,
-                    description: offer.description,
-                  }))}
-                  audiences={audiences.map((audience) => ({
-                    id: audience.id,
-                    name: audience.name,
-                    description: audience.description,
-                  }))}
-                  goals={(profile?.goals ?? []).map((goal) => ({
-                    id: goal.id,
-                    title: goal.title,
-                    description: goal.description,
-                  }))}
-                  values={(profile?.values ?? []).map((value) => ({
-                    id: value.id,
-                    name: value.name,
-                    description: value.description,
-                  }))}
-                  liveTrends={liveTrends.map((liveTrend) => ({
-                    id: liveTrend.id,
-                    title: liveTrend.title,
-                    description: liveTrend.description,
-                    source: liveTrend.source,
-                    sourceUrl: liveTrend.sourceUrl,
-                    relevanceScore: liveTrend.relevanceScore,
-                    createdAt: liveTrend.createdAt.toISOString(),
-                  }))}
-                  triggerLabel="Create content from this trend"
-                  initialTrendIds={[trend.id]}
-                  initialInstructions={`Use this live trend as the leading context: ${trend.title}. Keep the angle constructive and clearly relevant to Sika Prime Loans.`}
-                  triggerClassName="inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
+                <OpenAssistantButton
+                  label="Create post about this"
+                  prompt={`Create a post about this trend: ${trend.title}. Use the best-fit Sika Prime product automatically, keep it constructive, and make it ready for publishing.`}
+                  autoSend
                 />
               }
             >

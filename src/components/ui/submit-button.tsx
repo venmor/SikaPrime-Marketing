@@ -26,7 +26,7 @@ export function SubmitButton({
         variant === "primary" &&
           "bg-brand text-white shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:bg-brand-strong",
         variant === "secondary" &&
-          "border border-[color:var(--border-strong)] bg-white text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:border-[color:var(--muted)] hover:shadow-md",
+          "border border-[color:var(--border-strong)] bg-surface-strong text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:border-[color:var(--muted)] hover:shadow-md",
         variant === "ghost" &&
           "bg-transparent text-[color:var(--foreground)] hover:bg-slate-100",
         className,

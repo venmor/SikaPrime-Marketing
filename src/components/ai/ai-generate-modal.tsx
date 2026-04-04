@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X } from "lucide-react";
 
@@ -206,14 +207,16 @@ export function AIGenerateModal({
         {triggerLabel}
       </button>
 
-      {open ? (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center bg-slate-950/40 px-4 py-8 backdrop-blur-sm">
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div className="fixed inset-0 z-[220] flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/45 p-4 sm:p-6 backdrop-blur-sm">
+              <div className="w-full max-w-5xl">
           <div
             ref={modalRef}
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
-            className="w-full max-w-5xl rounded-[32px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.96)] shadow-[0_24px_64px_rgba(15,23,42,0.18)]"
+            className="mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.98)] shadow-[0_28px_72px_rgba(15,23,42,0.24)]"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-6 py-5">
               <div>
@@ -231,14 +234,14 @@ export function AIGenerateModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-[color:var(--muted)] shadow-sm transition-all hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-surface-strong text-[color:var(--muted)] shadow-sm transition-all hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
                 aria-label="Close AI generation"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2 px-6 pt-5">
+            <div className="flex flex-wrap gap-2 border-b border-[color:var(--border)] px-6 py-4">
               {[
                 { stepNumber: 1, label: "Channel" },
                 { stepNumber: 2, label: "Subject" },
@@ -260,7 +263,7 @@ export function AIGenerateModal({
               ))}
             </div>
 
-            <div className="px-6 py-6">
+            <div className="overflow-y-auto px-6 py-6">
               {errorMessage ? (
                 <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
                   {errorMessage} You can retry or continue with the manual creation
@@ -316,7 +319,7 @@ export function AIGenerateModal({
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Back
                     </button>
@@ -343,7 +346,7 @@ export function AIGenerateModal({
                         {usedTrends.map((trend) => (
                           <span
                             key={trend.id}
-                            className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
+                            className="rounded-full border border-[color:var(--border)] bg-surface-strong px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
                           >
                             {trend.title}
                           </span>
@@ -359,13 +362,13 @@ export function AIGenerateModal({
                       <button
                         type="button"
                         onClick={() => setStep(2)}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
                         Regenerate with AI
                       </button>
                       <Link
                         href={firstItemLink}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
                         Edit manually
                       </Link>
@@ -376,7 +379,7 @@ export function AIGenerateModal({
                         type="button"
                         onClick={() => handleSave(false)}
                         disabled={isSaving}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isSaving ? "Saving..." : "Save as draft"}
                       </button>
@@ -411,14 +414,14 @@ export function AIGenerateModal({
                     </Link>
                     <Link
                       href={firstItemLink}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Open content item
                     </Link>
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Close
                     </button>
@@ -427,8 +430,11 @@ export function AIGenerateModal({
               ) : null}
             </div>
           </div>
-        </div>
-      ) : null}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }

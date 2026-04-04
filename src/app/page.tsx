@@ -68,7 +68,7 @@ export default async function Home() {
             </Link>
             <a
               href="#modules"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-8 py-4 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-1 hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-8 py-4 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-1 hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
             >
               View modules
             </a>

@@ -7,7 +7,7 @@ import {
   WorkflowStage,
 } from "@prisma/client";
 
-import { AIGenerateModal } from "@/components/ai/ai-generate-modal";
+import { OpenAssistantButton } from "@/components/assistant/open-assistant-button";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
 import { SubmitButton } from "@/components/ui/submit-button";
@@ -141,46 +141,13 @@ export default async function ContentPage() {
   return (
     <div className="grid gap-6">
       <SectionCard
-        title="AI generation lane"
-        description="Use the guided AI flow when you want a fast, channel-ready draft shaped by live trends, business knowledge, and compliance context."
+        title="AI assistant lane"
+        description="Describe what you want in natural language and let the assistant fill product, tone, channel, and live trend context automatically."
         action={
           isGenerator ? (
-            <AIGenerateModal
-              products={products.map((product) => ({
-                id: product.id,
-                name: product.name,
-                description: product.description,
-              }))}
-              offers={(profile?.offers ?? []).map((offer) => ({
-                id: offer.id,
-                name: offer.name,
-                description: offer.description,
-              }))}
-              audiences={audiences.map((audience) => ({
-                id: audience.id,
-                name: audience.name,
-                description: audience.description,
-              }))}
-              goals={(profile?.goals ?? []).map((goal) => ({
-                id: goal.id,
-                title: goal.title,
-                description: goal.description,
-              }))}
-              values={(profile?.values ?? []).map((value) => ({
-                id: value.id,
-                name: value.name,
-                description: value.description,
-              }))}
-              liveTrends={liveTrends.map((trend) => ({
-                id: trend.id,
-                title: trend.title,
-                description: trend.description,
-                source: trend.source,
-                sourceUrl: trend.sourceUrl,
-                relevanceScore: trend.relevanceScore,
-                createdAt: trend.createdAt.toISOString(),
-              }))}
-              triggerLabel="Generate with AI"
+            <OpenAssistantButton
+              label="Open AI assistant"
+              className="justify-center"
             />
           ) : null
         }
@@ -206,7 +173,7 @@ export default async function ContentPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                   {stat.label}
@@ -223,17 +190,29 @@ export default async function ContentPage() {
 
           <div className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="brand-subtle">Guided flow</Badge>
-              <Badge variant="muted">{"Channel -> Subject -> Preview"}</Badge>
+              <Badge variant="brand-subtle">Chat first</Badge>
+              <Badge variant="muted">Assistant fills the setup for you</Badge>
             </div>
             <p className="mt-4 text-base leading-7 text-[color:var(--foreground)]">
-              The AI flow reads products, audiences, offers, goals, live trends,
-              and compliance guidance before it generates publication-ready drafts
-              for Facebook, WhatsApp, or both.
+              Try prompts like “Create a Facebook ad for our business loan in a
+              friendly tone” or “Write a WhatsApp reminder using today’s finance
+              trend.” The assistant handles the rest and only asks a question if
+              something important is missing.
             </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {assistant.opportunities.slice(0, 3).map((opportunity) => (
+                <OpenAssistantButton
+                  key={opportunity.key}
+                  label={opportunity.title}
+                  prompt={`Create a ${opportunity.channel.toLowerCase()} post about ${opportunity.title}. Keep it ${opportunity.tone.toLowerCase()} and use the strongest live trend if it fits.`}
+                  autoSend
+                  className="bg-surface-strong px-3 py-2 text-xs text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                />
+              ))}
+            </div>
             <p className="mt-4 text-sm leading-6 text-[color:var(--muted)]">
-              Manual idea creation and direct drafting stay available below, so the
-              team can choose between guided AI speed and full manual control.
+              Manual idea creation and direct drafting stay available below for
+              anyone who wants full control.
             </p>
           </div>
         </div>

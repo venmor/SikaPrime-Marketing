@@ -184,7 +184,7 @@ export function SubjectForm({
           {values.map((companyValue) => (
             <span
               key={companyValue.id}
-              className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
+              className="rounded-full border border-[color:var(--border)] bg-surface-strong px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
             >
               {companyValue.name}
             </span>
@@ -192,7 +192,7 @@ export function SubjectForm({
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm">
+      <div className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm">
         <p className="text-sm font-semibold text-[color:var(--foreground)]">
           Live trend context
         </p>

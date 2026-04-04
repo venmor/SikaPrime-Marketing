@@ -50,7 +50,7 @@ export default async function AnalyticsPage() {
             {analytics.insights.map((insight) => (
               <div
                 key={insight}
-                className="rounded-xl border border-[color:var(--border)] bg-white p-4 text-sm leading-relaxed text-[color:var(--foreground)] shadow-sm"
+                className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 text-sm leading-relaxed text-[color:var(--foreground)] shadow-sm"
               >
                 {insight}
               </div>
@@ -72,7 +72,7 @@ export default async function AnalyticsPage() {
               analytics.themePerformance.map((theme) => (
                 <div
                   key={theme.themeLabel}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                 >
                   <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {theme.themeLabel}
@@ -100,7 +100,7 @@ export default async function AnalyticsPage() {
               analytics.productPerformance.map((product) => (
                 <div
                   key={product.productName}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                 >
                   <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {product.productName}
@@ -164,7 +164,7 @@ export default async function AnalyticsPage() {
               analytics.trendPerformance.map((trend) => (
                 <div
                   key={trend.trendTitle}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                 >
                   <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                     {trend.trendTitle}
@@ -192,7 +192,7 @@ export default async function AnalyticsPage() {
               analytics.channelPerformance.map((channel) => (
                 <div
                   key={channel.channel}
-                  className="rounded-xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                 >
                   <div className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] pb-3 mb-3">
                     <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
