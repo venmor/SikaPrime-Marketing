@@ -227,7 +227,7 @@ export default async function FlyersPage({
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-2xl border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-2xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
               >
                 <p className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
                   {stat.label}
@@ -279,7 +279,7 @@ export default async function FlyersPage({
               ].map((step) => (
                 <div
                   key={step.label}
-                  className="rounded-[20px] border border-[color:var(--border)] bg-white p-4"
+                  className="rounded-[20px] border border-[color:var(--border)] bg-surface-strong p-4"
                 >
                   <step.icon className="h-5 w-5 text-brand" />
                   <p className="mt-3 text-sm font-semibold text-[color:var(--foreground)]">
@@ -308,7 +308,7 @@ export default async function FlyersPage({
                 className={`card-hover rounded-[24px] border p-4 shadow-sm transition-all ${
                   featuredProject?.id === project.id
                     ? "border-brand bg-brand-soft/40"
-                    : "border-[color:var(--border)] bg-white"
+                    : "border-[color:var(--border)] bg-surface-strong"
                 }`}
               >
                 <div className="flex flex-wrap items-center gap-2">
@@ -503,7 +503,7 @@ export default async function FlyersPage({
           }
         >
           <div className="grid gap-6">
-            <div className="rounded-[28px] border border-[color:var(--border)] bg-white p-5 shadow-sm">
+            <div className="rounded-[28px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="brand-subtle">Current run</Badge>
                 <Badge variant="muted">{humanizeEnum(featuredProject.channel)}</Badge>
@@ -591,7 +591,7 @@ export default async function FlyersPage({
                         .map((comment) => (
                           <li
                             key={comment}
-                            className="rounded-2xl border border-[color:var(--border)] bg-white px-3 py-2"
+                            className="rounded-2xl border border-[color:var(--border)] bg-surface-strong px-3 py-2"
                           >
                             {comment}
                           </li>
@@ -668,7 +668,7 @@ export default async function FlyersPage({
             {assistant.occasionOpportunities.map((opportunity) => (
               <div
                 key={opportunity.key}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="cyan-subtle">{humanizeEnum(opportunity.lane)}</Badge>

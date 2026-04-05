@@ -62,7 +62,7 @@ export default async function LiveTrendsPage() {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+              className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
             >
               <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                 {stat.label}

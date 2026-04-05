@@ -42,7 +42,7 @@ export default async function DashboardLayout({
           {canManageAccess(resolvedUser.role) ? (
             <Link
               href="/access"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
             >
               Access control
             </Link>

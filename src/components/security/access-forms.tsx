@@ -34,10 +34,10 @@ function ResultPanel({
       ) : null}
       {link ? (
         <div className="mt-3 flex flex-col gap-3">
-          <input readOnly value={link} className="bg-white text-xs" />
+          <input readOnly value={link} className="bg-surface-strong text-xs" />
           <button
             type="button"
-            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
             onClick={async () => {
               await navigator.clipboard.writeText(link);
               setCopied(true);

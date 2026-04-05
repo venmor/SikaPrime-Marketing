@@ -26,7 +26,7 @@ export default async function TrendsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/trends/live"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-4 py-2 text-sm font-semibold text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:shadow-md"
             >
               Open live trends
             </Link>
@@ -63,7 +63,7 @@ export default async function TrendsPage() {
             liveTrends.map((trend) => (
               <div
                 key={trend.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="brand-subtle">{trend.source}</Badge>
