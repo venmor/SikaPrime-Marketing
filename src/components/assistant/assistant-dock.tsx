@@ -307,7 +307,7 @@ export function AssistantDock({
                   <button
                     key={suggestion.id}
                     type="button"
-                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-2 text-left text-xs font-medium text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
+                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-2 text-left text-xs font-medium text-[color:var(--foreground)] transition-[transform,background-color,border-color,color] hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
                     onClick={() => submitPrompt(suggestion.prompt, { keepOpen: true })}
                   >
                     {suggestion.label}
@@ -370,7 +370,7 @@ export function AssistantDock({
                     className="mt-3 min-h-[7rem] w-full resize-none rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]"
                   />
                 </label>
-                <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="mt-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-xs text-[color:var(--muted)]">
                     The assistant fills product, audience, tone, and trends from your workspace.
                   </p>
@@ -378,7 +378,7 @@ export function AssistantDock({
                     type="button"
                     onClick={() => submitPrompt()}
                     disabled={isRunning || !input.trim()}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Send className="h-4 w-4" />
                     {isRunning ? "Generating..." : pendingPrompt ? "Answer" : "Generate"}
@@ -558,7 +558,7 @@ export function AssistantDock({
                       type="button"
                       onClick={() => saveDrafts(false)}
                       disabled={isSaving}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                     >
                       {isSaving ? "Saving..." : "Keep as draft"}
                     </button>
@@ -566,7 +566,7 @@ export function AssistantDock({
                       type="button"
                       onClick={() => saveDrafts(true)}
                       disabled={isSaving}
-                      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-brand-strong disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong disabled:opacity-60"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       Submit for review
@@ -648,7 +648,7 @@ export function AssistantDock({
 
       <button
         type="button"
-        className="pointer-events-auto inline-flex min-h-14 items-center gap-3 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(230,62,140,0.35)] transition-all hover:-translate-y-0.5 hover:bg-brand-strong"
+        className="pointer-events-auto inline-flex min-h-14 items-center gap-3 rounded-full bg-brand px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(230,62,140,0.35)] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong"
         onClick={() => setOpen((current) => !current)}
       >
         <Sparkles className="h-4 w-4" />

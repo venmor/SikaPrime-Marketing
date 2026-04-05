@@ -29,7 +29,7 @@ export default async function CalendarPage() {
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <SectionCard
           title="Scheduled Queue"
           description="Upcoming posts grouped by day for easier planning."

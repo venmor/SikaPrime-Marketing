@@ -100,7 +100,7 @@ export default async function RecommendationsPage({
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <SectionCard
           title="Ask the planner"
           description="Ask what to post next and get a reasoned answer."

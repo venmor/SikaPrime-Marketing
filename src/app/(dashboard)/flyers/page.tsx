@@ -201,7 +201,7 @@ export default async function FlyersPage({
           </div>
         }
       >
-        <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
               {
@@ -305,7 +305,7 @@ export default async function FlyersPage({
               <Link
                 key={project.id}
                 href={`/flyers?project=${project.id}`}
-                className={`card-hover rounded-[24px] border p-4 shadow-sm transition-all ${
+                className={`card-hover rounded-[24px] border p-4 shadow-sm transition-[transform,box-shadow,border-color,background-color] ${
                   featuredProject?.id === project.id
                     ? "border-brand bg-brand-soft/40"
                     : "border-[color:var(--border)] bg-surface-strong"
@@ -332,7 +332,7 @@ export default async function FlyersPage({
         </SectionCard>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
         <SectionCard
           title="Step 1: Upload a reference flyer"
           description="Add an original Sika Prime flyer so the studio can learn your layout, CTA style, and brand mood."
@@ -622,7 +622,7 @@ export default async function FlyersPage({
         </SectionCard>
       )}
 
-      <section className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
         <SectionCard
           title="Campaign templates"
           description="Repeatable flyer structures for school fees, month-end pressure, SME restocking, and other common borrowing moments."

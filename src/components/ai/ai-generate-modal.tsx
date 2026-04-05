@@ -200,7 +200,7 @@ export function AIGenerateModal({
         onClick={openFlow}
         className={
           triggerClassName ??
-          "inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
+          "inline-flex min-h-11 items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
         }
       >
         <Sparkles className="h-4 w-4" />
@@ -219,7 +219,7 @@ export function AIGenerateModal({
             className="surface-overlay mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px]"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-6 py-5">
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                   AI content generation
                 </p>
@@ -234,7 +234,7 @@ export function AIGenerateModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] shadow-sm transition-all hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] shadow-sm transition-[transform,box-shadow,background-color,color] hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
                 aria-label="Close AI generation"
               >
                 <X className="h-4 w-4" />
@@ -283,7 +283,7 @@ export function AIGenerateModal({
                     value={channelSelection}
                     onChange={setChannelSelection}
                   />
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm text-[color:var(--muted)]">
                       Pick one channel or generate separate channel-ready drafts for
                       both.
@@ -292,7 +292,7 @@ export function AIGenerateModal({
                       type="button"
                       disabled={!canContinueToBrief}
                       onClick={() => setStep(2)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Continue
                     </button>
@@ -319,7 +319,7 @@ export function AIGenerateModal({
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md sm:w-auto"
                     >
                       Back
                     </button>
@@ -327,7 +327,7 @@ export function AIGenerateModal({
                       type="button"
                       onClick={handleGenerate}
                       disabled={isGenerating}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                       {isGenerating ? "Generating..." : "Generate content"}
                     </button>
@@ -362,13 +362,13 @@ export function AIGenerateModal({
                       <button
                         type="button"
                         onClick={() => setStep(2)}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md sm:w-auto"
                       >
                         Regenerate with AI
                       </button>
                       <Link
                         href={firstItemLink}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md sm:w-auto"
                       >
                         Edit manually
                       </Link>
@@ -379,7 +379,7 @@ export function AIGenerateModal({
                         type="button"
                         onClick={() => handleSave(false)}
                         disabled={isSaving}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                       >
                         {isSaving ? "Saving..." : "Save as draft"}
                       </button>
@@ -387,7 +387,7 @@ export function AIGenerateModal({
                         type="button"
                         onClick={() => handleSave(true)}
                         disabled={isSaving}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                       >
                         {isSaving ? "Submitting..." : "Submit for review"}
                       </button>
@@ -408,20 +408,20 @@ export function AIGenerateModal({
                   <div className="flex flex-wrap gap-3">
                     <Link
                       href="/workflow"
-                      className="inline-flex min-h-11 items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong sm:w-auto"
                     >
                       Open workflow
                     </Link>
                     <Link
                       href={firstItemLink}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md sm:w-auto"
                     >
                       Open content item
                     </Link>
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color,color] hover:-translate-y-0.5 hover:shadow-md sm:w-auto"
                     >
                       Close
                     </button>

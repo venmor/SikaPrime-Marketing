@@ -41,7 +41,7 @@ export function ChannelSelector({
           type="button"
           onClick={() => onChange(option.value)}
           className={cn(
-            "rounded-[24px] border p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
+            "flex h-full min-w-0 flex-col rounded-[24px] border p-5 text-left shadow-sm transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-0.5 hover:shadow-md",
             value === option.value
               ? "border-brand bg-brand-soft/60 shadow-[0_0_0_3px_var(--brand-soft)]"
               : "border-[color:var(--border)] bg-surface-strong",

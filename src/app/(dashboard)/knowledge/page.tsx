@@ -171,7 +171,7 @@ export default async function KnowledgePage() {
                   Description
                   <textarea name="description" defaultValue={goal.description} required />
                 </label>
-                <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                   <label>
                     Priority
                     <input name="priority" type="number" defaultValue={goal.priority} />
@@ -201,7 +201,7 @@ export default async function KnowledgePage() {
                 Description
                 <textarea name="description" required />
               </label>
-              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <label>
                   Priority
                   <input name="priority" type="number" defaultValue={70} />
@@ -531,7 +531,7 @@ export default async function KnowledgePage() {
                     />
                   </label>
                 </div>
-                <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                   <label>
                     Priority
                     <input name="priority" type="number" defaultValue={offer.priority} />
@@ -575,7 +575,7 @@ export default async function KnowledgePage() {
                   <input name="endDate" type="date" />
                 </label>
               </div>
-              <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <label>
                   Priority
                   <input name="priority" type="number" defaultValue={60} />

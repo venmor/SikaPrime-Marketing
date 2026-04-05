@@ -8,11 +8,11 @@ export function StatCard({
   hint?: string;
 }) {
   return (
-    <div className="nested-panel card-hover flex flex-col justify-center p-6 sm:p-8">
+    <div className="nested-panel card-hover flex min-w-0 flex-col justify-center overflow-hidden p-6 sm:p-8">
       <p className="text-xs font-semibold uppercase tracking-widest text-[color:var(--muted)]">
         {label}
       </p>
-      <p className="mt-4 font-display text-4xl font-semibold tracking-tight text-[color:var(--foreground)]">
+      <p className="mt-4 break-words font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
         {value}
       </p>
       {hint ? (

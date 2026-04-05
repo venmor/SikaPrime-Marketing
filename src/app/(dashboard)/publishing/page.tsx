@@ -94,7 +94,7 @@ export default async function PublishingPage() {
           </div>
         }
       >
-        <div className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {[
               {
@@ -175,7 +175,7 @@ export default async function PublishingPage() {
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.02fr_0.98fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)]">
         <SectionCard
           title="Publish now"
           description="Items already approved and waiting for a final destination."
@@ -321,7 +321,7 @@ export default async function PublishingPage() {
         </SectionCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
         <SectionCard
           title="Scheduled queue"
           description="Items already placed on the calendar and waiting for their publish window."

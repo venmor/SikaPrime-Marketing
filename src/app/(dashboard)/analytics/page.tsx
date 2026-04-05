@@ -32,7 +32,7 @@ export default async function AnalyticsPage() {
         />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <SectionCard
           title="Performance Timeline"
           description="Track how impressions, engagement, and leads evolve across published content."
@@ -154,7 +154,7 @@ export default async function AnalyticsPage() {
         </SectionCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <SectionCard
           title="Trend Performance"
           description="Trend-linked posts that translated into stronger engagement or lead quality."

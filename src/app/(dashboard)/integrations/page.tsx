@@ -85,7 +85,7 @@ export default async function IntegrationsPage({
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         {Object.entries(settings.grouped).map(([groupLabel, groupSettings]) => (
           <SectionCard
             key={groupLabel}

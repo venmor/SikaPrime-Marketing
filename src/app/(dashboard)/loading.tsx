@@ -1,7 +1,7 @@
 export default function DashboardLoading() {
   return (
     <div className="grid gap-6">
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
         <div className="surface-panel rounded-[36px] p-6 sm:p-8">
           <div className="skeleton h-6 w-40 rounded-full" />
           <div className="mt-6 space-y-3">

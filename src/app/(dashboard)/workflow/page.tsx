@@ -216,7 +216,7 @@ export default async function WorkflowPage() {
             />
           }
         >
-          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
             <div className="rounded-[30px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 shadow-sm">
               <Badge variant="brand-subtle">Create to review</Badge>
               <h3 className="mt-4 font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
@@ -269,7 +269,7 @@ export default async function WorkflowPage() {
           </div>
         </SectionCard>
 
-        <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
           <SectionCard
             title="Drafts needing your pass"
             description="Revision notes stay attached to the draft so you can fix the right thing fast."
@@ -444,7 +444,7 @@ export default async function WorkflowPage() {
             </Link>
           }
         >
-          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
             <div className="rounded-[30px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 shadow-sm">
               <Badge variant="warning">Reviewer focus</Badge>
               <h3 className="mt-4 font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
@@ -493,7 +493,7 @@ export default async function WorkflowPage() {
           </div>
         </SectionCard>
 
-        <section className="grid gap-6 xl:grid-cols-[1.04fr_0.96fr]">
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_minmax(0,0.96fr)]">
           <SectionCard
             title="Waiting for your decision"
             description="Oldest requests first. Unassigned items stay visible until someone claims them."
@@ -696,7 +696,7 @@ export default async function WorkflowPage() {
           </div>
         }
       >
-        <div className="grid gap-5 lg:grid-cols-[1.12fr_0.88fr]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
           <div className="rounded-[30px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-6 shadow-sm">
             <Badge variant="brand-subtle">Team workflow</Badge>
             <h3 className="mt-4 font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)]">
@@ -913,7 +913,7 @@ export default async function WorkflowPage() {
         </SectionCard>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[0.96fr_1.04fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,0.96fr)_minmax(0,1.04fr)]">
         <SectionCard
           title="Scheduled next"
           description="Work already placed on the calendar."

@@ -21,7 +21,7 @@ export function OpenAssistantButton({
     <button
       type="button"
       className={cn(
-        "inline-flex items-center gap-2 rounded-full bg-brand px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2",
+        "inline-flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-full bg-brand px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2",
         className,
       )}
       onClick={() => {

@@ -19,7 +19,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors",
+        "inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-center text-[0.6875rem] font-semibold uppercase leading-tight tracking-wider transition-colors",
         variant === "default" &&
           "border-transparent bg-[color:var(--brand-soft)] text-[color:var(--brand-strong)]",
         variant === "success" &&

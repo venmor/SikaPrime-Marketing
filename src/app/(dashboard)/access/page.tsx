@@ -116,7 +116,7 @@ export default async function AccessPage({
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <SectionCard
           title="Invite a teammate"
           description="Admins can create secure invite links for new or inactive users. Links expire automatically, never store plain tokens, and are emailed when delivery is configured."

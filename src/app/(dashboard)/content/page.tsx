@@ -152,7 +152,7 @@ export default async function ContentPage() {
           ) : null
         }
       >
-        <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)]">
           <div className="grid gap-4 md:grid-cols-3">
             {[
               {
@@ -218,7 +218,7 @@ export default async function ContentPage() {
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <SectionCard
           title="Create ideas"
           description="Start with a goal and generate usable campaign ideas with business context and safe trend support."
@@ -583,7 +583,7 @@ export default async function ContentPage() {
         title="Always-On Assistant Signals"
         description="These proactive and balancing cues help the team keep channels active even when no strong trend is worth using."
       >
-        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
           <div className="grid gap-4">
             <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
@@ -688,7 +688,7 @@ export default async function ContentPage() {
         </div>
       </SectionCard>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <SectionCard
           title="Saved Ideas"
           description="Ideas can be reviewed, refined, rejected, or converted into complete drafts."

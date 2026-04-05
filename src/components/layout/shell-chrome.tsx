@@ -101,7 +101,7 @@ export function ShellChrome({
               className="absolute inset-0 bg-slate-950/55 backdrop-blur-sm transition-opacity"
               onClick={() => setMobileOpen(false)}
             />
-            <div className="surface-panel relative h-full w-[min(86vw,332px)] rounded-none p-4 shadow-2xl transition-transform duration-300 ease-in-out">
+            <div className="surface-panel relative h-full w-[min(90vw,332px)] overflow-y-auto rounded-none p-4 shadow-2xl transition-transform duration-300 ease-in-out">
               <SidebarNav user={user} onNavigate={() => setMobileOpen(false)} />
             </div>
           </div>
@@ -109,8 +109,8 @@ export function ShellChrome({
 
         <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-4 sm:p-6 lg:p-8">
           <header className="mb-8">
-            <div className="surface-panel flex flex-col gap-5 p-4 sm:p-6">
-              <div className="flex items-center justify-between gap-4">
+            <div className="surface-panel flex overflow-hidden flex-col gap-5 p-4 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
@@ -125,14 +125,14 @@ export function ShellChrome({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
                   <details className="group relative">
-                    <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] pl-1 pr-4 py-1 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-[border-color,box-shadow,background-color,color] hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
+                    <summary className="flex max-w-[min(100%,16rem)] cursor-pointer list-none items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] py-1 pl-1 pr-4 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-[border-color,box-shadow,background-color,color] hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
                       <div
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-strong font-bold"
                         dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
                       />
-                      <span className="max-w-[120px] truncate sm:max-w-[160px]">
+                      <span className="max-w-[112px] truncate sm:max-w-[160px]">
                         {user.name}
                       </span>
                       <ChevronDown className="h-4 w-4 text-[color:var(--muted)] transition-transform duration-200 group-open:rotate-180" />
@@ -179,7 +179,7 @@ export function ShellChrome({
                   {primaryAction && (
                     <Link
                       href={primaryAction.href}
-                      className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2 sm:w-auto"
                     >
                       <primaryAction.icon className="h-4 w-4" />
                       <span className="hidden sm:inline">{primaryAction.label}</span>

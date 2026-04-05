@@ -56,8 +56,8 @@ export default async function LoginPage({
 
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-[color:var(--background)] px-4 py-8 sm:px-6 lg:px-10">
-      <div className="relative mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-2 lg:items-center">
-        <section className="fade-up order-2 lg:order-1 flex flex-col justify-center">
+      <div className="relative mx-auto grid w-full max-w-5xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-8">
+        <section className="fade-up hidden flex-col justify-center lg:flex">
           <Badge variant="brand-subtle" className="self-start mb-6">Sika Prime workspace</Badge>
 
           <AppLogo />
@@ -93,8 +93,19 @@ export default async function LoginPage({
           </div>
         </section>
 
-        <section className="surface-panel fade-up order-1 lg:order-2 flex flex-col p-8 sm:p-10 shadow-2xl">
-          <div className="mb-8 flex items-center justify-between">
+        <section className="surface-panel fade-up order-1 flex flex-col p-6 shadow-2xl sm:p-8 lg:order-2 lg:p-10">
+          <div className="mb-6 lg:hidden">
+            <Badge variant="brand-subtle" className="mb-4">Sika Prime workspace</Badge>
+            <AppLogo compact />
+            <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
+              One calm space for Sika Prime marketing.
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-[color:var(--muted)] sm:text-base">
+              Sign in to create stronger content, keep approvals clear, and stay active when trends are quiet.
+            </p>
+          </div>
+
+          <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-display text-2xl font-bold tracking-tight text-[color:var(--foreground)]">
                 Welcome back
@@ -126,7 +137,7 @@ export default async function LoginPage({
               />
               <label
                 htmlFor="email"
-                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
+                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-[top,font-size,color] peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
               >
                 Email
               </label>
@@ -143,7 +154,7 @@ export default async function LoginPage({
               />
               <label
                 htmlFor="password"
-                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
+                className="absolute left-4 top-2 text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] transition-[top,font-size,color] peer-placeholder-shown:top-4 peer-placeholder-shown:text-sm peer-placeholder-shown:normal-case peer-focus:top-2 peer-focus:text-xs peer-focus:uppercase peer-focus:text-[color:var(--brand)]"
               >
                 Password
               </label>
@@ -154,7 +165,7 @@ export default async function LoginPage({
             </SubmitButton>
           </form>
 
-          <div className="mt-4 flex items-center justify-between text-sm text-[color:var(--muted)]">
+          <div className="mt-4 flex flex-col items-start gap-2 text-sm text-[color:var(--muted)] sm:flex-row sm:items-center sm:justify-between">
             <span>Need help accessing your account?</span>
             <Link
               href="/forgot-password"
@@ -164,8 +175,8 @@ export default async function LoginPage({
             </Link>
           </div>
 
-          <div className="mt-10 rounded-2xl bg-[color:var(--surface-soft)] p-6">
-            <div className="flex items-center justify-between">
+          <div className="mt-8 rounded-2xl bg-[color:var(--surface-soft)] p-5 sm:mt-10 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold uppercase tracking-widest text-[color:var(--muted)]">
                 Secure access
               </h3>
@@ -178,7 +189,7 @@ export default async function LoginPage({
             </p>
           </div>
 
-          <p className="mt-8 text-center text-sm text-[color:var(--muted)]">
+          <p className="mt-6 text-center text-sm text-[color:var(--muted)] sm:mt-8">
             Need the overview first?{" "}
             <Link
               href="/"

@@ -14,7 +14,7 @@ export function AppLogo({
   theme?: "light" | "dark";
 }) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex min-w-0 items-center gap-3", className)}>
       <div
         className={cn(
           "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[22px] border shadow-[var(--shadow-soft)]",
@@ -39,7 +39,7 @@ export function AppLogo({
         <div className="min-w-0">
           <p
             className={cn(
-              "text-[11px] font-semibold uppercase tracking-[0.28em]",
+              "truncate text-[10px] font-semibold uppercase tracking-[0.22em] sm:text-[11px] sm:tracking-[0.28em]",
               theme === "dark" ? "text-white/60" : "text-[color:var(--muted)]",
             )}
           >
@@ -51,7 +51,7 @@ export function AppLogo({
               compact ? "text-base" : "text-lg",
               theme === "dark" ? "text-white" : "text-[color:var(--foreground)]",
             )}
-            >
+          >
             Marketing workspace
           </p>
         </div>

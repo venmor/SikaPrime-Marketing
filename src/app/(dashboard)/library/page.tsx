@@ -114,7 +114,7 @@ export default async function LibraryPage({
               </select>
             </label>
           </div>
-          <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
             <label>
               Content type
               <select name="contentType" defaultValue={filters.contentType}>
@@ -195,7 +195,7 @@ export default async function LibraryPage({
                   </span>
                 </div>
 
-                <div className="mt-5 grid gap-4 xl:grid-cols-[auto_1fr]">
+                <div className="mt-5 grid gap-4 xl:grid-cols-[auto_minmax(0,1fr)]">
                   <form action={reusePublishedContentAction}>
                     <input type="hidden" name="id" value={item.id} />
                     <SubmitButton pendingLabel="Creating draft...">
@@ -205,7 +205,7 @@ export default async function LibraryPage({
 
                   <form
                     action={repurposePublishedContentAction}
-                    className="grid gap-3 md:grid-cols-[1fr_auto]"
+                    className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto]"
                   >
                     <input type="hidden" name="id" value={item.id} />
                     <label>

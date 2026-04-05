@@ -27,21 +27,21 @@ export default async function DashboardPage() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <SectionCard
           title="Your next best action"
           description="The assistant keeps the daily queue small so you always know what to do next."
           action={
             <Link
               href={snapshot.nextAction.href}
-              className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md sm:w-auto"
             >
               <Sparkles className="h-4 w-4" />
               {snapshot.nextAction.ctaLabel}
             </Link>
           }
         >
-          <div className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
             <div className="rounded-[28px] bg-brand-soft p-6">
               <Badge variant="brand-subtle">Priority</Badge>
               <h2 className="mt-4 font-display text-3xl font-semibold tracking-tight text-brand-strong sm:text-4xl">
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={snapshot.nextAction.href}
-                  className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-brand-strong hover:shadow-md sm:w-auto"
                 >
                   {snapshot.nextAction.ctaLabel}
                 </Link>
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
           title="One pending review"
           description="Reviewers stay in flow with one clear approval decision instead of a long table."
         >
-          <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
             <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="warning">Waiting</Badge>

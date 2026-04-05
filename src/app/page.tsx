@@ -61,14 +61,14 @@ export default async function Home() {
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-brand px-8 py-4 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-1 hover:bg-brand-strong hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand px-8 py-4 text-sm font-semibold text-white shadow-sm transition-[transform,box-shadow,background-color] hover:-translate-y-1 hover:bg-brand-strong hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2 sm:w-auto"
             >
               Open platform
               <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="#modules"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-8 py-4 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-1 hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-surface-strong px-8 py-4 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,border-color] hover:-translate-y-1 hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2 sm:w-auto"
             >
               View modules
             </a>

@@ -16,12 +16,12 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "surface-panel flex flex-col p-6 sm:p-8",
+        "surface-panel flex min-w-0 flex-col p-6 sm:p-8",
         className,
       )}
     >
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <h2 className="font-display text-xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-2xl">
             {title}
           </h2>
@@ -31,9 +31,9 @@ export function SectionCard({
             </p>
           ) : null}
         </div>
-        {action ? <div className="shrink-0">{action}</div> : null}
+        {action ? <div className="w-full md:w-auto md:shrink-0">{action}</div> : null}
       </div>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         {children}
       </div>
     </section>
