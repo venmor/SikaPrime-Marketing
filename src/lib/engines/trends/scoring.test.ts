@@ -1,4 +1,26 @@
-import { scoreTrend } from "@/lib/engines/trends/scoring";
+import { countKeywordMatches, scoreTrend } from "@/lib/engines/trends/scoring";
+
+describe("countKeywordMatches", () => {
+  it("counts exact and partial matches", () => {
+    expect(countKeywordMatches("the quick brown fox", ["quick", "fox", "dog"])).toBe(2);
+    expect(countKeywordMatches("apples and oranges", ["apple", "orange", "banana"])).toBe(2);
+  });
+
+  it("is case insensitive", () => {
+    expect(countKeywordMatches("The Quick Brown Fox", ["QUICK", "Fox", "DOG"])).toBe(2);
+  });
+
+  it("handles special characters by replacing them with spaces", () => {
+    expect(countKeywordMatches("test-word, another! word", ["test word", "another  word"])).toBe(2);
+    expect(countKeywordMatches("user@domain.com", ["user domain com"])).toBe(1);
+  });
+
+  it("handles empty inputs", () => {
+    expect(countKeywordMatches("", ["test", "words"])).toBe(0);
+    expect(countKeywordMatches("some text", [])).toBe(0);
+    expect(countKeywordMatches("", [])).toBe(0);
+  });
+});
 
 describe("trend scoring", () => {
   it("rewards fresh, relevant, brand-fit signals", () => {
