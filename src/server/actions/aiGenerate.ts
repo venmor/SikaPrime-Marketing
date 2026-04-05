@@ -339,17 +339,24 @@ export async function saveAiGeneratedContentAction(input: AIGenerationSaveInput)
     };
   }
 
-  for (const item of input.items) {
-    const existing = await prisma.contentItem.findUnique({
-      where: { id: item.contentItemId },
-      select: {
-        id: true,
-        ownerId: true,
-        reviewerId: true,
-      },
-    });
+  const existingItems = await prisma.contentItem.findMany({
+    where: {
+      id: { in: input.items.map((item) => item.contentItemId) },
+      ownerId: session.userId,
+    },
+    select: {
+      id: true,
+      ownerId: true,
+      reviewerId: true,
+    },
+  });
 
-    if (!existing || existing.ownerId !== session.userId) {
+  const existingMap = new Map(existingItems.map((item) => [item.id, item]));
+
+  for (const item of input.items) {
+    const existing = existingMap.get(item.contentItemId);
+
+    if (!existing) {
       continue;
     }
 
