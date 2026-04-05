@@ -40,8 +40,8 @@ export default async function Home() {
   }
 
   return (
-    <main className="relative min-h-screen bg-[color:var(--background)] px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-12">
+    <main className="relative min-h-screen bg-[color:var(--background)] px-[clamp(1rem,3vw,1.5rem)] py-[clamp(2rem,6vw,3rem)]">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-[clamp(2rem,5vw,3rem)]">
         <section className="flex flex-col items-center text-center">
           <Badge variant="brand-subtle" className="mb-6">Web-first, mobile-ready</Badge>
 
@@ -49,7 +49,7 @@ export default async function Home() {
             <AppLogo />
           </div>
 
-          <h1 className="max-w-4xl font-display text-4xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-6xl lg:text-7xl">
+          <h1 className="max-w-4xl font-display text-[clamp(2rem,6vw,4.5rem)] font-bold tracking-tight text-[color:var(--foreground)]">
             Marketing operations, simplified for Sika Prime.
           </h1>
 
@@ -75,11 +75,11 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mt-8 grid gap-8 md:grid-cols-3">
+        <section className="mt-8 grid gap-[clamp(1.5rem,4vw,2rem)] md:grid-cols-3">
           {heroPoints.map((item) => (
             <div
               key={item.title}
-              className="surface-panel card-hover flex flex-col items-center text-center p-8"
+              className="surface-panel card-hover flex flex-col items-center text-center p-[clamp(1.25rem,4vw,2rem)]"
             >
               <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-soft text-brand-strong">
                 <item.icon className="h-6 w-6" />
@@ -94,7 +94,7 @@ export default async function Home() {
           ))}
         </section>
 
-        <section className="grid gap-8 lg:grid-cols-2">
+        <section className="grid gap-[clamp(1.5rem,4vw,2rem)] lg:grid-cols-2">
           <SectionCard
             title="Secure team access"
             description="Built for real users, not a public demo list."
@@ -136,7 +136,7 @@ export default async function Home() {
           </SectionCard>
         </section>
 
-        <section className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-[clamp(1.5rem,4vw,2rem)] sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Trend Engine"
             value="Safe + live"
@@ -159,7 +159,7 @@ export default async function Home() {
           />
         </section>
 
-        <section id="modules" className="grid gap-8 lg:grid-cols-2">
+        <section id="modules" className="grid gap-[clamp(1.5rem,4vw,2rem)] lg:grid-cols-2">
           <SectionCard
             title="What the team gets"
             description="A focused workspace instead of scattered tools."
