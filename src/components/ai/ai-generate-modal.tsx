@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Sparkles, X } from "lucide-react";
+import { readStreamableValue } from "ai/rsc";
+import { parse } from "partial-json";
 
 import { ChannelSelector } from "@/components/ai/channel-selector";
 import { PreviewEdit } from "@/components/ai/preview-edit";
@@ -85,6 +87,7 @@ export function AIGenerateModal({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [usedTrends, setUsedTrends] = useState<LiveTrendPreview[]>([]);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
   const [isSaving, startSaving] = useTransition();
 
@@ -164,10 +167,61 @@ export function AIGenerateModal({
         return;
       }
 
-      setGeneratedItems(result.items);
       setUsedTrends(result.usedLiveTrends);
+      setFallbackReason(result.fallbackReason ?? null);
       setStatusMessage(result.message);
       setStep(3);
+
+      if (result.stream) {
+        let streamContent = "";
+        for await (const chunk of readStreamableValue(result.stream)) {
+          streamContent = (chunk as string) || "";
+
+          let cleanContent = streamContent.trim();
+          if (cleanContent.startsWith("```json")) {
+            cleanContent = cleanContent.replace(/^```json/, "").replace(/```$/, "").trim();
+          }
+
+          try {
+            const rawParsed = parse(cleanContent);
+            const parsedArray = Array.isArray(rawParsed) ? rawParsed : [rawParsed];
+
+            const partialItems = parsedArray
+              .filter((item: unknown) => item !== null && typeof item === "object")
+              .map((item: unknown, i: number) => {
+                 const typedItem = item as Record<string, unknown>;
+                 const channel = (typedItem?.channel as string) || (channelSelection === "BOTH" ? (i === 0 ? "FACEBOOK" : "WHATSAPP") : channelSelection);
+                 return {
+                   contentItemId: result.preCreatedItemIds?.[i] || `stream-${i}`,
+                   channel,
+                   title: (typedItem?.title as string) || "",
+                   stage: "DRAFT",
+                   callToAction: (typedItem?.callToAction as string) || "",
+                   hashtags: (typedItem?.hashtags as string[]) || [],
+                   themeLabel: (typedItem?.themeLabel as string) || "",
+                   rationale: (typedItem?.rationale as string) || "",
+                   promptMetadata: { objective: "", selectedTrendIds: [], selectedTrendTitles: [] },
+                   payload: channel === "FACEBOOK" ? {
+                     kind: "FACEBOOK",
+                     body: (typedItem?.body as string) || "",
+                     caption: (typedItem?.caption as string) || "",
+                     engagementComments: (typedItem?.engagementComments as string[]) || []
+                   } : {
+                     kind: "WHATSAPP",
+                     message: (typedItem?.message as string) || "",
+                     buttons: (typedItem?.buttons as string[]) || []
+                   }
+                 };
+              });
+            setGeneratedItems(partialItems as AIGeneratedChannelPreview[]);
+          } catch {
+            // Ignore parse errors from incomplete JSON chunks if any
+          }
+        }
+      } else {
+        setGeneratedItems(result.items);
+      }
+
       router.refresh();
     });
   }
@@ -337,6 +391,22 @@ export function AIGenerateModal({
 
               {step === 3 ? (
                 <div className="grid gap-6">
+                  {fallbackReason ? (
+                    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
+                      <p className="text-sm font-medium text-[color:var(--foreground)]">
+                        AI generation failed ({fallbackReason}). Showing a pre-written template.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleGenerate}
+                        disabled={isGenerating}
+                        className="mt-3 inline-flex min-h-9 items-center justify-center rounded-full bg-[color:var(--surface-strong)] px-4 py-2 text-xs font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isGenerating ? "Retrying..." : "Retry AI"}
+                      </button>
+                    </div>
+                  ) : null}
+
                   {usedTrends.length ? (
                     <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">

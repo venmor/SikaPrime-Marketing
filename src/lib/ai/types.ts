@@ -52,6 +52,8 @@ export type AIGeneratedChannelPreview = {
   hashtags: string[];
   themeLabel: string;
   rationale: string;
+  userRating?: number;
+  userFeedback?: string;
   promptMetadata: {
     objective: string;
     productName?: string | null;
@@ -70,12 +72,17 @@ export type AIGenerationResult =
       message: string;
       items: AIGeneratedChannelPreview[];
       usedLiveTrends: LiveTrendPreview[];
+      fallbackReason?: string | null;
+      stream?: unknown;
+      preCreatedItemIds?: string[];
     }
   | {
       status: "error";
       message: string;
       items?: never;
       usedLiveTrends?: LiveTrendPreview[];
+      fallbackReason?: never;
+      stream?: never;
     };
 
 export type AIGenerationSaveInput = {
