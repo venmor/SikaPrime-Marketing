@@ -86,8 +86,8 @@ export function ShellChrome({
   return (
     <div className="relative min-h-screen bg-[color:var(--background)]">
       <div className="relative flex min-h-screen">
-        <div className="hidden w-[292px] shrink-0 p-4 xl:block">
-          <div className="surface-panel sticky top-4 h-[calc(100vh-2rem)] p-5">
+        <div className="hidden w-[clamp(240px,20vw,260px)] shrink-0 p-4 xl:block">
+          <div className="surface-panel sticky top-4 h-[calc(100vh-2rem)] p-[clamp(1rem,2vw,1.25rem)]">
             <SidebarNav user={user} />
           </div>
         </div>
@@ -107,9 +107,9 @@ export function ShellChrome({
           </div>
         )}
 
-        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-4 sm:p-6 lg:p-8">
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-[clamp(1rem,3vw,1.5rem)] sm:p-[clamp(1.25rem,4vw,2rem)]">
           <header className="mb-8">
-            <div className="surface-panel flex flex-col gap-5 p-4 sm:p-6">
+            <div className="surface-panel flex flex-col gap-[clamp(1rem,2vw,1.25rem)] p-[clamp(1rem,2vw,1.25rem)]">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <button
@@ -215,7 +215,7 @@ export function ShellChrome({
                     )}
                   </div>
 
-                  <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
+                  <h1 className="mt-3 font-display text-[clamp(1.5rem,4vw,2.25rem)] font-semibold tracking-tight text-[color:var(--foreground)]">
                     {currentPage.label}
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
@@ -237,7 +237,7 @@ export function ShellChrome({
                           href={item.href}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                            "whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                             active
                               ? "bg-[color:var(--surface-strong)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                               : "text-[color:var(--muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--foreground)]",
@@ -253,7 +253,7 @@ export function ShellChrome({
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-8">
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-[clamp(1rem,3vw,2rem)]">
             {children}
           </main>
         </div>
