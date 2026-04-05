@@ -223,40 +223,42 @@ export async function applyPublishingCommandAction(formData: FormData) {
       details: command,
     });
   } else if (scheduleDate) {
-    for (const [index, item] of items.entries()) {
-      const scheduledFor = new Date(
-        scheduleDate.getTime() + index * 15 * 60 * 1000,
-      );
+    await prisma.$transaction(
+      items.flatMap((item, index) => {
+        const scheduledFor = new Date(
+          scheduleDate.getTime() + index * 15 * 60 * 1000,
+        );
 
-      await prisma.contentItem.update({
-        where: { id: item.id },
-        data: {
-          stage: WorkflowStage.SCHEDULED,
-          scheduledFor,
-        },
-      });
-
-      await prisma.publication.deleteMany({
-        where: {
-          contentItemId: item.id,
-          status: PublicationStatus.SCHEDULED,
-        },
-      });
-
-      await prisma.publication.create({
-        data: {
-          contentItemId: item.id,
-          channel: item.channel,
-          status: PublicationStatus.SCHEDULED,
-          caption: item.finalCopy ?? item.draft,
-          payload: JSON.stringify({
-            title: item.title,
-            hashtags: item.hashtags,
+        return [
+          prisma.contentItem.update({
+            where: { id: item.id },
+            data: {
+              stage: WorkflowStage.SCHEDULED,
+              scheduledFor,
+            },
           }),
-          scheduledFor,
-        },
-      });
-    }
+          prisma.publication.deleteMany({
+            where: {
+              contentItemId: item.id,
+              status: PublicationStatus.SCHEDULED,
+            },
+          }),
+          prisma.publication.create({
+            data: {
+              contentItemId: item.id,
+              channel: item.channel,
+              status: PublicationStatus.SCHEDULED,
+              caption: item.finalCopy ?? item.draft,
+              payload: JSON.stringify({
+                title: item.title,
+                hashtags: item.hashtags,
+              }),
+              scheduledFor,
+            },
+          }),
+        ];
+      }),
+    );
 
     await logActivity({
       actorId: session.userId,
