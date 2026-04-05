@@ -39,7 +39,7 @@ export default async function CalendarPage() {
               calendar.days.map((day) => (
                 <div
                   key={day.date}
-                  className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+                  className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <h3 className="font-display text-xl font-semibold">{day.date}</h3>
@@ -52,7 +52,7 @@ export default async function CalendarPage() {
                       <Link
                         key={item.id}
                         href={`/content/${item.id}`}
-                        className="rounded-[22px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.75)] p-4 transition hover:border-[color:var(--brand)]"
+                        className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 transition hover:border-[color:var(--brand)]"
                       >
                         <div className="flex flex-wrap items-center gap-3">
                           <Badge>{humanizeEnum(item.channel)}</Badge>
@@ -125,15 +125,15 @@ export default async function CalendarPage() {
                     key={warning.message}
                     className={
                       warning.level === "warning"
-                        ? "rounded-[24px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
-                        : "rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4 text-sm text-[color:var(--muted)]"
+                        ? "alert-warning rounded-[24px] p-4 text-sm"
+                        : "rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 text-sm text-[color:var(--muted)]"
                     }
                   >
                     {warning.message}
                   </div>
                 ))
               ) : (
-                <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="alert-success rounded-[24px] p-4 text-sm">
                   No duplicate, stale-trend, or overposting risks are currently flagged.
                 </div>
               )}
@@ -150,7 +150,7 @@ export default async function CalendarPage() {
                   <Link
                     key={item.id}
                     href={`/content/${item.id}`}
-                    className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4 transition hover:border-[color:var(--brand)]"
+                    className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 transition hover:border-[color:var(--brand)]"
                   >
                     <div className="flex flex-wrap items-center gap-3">
                       <Badge variant="success">Approved</Badge>

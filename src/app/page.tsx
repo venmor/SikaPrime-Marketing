@@ -126,7 +126,7 @@ export default async function Home() {
                 "Modular services ready for more channels, AI, and mobile reuse.",
               ].map((item) => (
                 <div key={item} className="flex items-start gap-4">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[color:var(--success-soft)] text-[color:var(--success-strong)]">
                     <BadgeCheck className="h-4 w-4" />
                   </div>
                   <p className="text-sm leading-relaxed text-[color:var(--muted-strong)]">{item}</p>

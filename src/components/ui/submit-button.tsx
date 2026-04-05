@@ -13,7 +13,7 @@ export function SubmitButton({
   children: React.ReactNode;
   pendingLabel?: string;
   className?: string;
-  variant?: "primary" | "secondary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost" | "success";
 }) {
   const { pending } = useFormStatus();
 
@@ -22,13 +22,15 @@ export function SubmitButton({
       type="submit"
       disabled={pending}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-70",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)] disabled:cursor-not-allowed disabled:opacity-70",
         variant === "primary" &&
           "bg-brand text-white shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:bg-brand-strong",
+        variant === "success" &&
+          "bg-[color:var(--success)] text-[color:var(--background)] shadow-[var(--shadow-soft)] hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:bg-[color:var(--success-strong)]",
         variant === "secondary" &&
           "border border-[color:var(--border-strong)] bg-surface-strong text-[color:var(--foreground)] shadow-sm hover:-translate-y-0.5 hover:border-[color:var(--muted)] hover:shadow-md",
         variant === "ghost" &&
-          "bg-transparent text-[color:var(--foreground)] hover:bg-slate-100",
+          "bg-transparent text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]",
         className,
       )}
     >

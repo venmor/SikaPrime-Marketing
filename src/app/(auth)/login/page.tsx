@@ -109,7 +109,7 @@ export default async function LoginPage({
           </div>
 
           {errorMessage && (
-            <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700 shadow-sm">
+            <div className="alert-danger mb-6 rounded-xl p-4 text-sm shadow-sm">
               {errorMessage}
             </div>
           )}

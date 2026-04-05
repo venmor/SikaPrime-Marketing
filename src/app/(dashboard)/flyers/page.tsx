@@ -162,13 +162,13 @@ export default async function FlyersPage({
   return (
     <div className="grid gap-8">
       {firstValue(params.asset) === "uploaded" ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+        <div className="alert-success rounded-2xl p-4 text-sm">
           Brand reference uploaded and analyzed. It is now ready to guide the
           next flyer generation run.
         </div>
       ) : null}
       {firstValue(params.error) ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+        <div className="alert-danger rounded-2xl p-4 text-sm">
           {firstValue(params.error) === "missing-file"
             ? "Choose a flyer image before uploading."
             : firstValue(params.error) === "invalid-file"
@@ -530,7 +530,7 @@ export default async function FlyersPage({
               {featuredProject.concepts.map((concept) => (
                 <article
                   key={concept.id}
-                  className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.8)] p-5 shadow-sm"
+                  className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5 shadow-sm"
                 >
                   <div className="overflow-hidden rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
                     {concept.imageData ? (
@@ -631,7 +631,7 @@ export default async function FlyersPage({
             {templates.map((template) => (
               <div
                 key={template.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5"
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="brand-subtle">Template</Badge>
@@ -698,7 +698,7 @@ export default async function FlyersPage({
             assets.map((asset) => (
               <div
                 key={asset.id}
-                className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+                className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5"
               >
                 <div className="overflow-hidden rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)]">
                   <Image
@@ -732,7 +732,7 @@ export default async function FlyersPage({
                     <form action={updateBrandAssetStatusAction}>
                       <input type="hidden" name="assetId" value={asset.id} />
                       <input type="hidden" name="status" value={AssetStatus.APPROVED} />
-                      <SubmitButton pendingLabel="Approving..." variant="secondary">
+                      <SubmitButton pendingLabel="Approving..." variant="success">
                         Approve
                       </SubmitButton>
                     </form>

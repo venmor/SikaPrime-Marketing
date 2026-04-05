@@ -236,7 +236,7 @@ export function AssistantDock({
   return (
     <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[210] flex flex-col items-end gap-3 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-[calc(100vw-1.5rem)]">
       {open ? (
-        <div className="pointer-events-auto flex h-[min(88dvh,54rem)] w-full max-w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[color:var(--border-strong)] bg-[color:rgba(255,255,255,0.97)] shadow-[0_24px_60px_rgba(15,23,42,0.22)] backdrop-blur-xl">
+        <div className="surface-overlay pointer-events-auto flex h-[min(88dvh,54rem)] w-full max-w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px]">
           <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[color:var(--muted)]">
@@ -247,7 +247,7 @@ export function AssistantDock({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
                 onClick={() => setOpen(false)}
                 aria-label="Minimize assistant"
               >
@@ -255,7 +255,7 @@ export function AssistantDock({
               </button>
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] transition-colors hover:text-[color:var(--foreground)]"
                 onClick={() => {
                   setOpen(false);
                   setDrafts([]);
@@ -307,7 +307,7 @@ export function AssistantDock({
                   <button
                     key={suggestion.id}
                     type="button"
-                    className="rounded-full border border-[color:var(--border)] bg-white px-3 py-2 text-left text-xs font-medium text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
+                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-2 text-left text-xs font-medium text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:border-[color:var(--border-strong)]"
                     onClick={() => submitPrompt(suggestion.prompt, { keepOpen: true })}
                   >
                     {suggestion.label}
@@ -323,7 +323,7 @@ export function AssistantDock({
                       className={cn(
                         "rounded-[20px] px-4 py-3 text-sm leading-6",
                         message.role === "assistant"
-                          ? "bg-white text-[color:var(--foreground)] shadow-sm"
+                          ? "bg-[color:var(--surface-strong)] text-[color:var(--foreground)] shadow-sm"
                           : "ml-8 bg-brand text-white",
                       )}
                     >
@@ -358,7 +358,7 @@ export function AssistantDock({
                 </div>
               </div>
 
-              <div className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-sm">
+              <div className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
                 <label className="block">
                   <span className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
                     What should I make?
@@ -387,7 +387,7 @@ export function AssistantDock({
               </div>
 
               {drafts.length ? (
-                <div className="rounded-[24px] border border-[color:var(--border-strong)] bg-white p-4 shadow-sm">
+                <div className="rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
@@ -558,7 +558,7 @@ export function AssistantDock({
                       type="button"
                       onClick={() => saveDrafts(false)}
                       disabled={isSaving}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                     >
                       {isSaving ? "Saving..." : "Keep as draft"}
                     </button>
@@ -581,7 +581,7 @@ export function AssistantDock({
                 reviewInbox.map((item) => (
                   <div
                     key={item.id}
-                    className="rounded-[22px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                    className="rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -618,7 +618,7 @@ export function AssistantDock({
                         type="button"
                         onClick={() => handleReviewAction("approve", item.id)}
                         disabled={isReviewing}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-emerald-700 disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[color:var(--success)] px-4 py-2.5 text-sm font-semibold text-[color:var(--background)] shadow-[var(--shadow-soft)] transition-[transform,box-shadow,background-color,color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[var(--shadow-card)] hover:bg-[color:var(--success-strong)] disabled:opacity-60"
                       >
                         <CheckCircle2 className="h-4 w-4" />
                         Approve
@@ -627,7 +627,7 @@ export function AssistantDock({
                         type="button"
                         onClick={() => handleReviewAction("revise", item.id)}
                         disabled={isReviewing}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-[transform,box-shadow,background-color,border-color,color] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60"
                       >
                         <WandSparkles className="h-4 w-4" />
                         Request changes

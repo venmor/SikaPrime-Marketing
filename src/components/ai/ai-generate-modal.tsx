@@ -216,7 +216,7 @@ export function AIGenerateModal({
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
-            className="mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.98)] shadow-[0_28px_72px_rgba(15,23,42,0.24)]"
+            className="surface-overlay mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px]"
           >
             <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-6 py-5">
               <div>
@@ -234,7 +234,7 @@ export function AIGenerateModal({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-white text-[color:var(--muted)] shadow-sm transition-all hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] shadow-sm transition-all hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
                 aria-label="Close AI generation"
               >
                 <X className="h-4 w-4" />
@@ -254,7 +254,7 @@ export function AIGenerateModal({
                     step === item.stepNumber
                       ? "bg-brand-soft text-brand-strong"
                       : step > item.stepNumber
-                        ? "bg-emerald-50 text-emerald-700"
+                        ? "bg-[color:var(--success-soft)] text-[color:var(--success-strong)]"
                         : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
                   }`}
                 >
@@ -265,14 +265,14 @@ export function AIGenerateModal({
 
             <div className="overflow-y-auto px-6 py-6">
               {errorMessage ? (
-                <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+                <div className="alert-danger mb-5 rounded-2xl p-4 text-sm">
                   {errorMessage} You can retry or continue with the manual creation
                   tools in the Content Lab.
                 </div>
               ) : null}
 
               {statusMessage && step === 4 ? (
-                <div className="mb-5 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                <div className="alert-success mb-5 rounded-2xl p-4 text-sm">
                   {statusMessage}
                 </div>
               ) : null}
@@ -319,7 +319,7 @@ export function AIGenerateModal({
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Back
                     </button>
@@ -346,7 +346,7 @@ export function AIGenerateModal({
                         {usedTrends.map((trend) => (
                           <span
                             key={trend.id}
-                            className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
+                            className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-1.5 text-xs font-medium text-[color:var(--muted-strong)]"
                           >
                             {trend.title}
                           </span>
@@ -362,13 +362,13 @@ export function AIGenerateModal({
                       <button
                         type="button"
                         onClick={() => setStep(2)}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
                         Regenerate with AI
                       </button>
                       <Link
                         href={firstItemLink}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
                         Edit manually
                       </Link>
@@ -379,7 +379,7 @@ export function AIGenerateModal({
                         type="button"
                         onClick={() => handleSave(false)}
                         disabled={isSaving}
-                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         {isSaving ? "Saving..." : "Save as draft"}
                       </button>
@@ -414,14 +414,14 @@ export function AIGenerateModal({
                     </Link>
                     <Link
                       href={firstItemLink}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Open content item
                     </Link>
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
-                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-white px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                      className="inline-flex min-h-11 items-center justify-center rounded-full border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] px-5 py-2.5 text-sm font-semibold text-[color:var(--foreground)] shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                     >
                       Close
                     </button>

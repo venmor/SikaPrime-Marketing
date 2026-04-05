@@ -116,7 +116,7 @@ export default async function KnowledgePage() {
               <form
                 key={value.id}
                 action={saveCompanyValueAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={value.id} />
                 <label>
@@ -160,7 +160,7 @@ export default async function KnowledgePage() {
               <form
                 key={goal.id}
                 action={saveStrategicGoalAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={goal.id} />
                 <label>
@@ -227,7 +227,7 @@ export default async function KnowledgePage() {
               <form
                 key={product.id}
                 action={saveProductAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={product.id} />
                 <div className="grid gap-4 md:grid-cols-2">
@@ -281,7 +281,7 @@ export default async function KnowledgePage() {
                     label="Create a post for this product"
                     prompt={`Create the best post for ${product.name}. Pick the strongest channel automatically, keep it aligned with the current top trend, and make it ready to edit.`}
                     autoSend
-                    className="bg-white text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+                    className="bg-[color:var(--surface-strong)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
                   />
                 </div>
               </form>
@@ -340,7 +340,7 @@ export default async function KnowledgePage() {
               <form
                 key={segment.id}
                 action={saveAudienceSegmentAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={segment.id} />
                 <label>
@@ -387,7 +387,7 @@ export default async function KnowledgePage() {
                     label="Create a post for this audience"
                     prompt={`Create the best post for the ${segment.name} audience. Pick the strongest channel and product automatically, and keep the tone natural for this group.`}
                     autoSend
-                    className="bg-white text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+                    className="bg-[color:var(--surface-strong)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
                   />
                 </div>
               </form>
@@ -442,7 +442,7 @@ export default async function KnowledgePage() {
               <form
                 key={rule.id}
                 action={saveComplianceRuleAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={rule.id} />
                 <label>
@@ -498,7 +498,7 @@ export default async function KnowledgePage() {
               <form
                 key={offer.id}
                 action={saveOfferAction}
-                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <input type="hidden" name="id" value={offer.id} />
                 <label>
@@ -600,7 +600,7 @@ export default async function KnowledgePage() {
             <form
               key={term.id}
               action={saveGuardrailTermAction}
-              className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+              className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
             >
               <input type="hidden" name="id" value={term.id} />
               <label>

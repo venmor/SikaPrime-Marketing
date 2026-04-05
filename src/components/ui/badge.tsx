@@ -19,21 +19,21 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors",
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[0.6875rem] font-semibold uppercase tracking-wider transition-colors",
         variant === "default" &&
-          "bg-brand-soft text-brand-strong",
+          "border-transparent bg-[color:var(--brand-soft)] text-[color:var(--brand-strong)]",
         variant === "success" &&
-          "bg-emerald-100 text-emerald-800",
+          "border-transparent bg-[color:var(--success-soft)] text-[color:var(--success-strong)]",
         variant === "warning" &&
-          "bg-amber-100 text-amber-800",
+          "border-transparent bg-[color:var(--warning-soft)] text-[color:var(--warning-strong)]",
         variant === "danger" &&
-          "bg-rose-100 text-rose-800",
+          "border-transparent bg-[color:var(--danger-soft)] text-[color:var(--danger-strong)]",
         variant === "muted" &&
-          "bg-slate-100 text-slate-600",
+          "border-[color:var(--border)] bg-[color:var(--surface-soft)] text-[color:var(--muted)]",
         variant === "brand-subtle" &&
-          "bg-[color:var(--brand-soft)] text-[color:var(--brand-strong)]",
+          "border-transparent bg-[color:var(--brand-soft)] text-[color:var(--brand-strong)]",
         variant === "cyan-subtle" &&
-          "bg-[color:var(--secondary-soft)] text-[color:var(--secondary-strong)]",
+          "border-transparent bg-[color:var(--secondary-soft)] text-[color:var(--secondary-strong)]",
         className,
       )}
     >

@@ -4,6 +4,7 @@ import { ChevronDown, CheckCircle2, Clock3, Sparkles } from "lucide-react";
 import { OpenAssistantButton } from "@/components/assistant/open-assistant-button";
 import { Badge } from "@/components/ui/badge";
 import { SectionCard } from "@/components/ui/section-card";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { canGenerateContent, canReviewContent } from "@/lib/auth/access";
 import { getAssistantHomeSnapshot } from "@/lib/assistant/service";
 import { requireSession } from "@/lib/auth/session";
@@ -61,7 +62,7 @@ export default async function DashboardPage() {
                     label="Quick generate"
                     prompt={`Create the next best ${snapshot.defaults.preferredChannel.toLowerCase()} post for ${snapshot.defaults.preferredProductName ?? "our best product"} in a ${snapshot.defaults.preferredTone.toLowerCase()} tone.`}
                     autoSend
-                    className="bg-white text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
+                    className="bg-[color:var(--surface-strong)] text-[color:var(--foreground)] hover:bg-[color:var(--surface-soft)]"
                   />
                 ) : null}
               </div>
@@ -87,7 +88,7 @@ export default async function DashboardPage() {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                     {card.label}
@@ -113,7 +114,7 @@ export default async function DashboardPage() {
               {snapshot.suggestions.map((suggestion) => (
                 <div
                   key={suggestion.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
                 >
                   <p className="text-sm font-semibold text-[color:var(--foreground)]">
                     {suggestion.label}
@@ -137,7 +138,7 @@ export default async function DashboardPage() {
             title="Focused today"
             description="Creation is hidden for your role so you can stay on decision-making and measurement."
           >
-            <div className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
               <p className="text-base leading-7 text-[color:var(--foreground)]">
                 Use the sidebar to open the queue or performance pages relevant to your role. The assistant keeps creation controls out of your way here.
               </p>
@@ -155,7 +156,7 @@ export default async function DashboardPage() {
             {snapshot.trendsForYou.map((trend) => (
               <div
                 key={trend.id}
-                className="min-w-[18rem] rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                className="min-w-[18rem] rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-3">
                   <Badge variant="cyan-subtle">{trend.source}</Badge>
@@ -190,7 +191,7 @@ export default async function DashboardPage() {
           description="Reviewers stay in flow with one clear approval decision instead of a long table."
         >
           <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-start">
-            <div className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="warning">Waiting</Badge>
                 <Badge variant="muted">{formatRelativeDate(spotlightReview.updatedAt)}</Badge>
@@ -207,23 +208,20 @@ export default async function DashboardPage() {
             </div>
 
             <div className="grid gap-3">
-              <form action={approveContentAction} className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm">
+              <form action={approveContentAction} className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
                 <input type="hidden" name="id" value={spotlightReview.id} />
                 <input
                   type="hidden"
                   name="approvalNotes"
                   value="Approved from dashboard spotlight."
                 />
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-emerald-700"
-                >
+                <SubmitButton pendingLabel="Approving..." variant="success">
                   <CheckCircle2 className="h-4 w-4" />
                   Approve
-                </button>
+                </SubmitButton>
               </form>
 
-              <form action={sendBackToDraftAction} className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm">
+              <form action={sendBackToDraftAction} className="grid gap-3 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
                 <input type="hidden" name="id" value={spotlightReview.id} />
                 <label>
                   Revision note
@@ -233,13 +231,10 @@ export default async function DashboardPage() {
                     required
                   />
                 </label>
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[color:var(--border-strong)] bg-white px-4 py-2.5 text-sm font-semibold text-[color:var(--foreground)] transition-all hover:-translate-y-0.5 hover:shadow-md"
-                >
+                <SubmitButton pendingLabel="Returning for revision..." variant="secondary">
                   <Clock3 className="h-4 w-4" />
                   Request changes
-                </button>
+                </SubmitButton>
               </form>
 
               <Link
@@ -253,7 +248,7 @@ export default async function DashboardPage() {
         </SectionCard>
       ) : null}
 
-      <details className="group rounded-[28px] border border-[color:var(--border)] bg-white p-5 shadow-sm">
+      <details className="group rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
           <div>
             <p className="text-sm font-semibold text-[color:var(--foreground)]">

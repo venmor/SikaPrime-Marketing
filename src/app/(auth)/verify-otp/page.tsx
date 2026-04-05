@@ -92,10 +92,10 @@ export default async function VerifyOtpPage({
           <div
             className={
               message.tone === "warning"
-                ? "mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+                ? "alert-warning mt-6 rounded-xl p-4 text-sm"
                 : message.tone === "success"
-                  ? "mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"
-                  : "mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+                  ? "alert-success mt-6 rounded-xl p-4 text-sm"
+                  : "alert-danger mt-6 rounded-xl p-4 text-sm"
             }
           >
             {message.text}

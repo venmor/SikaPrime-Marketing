@@ -395,7 +395,7 @@ export default async function ContentDetailPage({
                   </div>
                 ) : structuredPayload?.kind === "WHATSAPP" ? (
                   <div className="mt-3 flex justify-start">
-                    <div className="max-w-[92%] rounded-[22px] bg-emerald-500 px-4 py-3 text-sm leading-6 text-white shadow-sm">
+                    <div className="max-w-[92%] rounded-[22px] bg-[color:var(--success)] px-4 py-3 text-sm leading-6 text-[color:var(--background)] shadow-sm">
                       {structuredPayload.message}
                     </div>
                   </div>
@@ -562,7 +562,7 @@ export default async function ContentDetailPage({
                           placeholder="Approved for scheduling and publishing."
                         />
                       </label>
-                      <SubmitButton pendingLabel="Approving...">
+                      <SubmitButton pendingLabel="Approving..." variant="success">
                         Approve content
                       </SubmitButton>
                     </form>
@@ -576,10 +576,7 @@ export default async function ContentDetailPage({
                           placeholder="What should change before approval?"
                         />
                       </label>
-                      <SubmitButton
-                        pendingLabel="Returning for revision..."
-                        className="bg-[color:var(--accent)] text-[color:#1f1a12] hover:bg-[color:#bd7d26]"
-                      >
+                      <SubmitButton pendingLabel="Returning for revision..." variant="secondary">
                         Send for revision
                       </SubmitButton>
                     </form>
@@ -619,10 +616,7 @@ export default async function ContentDetailPage({
                 {canEdit ? (
                   <form action={archiveContentAction}>
                     <input type="hidden" name="id" value={content.id} />
-                    <SubmitButton
-                      pendingLabel="Archiving..."
-                      className="bg-[color:#6b7280] hover:bg-[color:#4b5563]"
-                    >
+                    <SubmitButton pendingLabel="Archiving..." variant="ghost">
                       Archive item
                     </SubmitButton>
                   </form>
@@ -643,7 +637,7 @@ export default async function ContentDetailPage({
               content.reviews.map((review) => (
                 <div
                   key={review.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge
@@ -695,7 +689,7 @@ export default async function ContentDetailPage({
               content.publications.map((publication) => (
                 <div
                   key={publication.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant="muted">{humanizeEnum(publication.status)}</Badge>
@@ -738,7 +732,7 @@ export default async function ContentDetailPage({
             activity.map((entry) => (
               <div
                 key={entry.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge variant="muted">{entry.action}</Badge>

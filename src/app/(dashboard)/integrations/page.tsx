@@ -38,13 +38,13 @@ export default async function IntegrationsPage({
   return (
     <div className="grid gap-6">
       {params.saved === "1" ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+        <div className="alert-success rounded-2xl p-4 text-sm">
           Integration settings saved. Runtime services will use the new values on
           the next request.
         </div>
       ) : null}
       {params.error === "invalid" ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">
+        <div className="alert-danger rounded-2xl p-4 text-sm">
           One or more settings were missing required metadata.
         </div>
       ) : null}
@@ -111,7 +111,7 @@ export default async function IntegrationsPage({
                   <form
                     key={setting.id}
                     action={saveIntegrationSettingAction}
-                    className="grid gap-4 rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+                    className="grid gap-4 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5"
                   >
                     <input type="hidden" name="id" value={setting.id} />
                     <input type="hidden" name="key" value={setting.key} />

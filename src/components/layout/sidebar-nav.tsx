@@ -46,12 +46,12 @@ export function SidebarNav({
       aria-label="Global navigation"
       className="flex h-full flex-col gap-6"
     >
-      <div className="flex items-center justify-between px-2">
+      <div className="flex items-center justify-between px-1">
         <AppLogo compact />
         <Badge variant="brand-subtle">Live</Badge>
       </div>
 
-      <nav aria-label="Primary destinations" className="flex flex-col gap-1">
+      <nav aria-label="Primary destinations" className="flex flex-col gap-1.5">
         {visiblePrimarySections.map((section: NavigationSection) => {
           const sectionActive = activeSection.id === section.id;
 
@@ -62,13 +62,20 @@ export function SidebarNav({
               onClick={onNavigate}
               aria-current={pathname === section.href ? "page" : undefined}
               className={cn(
-                "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                "group flex items-center gap-3 rounded-2xl px-3 py-3 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                 sectionActive
-                  ? "bg-brand-soft text-brand-strong"
+                  ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                   : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]",
               )}
             >
-              <section.icon className={cn("h-5 w-5 transition-colors", sectionActive ? "text-brand" : "text-[color:var(--muted)] group-hover:text-[color:var(--foreground)]")} />
+              <section.icon
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  sectionActive
+                    ? "text-brand"
+                    : "text-[color:var(--muted)] group-hover:text-[color:var(--foreground)]",
+                )}
+              />
               <span
                 className={cn(
                   "truncate text-sm font-medium",
@@ -97,13 +104,20 @@ export function SidebarNav({
                 onClick={onNavigate}
                 aria-current={pathname === section.href ? "page" : undefined}
                 className={cn(
-                  "group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                  "group flex items-center gap-3 rounded-2xl px-3 py-3 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                   active
-                    ? "bg-brand-soft text-brand-strong"
+                    ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                     : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]",
                 )}
               >
-                <section.icon className={cn("h-5 w-5 transition-colors", active ? "text-brand" : "text-[color:var(--muted)] group-hover:text-[color:var(--foreground)]")} />
+                <section.icon
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    active
+                      ? "text-brand"
+                      : "text-[color:var(--muted)] group-hover:text-[color:var(--foreground)]",
+                  )}
+                />
                 <span
                   className={cn(
                     "truncate text-sm font-medium",
@@ -118,7 +132,7 @@ export function SidebarNav({
         </nav>
       ) : null}
 
-      <div className="mt-auto flex flex-col gap-4 px-2">
+      <div className="mt-auto rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-soft font-semibold text-brand-strong">
             {initials(user.name)}

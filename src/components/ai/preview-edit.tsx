@@ -59,7 +59,7 @@ export function PreviewEdit({
               </div>
             ) : (
               <div className="mt-4 flex justify-end">
-                <div className="max-w-[92%] rounded-[22px] bg-emerald-500 px-4 py-3 text-sm leading-6 text-white shadow-sm">
+                <div className="max-w-[92%] rounded-[22px] bg-[color:var(--success)] px-4 py-3 text-sm leading-6 text-[color:var(--background)] shadow-sm">
                   {item.payload.message}
                 </div>
               </div>

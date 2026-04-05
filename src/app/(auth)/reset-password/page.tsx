@@ -70,7 +70,7 @@ export default async function ResetPasswordPage({
         )}
 
         {errorMessage ? (
-          <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          <div className="alert-danger mt-6 rounded-xl p-4 text-sm">
             {errorMessage}
           </div>
         ) : null}

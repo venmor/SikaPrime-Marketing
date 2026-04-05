@@ -107,7 +107,7 @@ export default async function TrendsPage() {
                   return (
                     <div
                       key={trend.id}
-                      className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                      className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
                     >
                       <div className="flex flex-wrap items-center gap-3">
                         <Badge variant={trend.status === "RISING" ? "success" : "warning"}>
@@ -125,7 +125,7 @@ export default async function TrendsPage() {
                       <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
                         {trend.summary}
                       </p>
-                      <div className="mt-4 grid gap-3 rounded-2xl bg-[color:rgba(18,62,74,0.05)] p-4 text-sm">
+                      <div className="mt-4 grid gap-3 rounded-2xl bg-[color:var(--surface-soft)] p-4 text-sm">
                         <p className="font-semibold text-[color:var(--foreground)]">
                           Why it matters
                         </p>

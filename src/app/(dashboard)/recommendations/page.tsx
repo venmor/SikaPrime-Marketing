@@ -117,7 +117,7 @@ export default async function RecommendationsPage({
             <SubmitButton pendingLabel="Thinking...">Ask planner</SubmitButton>
           </form>
 
-          <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5">
+          <div className="mt-6 rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
               {planningAnswer.headline}
             </p>
@@ -145,7 +145,7 @@ export default async function RecommendationsPage({
             {assistant?.opportunities.slice(0, 2).map((opportunity) => (
               <div
                 key={opportunity.key}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge>{opportunity.source}</Badge>
@@ -166,7 +166,7 @@ export default async function RecommendationsPage({
             {[...trends.local.slice(0, 1), ...trends.global.slice(0, 1)].map((trend) => (
               <div
                 key={trend.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge variant={trend.status === "RISING" ? "success" : "warning"}>
@@ -196,7 +196,7 @@ export default async function RecommendationsPage({
             recommendations.map((recommendation) => (
               <div
                 key={recommendation.id}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge>{humanizeEnum(recommendation.channel)}</Badge>

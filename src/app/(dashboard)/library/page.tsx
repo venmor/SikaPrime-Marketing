@@ -155,7 +155,7 @@ export default async function LibraryPage({
             items.map((item) => (
               <div
                 key={item.id}
-                className="rounded-[28px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-5"
+                className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--surface)] p-5"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge>{humanizeEnum(item.channel)}</Badge>

@@ -120,7 +120,7 @@ export default async function PublishingPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                   {stat.label}
@@ -161,7 +161,7 @@ export default async function PublishingPage() {
                 ].map((example) => (
                   <span
                     key={example}
-                    className="rounded-full bg-white px-3 py-2 text-xs text-[color:var(--muted)]"
+                    className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-2 text-xs text-[color:var(--muted)]"
                   >
                     {example}
                   </span>
@@ -186,7 +186,7 @@ export default async function PublishingPage() {
               approvedNow.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="success">Approved</Badge>
@@ -248,7 +248,7 @@ export default async function PublishingPage() {
                 calendar.recommendedWindows.map((window) => (
                   <div
                     key={window.label}
-                    className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                    className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
                   >
                     <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                       Suggested window
@@ -275,7 +275,7 @@ export default async function PublishingPage() {
                     key={warning.message}
                     className={
                       warning.level === "warning"
-                        ? "rounded-[22px] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+                        ? "alert-warning rounded-[22px] p-4 text-sm"
                         : "rounded-[22px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4 text-sm text-[color:var(--muted)]"
                     }
                   >
@@ -284,7 +284,7 @@ export default async function PublishingPage() {
                 ))}
               </div>
             ) : (
-              <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <div className="alert-success rounded-[22px] p-4 text-sm">
                 The current queue looks balanced.
               </div>
             )}
@@ -307,7 +307,7 @@ export default async function PublishingPage() {
                     <Link
                       key={item.id}
                       href={`/content/${item.id}`}
-                      className="rounded-[16px] bg-white px-3 py-2 transition-colors hover:text-brand"
+                      className="rounded-[16px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] px-3 py-2 transition-colors hover:text-brand"
                     >
                       {item.title}
                     </Link>
@@ -332,7 +332,7 @@ export default async function PublishingPage() {
               scheduledQueue.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-white p-5 shadow-sm"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant="warning">Scheduled</Badge>
@@ -378,7 +378,7 @@ export default async function PublishingPage() {
               publications.map((publication) => (
                 <div
                   key={publication.id}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge variant={publicationVariant(publication.status)}>
@@ -399,7 +399,7 @@ export default async function PublishingPage() {
                         : "Waiting for next action"}
                   </p>
                   {publication.errorMessage ? (
-                    <p className="mt-2 text-sm text-amber-700">
+                    <p className="mt-2 text-sm text-[color:var(--warning-strong)]">
                       Error: {publication.errorMessage}
                     </p>
                   ) : null}

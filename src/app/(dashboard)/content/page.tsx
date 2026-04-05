@@ -173,7 +173,7 @@ export default async function ContentPage() {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="rounded-[24px] border border-[color:var(--border)] bg-white p-4 shadow-sm"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-4 shadow-sm"
               >
                 <p className="text-[10px] font-bold uppercase tracking-widest text-[color:var(--muted)]">
                   {stat.label}
@@ -206,7 +206,7 @@ export default async function ContentPage() {
                   label={opportunity.title}
                   prompt={`Create a ${opportunity.channel.toLowerCase()} post about ${opportunity.title}. Keep it ${opportunity.tone.toLowerCase()} and use the strongest live trend if it fits.`}
                   autoSend
-                  className="bg-white px-3 py-2 text-xs text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
+                  className="bg-[color:var(--surface-strong)] px-3 py-2 text-xs text-[color:var(--foreground)] hover:bg-[color:var(--surface)]"
                 />
               ))}
             </div>
@@ -383,7 +383,7 @@ export default async function ContentPage() {
               </SubmitButton>
             </form>
           ) : (
-            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.65)] px-4 py-4 text-sm text-[color:var(--muted)]">
+            <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] px-4 py-4 text-sm text-[color:var(--muted)]">
               Your current role is read-only for generation. You can still review
               saved ideas and active drafts.
             </div>
@@ -585,7 +585,7 @@ export default async function ContentPage() {
       >
         <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
           <div className="grid gap-4">
-            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Current balance
               </p>
@@ -617,7 +617,7 @@ export default async function ContentPage() {
               {assistant.opportunities.slice(0, 4).map((opportunity) => (
                 <div
                   key={opportunity.key}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge>{opportunity.source}</Badge>
@@ -643,7 +643,7 @@ export default async function ContentPage() {
           </div>
 
           <div className="grid gap-4">
-            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Active occasions
               </p>
@@ -669,7 +669,7 @@ export default async function ContentPage() {
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.72)] p-4">
+            <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Safe trend adaptation
               </p>
@@ -699,7 +699,7 @@ export default async function ContentPage() {
                 <Link
                   key={item.id}
                   href={`/content/${item.id}`}
-                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.7)] p-4 transition hover:border-[color:var(--brand)]"
+                  className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 transition hover:border-[color:var(--brand)]"
                 >
                   <div className="flex flex-wrap items-center gap-3">
                     <Badge variant="muted">{humanizeEnum(item.stage)}</Badge>
@@ -735,7 +735,7 @@ export default async function ContentPage() {
               <Link
                 key={item.id}
                 href={`/content/${item.id}`}
-                className="rounded-[24px] border border-[color:var(--border)] bg-[color:rgba(255,255,255,0.7)] p-4 transition hover:border-[color:var(--brand)]"
+                className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface)] p-4 transition hover:border-[color:var(--brand)]"
               >
                 <div className="flex flex-wrap items-center gap-3">
                   <Badge variant="muted">{humanizeEnum(item.stage)}</Badge>

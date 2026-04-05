@@ -71,11 +71,11 @@ export default async function AccessPage({
   return (
     <div className="grid gap-6">
       {params.error === "self-lockout" ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="alert-warning rounded-2xl p-4 text-sm">
           Your own admin account cannot be suspended from this page.
         </div>
       ) : params.error === "email-required" ? (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="alert-warning rounded-2xl p-4 text-sm">
           Configure SMTP email delivery before enabling email OTP for a user.
         </div>
       ) : null}
