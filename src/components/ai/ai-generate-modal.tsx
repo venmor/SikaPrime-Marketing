@@ -263,16 +263,16 @@ export function AIGenerateModal({
 
       {open && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-[220] flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/45 p-4 sm:p-6 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[220] flex min-h-dvh items-start pt-[8vh] sm:pt-[10vh] justify-center overflow-y-auto bg-slate-950/45 p-4 sm:p-6 backdrop-blur-sm">
               <div className="w-full max-w-5xl">
           <div
             ref={modalRef}
             role="dialog"
             aria-modal="true"
             tabIndex={-1}
-            className="surface-overlay mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px]"
+            className="surface-overlay mx-auto flex max-h-[80vh] w-full flex-col overflow-hidden rounded-[32px]"
           >
-            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-6 py-5">
+            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-5 py-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                   AI content generation
@@ -295,7 +295,7 @@ export function AIGenerateModal({
               </button>
             </div>
 
-            <div className="flex flex-wrap gap-2 border-b border-[color:var(--border)] px-6 py-4">
+            <div className="flex flex-wrap gap-2 border-b border-[color:var(--border)] px-5 py-3">
               {[
                 { stepNumber: 1, label: "Channel" },
                 { stepNumber: 2, label: "Subject" },

@@ -5,11 +5,13 @@ vi.mock("server-only", () => ({}));
 
 // Mock next/headers
 const mockGet = vi.fn();
-vi.mock("next/headers", () => ({
-  headers: vi.fn().mockResolvedValue({
-    get: mockGet,
-  }),
-}));
+vi.mock("next/headers", () => {
+  return {
+    headers: vi.fn().mockResolvedValue({
+      get: (...args: unknown[]) => mockGet(...args),
+    }),
+  };
+});
 
 // Mock prisma to avoid DB connection issues
 vi.mock("@/lib/db", () => ({

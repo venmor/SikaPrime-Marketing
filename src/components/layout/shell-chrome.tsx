@@ -107,8 +107,8 @@ export function ShellChrome({
           </div>
         )}
 
-        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-[clamp(1rem,3vw,1.5rem)] sm:p-[clamp(1.25rem,4vw,2rem)]">
-          <header className="mb-8">
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden p-4 sm:p-6">
+          <header className="relative z-[100] mb-8">
             <div className="surface-panel flex flex-col gap-[clamp(1rem,2vw,1.25rem)] p-[clamp(1rem,2vw,1.25rem)]">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -136,7 +136,7 @@ export function ShellChrome({
                       </span>
                       <ChevronDown className="h-4 w-4 text-[color:var(--muted)] transition-transform duration-200 group-open:rotate-180" />
                     </summary>
-                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-elevated)] p-4 shadow-xl backdrop-blur-xl">
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] w-[min(22rem,calc(100vw-2rem))] rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-elevated)] p-4 shadow-xl backdrop-blur-xl">
                       <div className="flex items-center gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xl font-bold text-brand-strong">
                           {initials(user.name)}
@@ -251,7 +251,7 @@ export function ShellChrome({
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-[clamp(1rem,3vw,2rem)]">
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6">
             {children}
           </main>
         </div>
