@@ -199,6 +199,7 @@ async function generateAndPersistAiContent(input: {
   return {
     items,
     usedLiveTrends: generation.usedLiveTrends,
+    fallbackReason: generation.fallbackReason,
     message:
       generation.fallbackReason
         ? items.length === 2
@@ -209,6 +210,8 @@ async function generateAndPersistAiContent(input: {
           : "AI draft is ready to review.",
   };
 }
+
+import { createStreamableValue } from "ai/rsc";
 
 export async function generateAiContentAction(input: {
   channel: "FACEBOOK" | "WHATSAPP" | "BOTH";
@@ -225,6 +228,182 @@ export async function generateAiContentAction(input: {
   }
 
   try {
+    const { apiKey, model } = await import("@/lib/ai/generationService").then((m) => m.getAiConfig());
+
+    if (apiKey) {
+      const stream = createStreamableValue("");
+
+      const { streamText } = await import("ai");
+      const { openai } = await import("@ai-sdk/openai");
+      const { buildSystemPrompt, buildUserPrompt, loadResolvedContext, resolveLiveTrends, buildObjective } = await import("@/lib/ai/generationService");
+
+      const context = await loadResolvedContext(input.subjectDetails);
+      const liveTrends = await resolveLiveTrends(input.trendIds ?? []);
+      const objective = buildObjective(context, input.subjectDetails.customInstructions);
+      const channels = input.channel === "BOTH" ? ["FACEBOOK" as const, "WHATSAPP" as const] : [input.channel];
+
+      // Create the DB items first so we have real IDs!
+      const preCreatedItems = await Promise.all(
+        channels.map(async (channel) => {
+          const liveTrend = liveTrends[0] ?? null;
+          const brief = buildBrief({
+            subjectDetails: input.subjectDetails,
+            objective,
+            trendTitles: liveTrends.map((trend) => trend.title),
+          });
+          const contentItem = await createGeneratedContentItem({
+            title: "Generating...",
+            brief,
+            objective: context.goal?.title ?? objective,
+            campaignLabel: context.offer?.name ?? context.goal?.title ?? null,
+            distributionTarget: null,
+            contentType: contentTypeForChannel(channel),
+            tone: input.subjectDetails.tone,
+            channel: channel,
+            draft: "",
+            finalCopy: null,
+            callToAction: "",
+            hashtags: [],
+            aiModel: model || "gpt-4o-mini",
+            aiSummary: "Generated via stream.",
+            themeLabel: "Streaming...",
+            ownerId: session.userId,
+            reviewerId: null,
+            productId: context.product?.id ?? null,
+            audienceSegmentId: context.audience?.id ?? null,
+            liveTrendId: liveTrend?.id ?? null,
+            promptMetadata: {
+              objective,
+              productName: context.product?.name ?? null,
+              offerName: context.offer?.name ?? null,
+              audienceName: context.audience?.name ?? null,
+              goalTitle: context.goal?.title ?? null,
+              selectedTrendIds: input.trendIds ?? [],
+              selectedTrendTitles: liveTrends.map((trend) => trend.title),
+            },
+            channelPayload: channel === "FACEBOOK" ? { kind: "FACEBOOK", body: "", caption: "", engagementComments: [] } : { kind: "WHATSAPP", message: "", buttons: [] },
+          });
+
+          await prisma.generationLog.create({
+            data: {
+              contentItemId: contentItem.id,
+              actorId: session.userId,
+              provider: "openai",
+              model: model || "gpt-4o-mini",
+              channel: channel,
+              status: "SUCCESS",
+              prompt: "Streamed via UI",
+              responseText: "Streamed directly to client",
+            },
+          });
+
+          return {
+            id: contentItem.id,
+            channel,
+          };
+        })
+      );
+
+      // Start streaming process asynchronously
+      (async () => {
+        try {
+          let fullText = "[";
+
+          for (let i = 0; i < channels.length; i++) {
+            const channel = channels[i];
+            const systemPrompt = buildSystemPrompt(channel, context, liveTrends);
+            const userPrompt = buildUserPrompt({
+              channel,
+              subjectDetails: input.subjectDetails,
+              context,
+              trends: liveTrends,
+              objective,
+            });
+
+            const { textStream } = await streamText({
+              model: openai(model || "gpt-4o-mini"),
+              system: systemPrompt,
+              prompt: userPrompt,
+            });
+
+            if (i > 0) {
+              fullText += ",";
+              stream.update(fullText);
+            }
+
+            for await (const chunk of textStream) {
+              fullText += chunk;
+              stream.update(fullText);
+            }
+          }
+
+          fullText += "]";
+          stream.done(fullText);
+
+          // Cleanup markdown code blocks if AI wrapped the response
+          let cleanFullText = fullText.trim();
+          if (cleanFullText.startsWith("```json")) {
+            cleanFullText = cleanFullText.replace(/^```json/, "").replace(/```$/, "").trim();
+          }
+
+          // Parse final text and update DB
+          try {
+            const finalParsed = JSON.parse(cleanFullText);
+
+            for (let i = 0; i < finalParsed.length; i++) {
+              if (preCreatedItems[i]) {
+                const p = finalParsed[i];
+                await updateAiChannelPayloadAction({
+                  contentItemId: preCreatedItems[i].id,
+                  title: p.title || "Generated Draft",
+                  callToAction: p.callToAction || "",
+                  hashtags: (p.hashtags || []).join(" "),
+                  themeLabel: p.themeLabel || "",
+                  rationale: p.rationale || "",
+                  body: p.body,
+                  caption: p.caption,
+                  engagementComments: (p.engagementComments || []).join("\n"),
+                  message: p.message,
+                });
+              }
+            }
+          } catch (err) {
+            console.error("Failed to parse and save final streamed text", err);
+          }
+
+          await logActivity({
+            actorId: session.userId,
+            entityType: "ai_generation",
+            entityId: preCreatedItems[0]?.id ?? session.userId,
+            action: "content.ai_generated",
+            summary: `Generated ${preCreatedItems.length} AI draft${preCreatedItems.length === 1 ? "" : "s"}.`,
+            details: liveTrends.map((trend) => trend.title).join(", ") || null,
+          });
+
+        } catch (e) {
+          stream.error(e);
+        }
+      })();
+
+      return {
+        status: "success",
+        message: "Streaming AI Draft...",
+        items: [],
+        usedLiveTrends: liveTrends.map((trend) => ({
+          id: trend.id,
+          title: trend.title,
+          description: trend.description,
+          source: trend.source,
+          sourceUrl: trend.sourceUrl,
+          relevanceScore: trend.relevanceScore,
+          createdAt: typeof trend.createdAt === 'string' ? trend.createdAt : (trend.createdAt as Date).toISOString(),
+        })),
+        stream: stream.value,
+        preCreatedItemIds: preCreatedItems.map((i) => i.id),
+      };
+    }
+
+    // Fallback if no API key
     const result = await generateAndPersistAiContent({
       actorId: session.userId,
       channel: input.channel,
@@ -237,6 +416,7 @@ export async function generateAiContentAction(input: {
       message: result.message,
       items: result.items,
       usedLiveTrends: result.usedLiveTrends,
+      fallbackReason: result.fallbackReason,
     };
   } catch (error) {
     await prisma.generationLog.create({
@@ -358,6 +538,23 @@ export async function saveAiGeneratedContentAction(input: AIGenerationSaveInput)
 
     if (!existing) {
       continue;
+    }
+
+    if (item.userRating !== undefined) {
+      const latestLog = await prisma.generationLog.findFirst({
+        where: { contentItemId: item.contentItemId },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (latestLog) {
+        await prisma.generationLog.update({
+          where: { id: latestLog.id },
+          data: {
+            userRating: item.userRating,
+            userFeedback: item.userFeedback?.trim() || null,
+          },
+        });
+      }
     }
 
     const normalizedPayload =

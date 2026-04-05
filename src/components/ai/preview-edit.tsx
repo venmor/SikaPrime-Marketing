@@ -1,5 +1,7 @@
 "use client";
 
+import { ThumbsDown, ThumbsUp } from "lucide-react";
+
 import type { AIGeneratedChannelPreview } from "@/lib/ai/types";
 
 function updateItem(
@@ -24,14 +26,79 @@ export function PreviewEdit({
           key={item.contentItemId}
           className="rounded-[28px] border border-[color:var(--border)] bg-surface-strong p-5 shadow-sm"
         >
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-strong">
-              {item.channel}
-            </span>
-            <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-1 text-xs font-medium text-[color:var(--muted)]">
-              {item.themeLabel}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-brand-soft px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-brand-strong">
+                {item.channel}
+              </span>
+              <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-1 text-xs font-medium text-[color:var(--muted)]">
+                {item.themeLabel}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(
+                    updateItem(items, item.contentItemId, (current) => ({
+                      ...current,
+                      userRating: current.userRating === 1 ? undefined : 1,
+                    })),
+                  )
+                }
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  item.userRating === 1
+                    ? "bg-brand-soft text-brand-strong"
+                    : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
+                }`}
+                title="Good response"
+              >
+                <ThumbsUp className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange(
+                    updateItem(items, item.contentItemId, (current) => ({
+                      ...current,
+                      userRating: current.userRating === 0 ? undefined : 0,
+                    })),
+                  )
+                }
+                className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                  item.userRating === 0
+                    ? "bg-[color:var(--warning-soft)] text-[color:var(--warning-strong)]"
+                    : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]"
+                }`}
+                title="Bad response"
+              >
+                <ThumbsDown className="h-4 w-4" />
+              </button>
+            </div>
           </div>
+
+          {item.userRating === 0 ? (
+            <div className="mt-4">
+              <label>
+                <span className="text-xs text-[color:var(--muted)]">What went wrong?</span>
+                <input
+                  type="text"
+                  placeholder="Too long, wrong tone..."
+                  value={item.userFeedback ?? ""}
+                  onChange={(event) =>
+                    onChange(
+                      updateItem(items, item.contentItemId, (current) => ({
+                        ...current,
+                        userFeedback: event.target.value,
+                      })),
+                    )
+                  }
+                  className="mt-1 h-9 bg-[color:var(--surface)] text-sm"
+                />
+              </label>
+            </div>
+          ) : null}
 
           <div className="mt-4 rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">

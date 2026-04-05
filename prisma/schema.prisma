@@ -409,6 +409,8 @@ model GenerationLog {
   promptTokens    Int?
   completionTokens Int?
   totalTokens     Int?
+  userRating      Int?
+  userFeedback    String?
   createdAt       DateTime          @default(now())
   contentItem     ContentItem?      @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
   actor           User?             @relation("GenerationActor", fields: [actorId], references: [id], onDelete: SetNull)
