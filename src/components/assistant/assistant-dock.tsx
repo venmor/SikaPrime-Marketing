@@ -237,7 +237,7 @@ export function AssistantDock({
     <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[210] flex flex-col items-end gap-3 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-[calc(100vw-1.5rem)]">
       {open ? (
         <div className="surface-overlay pointer-events-auto flex h-[min(88dvh,54rem)] w-full max-w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px]">
-          <div className="flex items-center justify-between border-b border-[color:var(--border)] px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--border)] px-5 py-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Workflow assistant
@@ -388,8 +388,8 @@ export function AssistantDock({
 
               {drafts.length ? (
                 <div className="rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-strong)] p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
                         Generated drafts
                       </p>
@@ -411,7 +411,7 @@ export function AssistantDock({
                         key={draft.contentItemId}
                         className="rounded-[20px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4"
                       >
-                        <div className="flex items-center justify-between gap-3">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="brand-subtle">{draft.channel}</Badge>
                             <Badge variant="muted">{draft.themeLabel}</Badge>

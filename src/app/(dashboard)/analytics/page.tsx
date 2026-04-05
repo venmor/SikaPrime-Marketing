@@ -194,7 +194,7 @@ export default async function AnalyticsPage() {
                   key={channel.channel}
                   className="rounded-xl border border-[color:var(--border)] bg-surface-strong p-4 shadow-sm"
                 >
-                  <div className="flex items-center justify-between gap-3 border-b border-[color:var(--border)] pb-3 mb-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--border)] pb-3 mb-3">
                     <h3 className="font-display text-base font-semibold text-[color:var(--foreground)]">
                       {channel.channel}
                     </h3>

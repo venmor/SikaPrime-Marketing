@@ -290,7 +290,7 @@ export default async function PublishingPage() {
             )}
 
             <div className="rounded-[24px] border border-dashed border-[color:var(--border)] p-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm font-semibold text-[color:var(--foreground)]">
                   Unscheduled approved items
                 </p>

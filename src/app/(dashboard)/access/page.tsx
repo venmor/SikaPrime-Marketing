@@ -214,7 +214,7 @@ export default async function AccessPage({
                   </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2 xl:w-[420px]">
+                <div className="grid gap-3 sm:grid-cols-2 xl:w-full xl:max-w-[420px]">
                   <PasswordResetIssuerForm userId={user.id} />
 
                   {isCurrentUser ? (
