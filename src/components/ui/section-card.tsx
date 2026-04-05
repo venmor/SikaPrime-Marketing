@@ -16,7 +16,7 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "surface-panel flex min-w-0 flex-col p-6 sm:p-8",
+        "surface-panel flex min-w-0 flex-col p-[clamp(1rem,3vw,1.5rem)]",
         className,
       )}
     >

@@ -199,6 +199,7 @@ async function generateAndPersistAiContent(input: {
   return {
     items,
     usedLiveTrends: generation.usedLiveTrends,
+    fallbackReason: generation.fallbackReason,
     message:
       generation.fallbackReason
         ? items.length === 2
@@ -237,6 +238,7 @@ export async function generateAiContentAction(input: {
       message: result.message,
       items: result.items,
       usedLiveTrends: result.usedLiveTrends,
+      fallbackReason: result.fallbackReason,
     };
   } catch (error) {
     await prisma.generationLog.create({
@@ -339,18 +341,42 @@ export async function saveAiGeneratedContentAction(input: AIGenerationSaveInput)
     };
   }
 
-  for (const item of input.items) {
-    const existing = await prisma.contentItem.findUnique({
-      where: { id: item.contentItemId },
-      select: {
-        id: true,
-        ownerId: true,
-        reviewerId: true,
-      },
-    });
+  const existingItems = await prisma.contentItem.findMany({
+    where: {
+      id: { in: input.items.map((item) => item.contentItemId) },
+      ownerId: session.userId,
+    },
+    select: {
+      id: true,
+      ownerId: true,
+      reviewerId: true,
+    },
+  });
 
-    if (!existing || existing.ownerId !== session.userId) {
+  const existingMap = new Map(existingItems.map((item) => [item.id, item]));
+
+  for (const item of input.items) {
+    const existing = existingMap.get(item.contentItemId);
+
+    if (!existing) {
       continue;
+    }
+
+    if (item.userRating !== undefined) {
+      const latestLog = await prisma.generationLog.findFirst({
+        where: { contentItemId: item.contentItemId },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (latestLog) {
+        await prisma.generationLog.update({
+          where: { id: latestLog.id },
+          data: {
+            userRating: item.userRating,
+            userFeedback: item.userFeedback?.trim() || null,
+          },
+        });
+      }
     }
 
     const normalizedPayload =

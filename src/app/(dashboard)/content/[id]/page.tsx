@@ -380,7 +380,7 @@ export default async function ContentDetailPage({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                         Body
                       </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                      <p className="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
                         {structuredPayload.body}
                       </p>
                     </div>
@@ -388,14 +388,14 @@ export default async function ContentDetailPage({
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
                         Caption
                       </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
+                      <p className="mt-2 break-words whitespace-pre-wrap text-sm leading-6 text-[color:var(--foreground)]">
                         {structuredPayload.caption}
                       </p>
                     </div>
                   </div>
                 ) : structuredPayload?.kind === "WHATSAPP" ? (
                   <div className="mt-3 flex justify-start">
-                    <div className="max-w-[92%] rounded-[22px] bg-[color:var(--success)] px-4 py-3 text-sm leading-6 text-[color:var(--background)] shadow-sm">
+                    <div className="max-w-[92%] break-words rounded-[22px] bg-[color:var(--success)] px-4 py-3 text-sm leading-6 text-[color:var(--background)] shadow-sm">
                       {structuredPayload.message}
                     </div>
                   </div>

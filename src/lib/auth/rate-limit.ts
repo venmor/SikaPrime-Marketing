@@ -11,8 +11,18 @@ function normalizeKey(value: string) {
 
 async function getRequestFingerprint() {
   const headerStore = await headers();
-  const forwardedFor = headerStore.get("x-forwarded-for");
-  const ip = forwardedFor?.split(",")[0]?.trim() ?? "unknown";
+
+  /**
+   * Prioritize headers set by the hosting platform (Vercel) that cannot be easily spoofed.
+   * x-real-ip is set by Vercel to the actual client IP.
+   * x-vercel-forwarded-for is also provided on Vercel as a more reliable version of x-forwarded-for.
+   */
+  const ip =
+    headerStore.get("x-real-ip") ||
+    headerStore.get("x-vercel-forwarded-for") ||
+    headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "unknown";
+
   const userAgent = headerStore.get("user-agent") ?? "unknown";
 
   return `${ip}:${userAgent.slice(0, 48)}`;

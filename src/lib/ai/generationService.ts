@@ -15,6 +15,7 @@ import type {
 import { getAssistantUserDefaults } from "@/lib/assistant/service";
 import { prisma } from "@/lib/db";
 import { getLiveTrends, getLiveTrendsByIds } from "@/lib/engines/trends/liveTrendService";
+
 import { getIntegrationSettingValue } from "@/lib/integrations/service";
 import { fetchWithObservability } from "@/lib/operations/service";
 import { splitList } from "@/lib/utils";
@@ -178,7 +179,7 @@ function extractUsage(payload: unknown) {
   };
 }
 
-async function getAiConfig() {
+export async function getAiConfig() {
   const [apiKey, model] = await Promise.all([
     getIntegrationSettingValue("openai.api_key", process.env.OPENAI_API_KEY ?? ""),
     getIntegrationSettingValue(
@@ -285,7 +286,7 @@ function parseJson<T>(raw: string, schema: z.ZodType<T>) {
   }
 }
 
-async function loadResolvedContext(
+export async function loadResolvedContext(
   subjectDetails: AIGenerationSubjectDetails,
 ): Promise<ResolvedContext> {
   const profile = await prisma.businessProfile.findUnique({
@@ -381,7 +382,7 @@ async function loadResolvedContext(
   };
 }
 
-async function resolveLiveTrends(trendIds: string[]) {
+export async function resolveLiveTrends(trendIds: string[]) {
   const [selected, current] = await Promise.all([
     getLiveTrendsByIds(trendIds),
     getLiveTrends(3),
@@ -411,7 +412,7 @@ async function resolveLiveTrends(trendIds: string[]) {
     }));
 }
 
-function buildObjective(context: ResolvedContext, customInstructions?: string | null) {
+export function buildObjective(context: ResolvedContext, customInstructions?: string | null) {
   const goalLine = context.goal?.title
     ? `Primary goal: ${context.goal.title}. ${context.goal.description}`
     : `Primary goal: ${context.profile.primaryGoal}`;
@@ -422,7 +423,7 @@ function buildObjective(context: ResolvedContext, customInstructions?: string | 
   return [goalLine, customLine].filter(Boolean).join(" ");
 }
 
-function buildSystemPrompt(channel: ChannelOption, context: ResolvedContext, trends: LiveTrendPreview[]) {
+export function buildSystemPrompt(channel: ChannelOption, context: ResolvedContext, trends: LiveTrendPreview[]) {
   const channelRules =
     channel === "FACEBOOK"
       ? [
@@ -453,7 +454,7 @@ function buildSystemPrompt(channel: ChannelOption, context: ResolvedContext, tre
   ].join("\n");
 }
 
-function buildUserPrompt(input: {
+export function buildUserPrompt(input: {
   channel: ChannelOption;
   subjectDetails: AIGenerationSubjectDetails;
   context: ResolvedContext;

@@ -152,11 +152,11 @@ export default async function DashboardPage() {
           title="Trends for you"
           description="Fresh signals are paired with the product most likely to fit, so nobody has to hunt through a trend list first."
         >
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2">
             {snapshot.trendsForYou.map((trend) => (
               <div
                 key={trend.id}
-                className="min-w-[18rem] rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm"
+                className="min-w-[18rem] shrink-0 snap-start rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-strong)] p-5 shadow-sm"
               >
                 <div className="flex items-center justify-between gap-3">
                   <Badge variant="cyan-subtle">{trend.source}</Badge>

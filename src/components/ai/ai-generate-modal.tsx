@@ -85,6 +85,7 @@ export function AIGenerateModal({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [usedTrends, setUsedTrends] = useState<LiveTrendPreview[]>([]);
+  const [fallbackReason, setFallbackReason] = useState<string | null>(null);
   const [isGenerating, startGenerating] = useTransition();
   const [isSaving, startSaving] = useTransition();
 
@@ -127,6 +128,7 @@ export function AIGenerateModal({
     setStatusMessage(null);
     setErrorMessage(null);
     setUsedTrends([]);
+    setFallbackReason(null);
   }
 
   function openFlow() {
@@ -164,10 +166,12 @@ export function AIGenerateModal({
         return;
       }
 
-      setGeneratedItems(result.items);
       setUsedTrends(result.usedLiveTrends);
+      setFallbackReason(result.fallbackReason ?? null);
       setStatusMessage(result.message);
       setStep(3);
+      setGeneratedItems(result.items);
+
       router.refresh();
     });
   }
@@ -209,67 +213,67 @@ export function AIGenerateModal({
 
       {open && typeof document !== "undefined"
         ? createPortal(
-            <div className="fixed inset-0 z-[220] flex min-h-dvh items-center justify-center overflow-y-auto bg-slate-950/45 p-4 sm:p-6 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[220] flex min-h-dvh items-start justify-center overflow-y-auto bg-slate-950/45 p-4 pt-[8vh] backdrop-blur-sm sm:p-6 sm:pt-[10vh]">
               <div className="w-full max-w-5xl">
-          <div
-            ref={modalRef}
-            role="dialog"
-            aria-modal="true"
-            tabIndex={-1}
-            className="surface-overlay mx-auto flex max-h-[min(92dvh,58rem)] w-full flex-col overflow-hidden rounded-[32px]"
-          >
-            <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-6 py-5">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-                  AI content generation
-                </p>
-                <h2 className="mt-2 font-display text-2xl font-semibold text-[color:var(--foreground)]">
-                  Guided AI generation
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--muted)]">
-                  Move from channel choice to subject details to a draft that can go
-                  straight into review, without losing the manual creation option.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] shadow-sm transition-[transform,box-shadow,background-color,color] hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
-                aria-label="Close AI generation"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-2 border-b border-[color:var(--border)] px-6 py-4">
-              {[
-                { stepNumber: 1, label: "Channel" },
-                { stepNumber: 2, label: "Subject" },
-                { stepNumber: 3, label: "Preview" },
-                { stepNumber: 4, label: "Done" },
-              ].map((item) => (
-                <span
-                  key={item.stepNumber}
-                  className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${
-                    step === item.stepNumber
-                      ? "bg-brand-soft text-brand-strong"
-                      : step > item.stepNumber
-                        ? "bg-[color:var(--success-soft)] text-[color:var(--success-strong)]"
-                        : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
-                  }`}
+                <div
+                  ref={modalRef}
+                  role="dialog"
+                  aria-modal="true"
+                  tabIndex={-1}
+                  className="surface-overlay mx-auto flex max-h-[80vh] w-full flex-col overflow-hidden rounded-[32px]"
                 >
-                  {item.label}
-                </span>
-              ))}
-            </div>
+                  <div className="flex items-start justify-between gap-4 border-b border-[color:var(--border)] px-5 py-4">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+                        AI content generation
+                      </p>
+                      <h2 className="mt-2 font-display text-2xl font-semibold text-[color:var(--foreground)]">
+                        Guided AI generation
+                      </h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--muted)]">
+                        Move from channel choice to subject details to a draft that can go
+                        straight into review, without losing the manual creation option.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] text-[color:var(--muted)] shadow-sm transition-[transform,box-shadow,background-color,color] hover:-translate-y-0.5 hover:text-[color:var(--foreground)]"
+                      aria-label="Close AI generation"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
 
-            <div className="overflow-y-auto px-6 py-6">
-              {errorMessage ? (
-                <div className="alert-danger mb-5 rounded-2xl p-4 text-sm">
-                  {errorMessage} You can retry or continue with the manual creation
-                  tools in the Content Lab.
-                </div>
-              ) : null}
+                  <div className="flex flex-wrap gap-2 border-b border-[color:var(--border)] px-5 py-3">
+                    {[
+                      { stepNumber: 1, label: "Channel" },
+                      { stepNumber: 2, label: "Subject" },
+                      { stepNumber: 3, label: "Preview" },
+                      { stepNumber: 4, label: "Done" },
+                    ].map((item) => (
+                      <span
+                        key={item.stepNumber}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] ${
+                          step === item.stepNumber
+                            ? "bg-brand-soft text-brand-strong"
+                            : step > item.stepNumber
+                              ? "bg-[color:var(--success-soft)] text-[color:var(--success-strong)]"
+                              : "bg-[color:var(--surface-soft)] text-[color:var(--muted)]"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="overflow-y-auto px-6 py-6">
+                    {errorMessage ? (
+                      <div className="alert-danger mb-5 rounded-2xl p-4 text-sm">
+                        {errorMessage} You can retry or continue with the manual creation
+                        tools in the Content Lab.
+                      </div>
+                    ) : null}
 
               {statusMessage && step === 4 ? (
                 <div className="alert-success mb-5 rounded-2xl p-4 text-sm">
@@ -337,6 +341,22 @@ export function AIGenerateModal({
 
               {step === 3 ? (
                 <div className="grid gap-6">
+                  {fallbackReason ? (
+                    <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
+                      <p className="text-sm font-medium text-[color:var(--foreground)]">
+                        AI generation failed ({fallbackReason}). Showing a pre-written template.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleGenerate}
+                        disabled={isGenerating}
+                        className="mt-3 inline-flex min-h-9 items-center justify-center rounded-full bg-[color:var(--surface-strong)] px-4 py-2 text-xs font-semibold text-[color:var(--foreground)] shadow-sm transition-[transform,box-shadow,background-color,color] hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {isGenerating ? "Retrying..." : "Retry AI"}
+                      </button>
+                    </div>
+                  ) : null}
+
                   {usedTrends.length ? (
                     <div className="rounded-[24px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] p-4">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[color:var(--muted)]">
@@ -428,8 +448,8 @@ export function AIGenerateModal({
                   </div>
                 </div>
               ) : null}
-            </div>
-          </div>
+                  </div>
+                </div>
               </div>
             </div>,
             document.body,

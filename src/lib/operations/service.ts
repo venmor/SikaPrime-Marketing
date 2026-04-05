@@ -272,7 +272,7 @@ export async function getOperationalHealthSnapshot() {
   const checkedAt = new Date().toISOString();
 
   try {
-    await prisma.$queryRaw`SELECT 1`;
+    await prisma.activityLog.findFirst({ select: { id: true } });
   } catch (error) {
     return {
       ok: false,

@@ -24,7 +24,7 @@ import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";
-import { cn, humanizeEnum } from "@/lib/utils";
+import { cn, humanizeEnum, initials } from "@/lib/utils";
 import { getNavigationState, type NavigationChild } from "@/lib/constants";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -86,8 +86,8 @@ export function ShellChrome({
   return (
     <div className="relative min-h-screen bg-[color:var(--background)]">
       <div className="relative flex min-h-screen">
-        <div className="hidden w-[292px] shrink-0 p-4 xl:block">
-          <div className="surface-panel sticky top-4 h-[calc(100vh-2rem)] p-5">
+        <div className="hidden w-[clamp(240px,20vw,260px)] shrink-0 p-4 xl:block">
+          <div className="surface-panel sticky top-4 h-[calc(100vh-2rem)] p-[clamp(1rem,2vw,1.25rem)]">
             <SidebarNav user={user} />
           </div>
         </div>
@@ -107,9 +107,9 @@ export function ShellChrome({
           </div>
         )}
 
-        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col p-4 sm:p-6 lg:p-8">
-          <header className="mb-8">
-            <div className="surface-panel flex overflow-hidden flex-col gap-5 p-4 sm:p-6">
+        <div className="relative flex min-h-screen min-w-0 flex-1 flex-col overflow-x-hidden p-4 sm:p-6 lg:p-8">
+          <header className="relative z-[100] mb-8">
+            <div className="surface-panel flex overflow-hidden flex-col gap-[clamp(1rem,2vw,1.25rem)] p-[clamp(1rem,2vw,1.25rem)]">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <button
@@ -126,23 +126,21 @@ export function ShellChrome({
                 </div>
 
                 <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
-                  <details className="group relative">
+                  <details className="group relative max-w-full">
                     <summary className="flex max-w-[min(100%,16rem)] cursor-pointer list-none items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] py-1 pl-1 pr-4 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-[border-color,box-shadow,background-color,color] hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
-                      <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-strong font-bold"
-                        dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
-                      />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[10px] font-bold text-brand-strong">
+                        {initials(user.name)}
+                      </div>
                       <span className="max-w-[112px] truncate sm:max-w-[160px]">
                         {user.name}
                       </span>
                       <ChevronDown className="h-4 w-4 text-[color:var(--muted)] transition-transform duration-200 group-open:rotate-180" />
                     </summary>
-                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-elevated)] p-4 shadow-xl backdrop-blur-xl">
+                    <div className="absolute right-0 top-[calc(100%+0.5rem)] z-[100] w-[min(22rem,calc(100vw-2rem))] rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-elevated)] p-4 shadow-xl backdrop-blur-xl">
                       <div className="flex items-center gap-4">
-                        <div
-                          className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand-strong font-bold"
-                          dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
-                        />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xl font-bold text-brand-strong">
+                          {initials(user.name)}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
                             {user.name}
@@ -215,7 +213,7 @@ export function ShellChrome({
                     )}
                   </div>
 
-                  <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
+                  <h1 className="mt-3 font-display text-[clamp(1.5rem,4vw,2.25rem)] font-semibold tracking-tight text-[color:var(--foreground)]">
                     {currentPage.label}
                   </h1>
                   <p className="mt-3 max-w-2xl text-sm leading-6 text-[color:var(--muted)] sm:text-base">
@@ -237,7 +235,7 @@ export function ShellChrome({
                           href={item.href}
                           aria-current={active ? "page" : undefined}
                           className={cn(
-                            "whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                            "whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                             active
                               ? "bg-[color:var(--surface-strong)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                               : "text-[color:var(--muted)] hover:bg-[color:var(--surface)] hover:text-[color:var(--foreground)]",
@@ -253,7 +251,7 @@ export function ShellChrome({
             </div>
           </header>
 
-          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-8">
+          <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-6">
             {children}
           </main>
         </div>

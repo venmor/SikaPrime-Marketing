@@ -237,7 +237,7 @@ export function AssistantDock({
     <div className="pointer-events-none fixed inset-x-3 bottom-3 z-[210] flex flex-col items-end gap-3 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:max-w-[calc(100vw-1.5rem)]">
       {open ? (
         <div className="surface-overlay pointer-events-auto flex h-[min(88dvh,54rem)] w-full max-w-[min(32rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px]">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--border)] px-5 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[color:var(--border)] px-[clamp(1rem,2vw,1.25rem)] py-[clamp(0.75rem,1.5vw,1rem)]">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[color:var(--muted)]">
                 Workflow assistant
@@ -268,7 +268,7 @@ export function AssistantDock({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-5 pt-4">
+          <div className="flex items-center gap-2 px-[clamp(1rem,2vw,1.25rem)] pt-[clamp(0.75rem,1.5vw,1rem)]">
             {canGenerate ? (
               <button
                 type="button"
@@ -301,7 +301,7 @@ export function AssistantDock({
 
           <div className="min-h-0 flex-1 overflow-hidden">
             {activeTab === "assistant" ? (
-              <div className="flex h-full flex-col gap-4 overflow-y-auto px-5 pb-5 pt-4">
+              <div className="flex h-full flex-col gap-4 overflow-y-auto px-[clamp(1rem,2vw,1.25rem)] pb-[clamp(1rem,2vw,1.25rem)] pt-[clamp(0.75rem,1.5vw,1rem)]">
               <div className="flex flex-wrap gap-2">
                 {suggestions.map((suggestion) => (
                   <button
@@ -367,7 +367,7 @@ export function AssistantDock({
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     placeholder="Create a Facebook ad about our quick loan for small businesses, friendly tone, include today’s top finance trend."
-                    className="mt-3 min-h-[7rem] w-full resize-none rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-4 py-3 text-sm text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]"
+                    className="mt-3 min-h-[5rem] w-full resize-none rounded-[18px] border border-[color:var(--border)] bg-[color:var(--surface-soft)] px-3 py-2 text-sm text-[color:var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]"
                   />
                 </label>
                 <div className="mt-3 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -576,7 +576,7 @@ export function AssistantDock({
               ) : null}
               </div>
             ) : (
-              <div className="grid h-full gap-4 overflow-y-auto px-5 pb-5 pt-4">
+              <div className="grid h-full gap-4 overflow-y-auto px-[clamp(1rem,2vw,1.25rem)] pb-[clamp(1rem,2vw,1.25rem)] pt-[clamp(0.75rem,1.5vw,1rem)]">
               {reviewInbox.length ? (
                 reviewInbox.map((item) => (
                   <div

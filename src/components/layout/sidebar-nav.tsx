@@ -44,7 +44,7 @@ export function SidebarNav({
   return (
     <aside
       aria-label="Global navigation"
-      className="flex h-full flex-col gap-6"
+      className="flex h-full flex-col gap-4"
     >
       <div className="flex items-center justify-between px-1">
         <AppLogo compact />
@@ -62,7 +62,7 @@ export function SidebarNav({
               onClick={onNavigate}
               aria-current={pathname === section.href ? "page" : undefined}
               className={cn(
-                "group flex min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                "group flex min-w-0 items-center gap-3 rounded-2xl px-2.5 py-2 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                 sectionActive
                   ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                   : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]",
@@ -104,7 +104,7 @@ export function SidebarNav({
                 onClick={onNavigate}
                 aria-current={pathname === section.href ? "page" : undefined}
                 className={cn(
-                  "group flex min-w-0 items-center gap-3 rounded-2xl px-3 py-3 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
+                  "group flex min-w-0 items-center gap-3 rounded-2xl px-2.5 py-2 transition-[background-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)]",
                   active
                     ? "bg-[color:var(--surface-soft)] text-[color:var(--foreground)] shadow-sm ring-1 ring-[color:var(--border)]"
                     : "text-[color:var(--muted)] hover:bg-[color:var(--surface-soft)] hover:text-[color:var(--foreground)]",
