@@ -24,7 +24,7 @@ import type { UserRole } from "@/lib/auth/roles";
 import { AppLogo } from "@/components/branding/app-logo";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { Badge } from "@/components/ui/badge";
-import { cn, humanizeEnum } from "@/lib/utils";
+import { cn, humanizeEnum, initials } from "@/lib/utils";
 import { getNavigationState, type NavigationChild } from "@/lib/constants";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -128,10 +128,9 @@ export function ShellChrome({
                 <div className="flex items-center gap-3">
                   <details className="group relative">
                     <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-full border border-[color:var(--border)] bg-[color:var(--surface-strong)] pl-1 pr-4 py-1 text-sm font-medium text-[color:var(--foreground)] shadow-sm transition-[border-color,box-shadow,background-color,color] hover:border-[color:var(--muted)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand)] [&::-webkit-details-marker]:hidden">
-                      <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-brand-strong font-bold"
-                        dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
-                      />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-[10px] font-bold text-brand-strong">
+                        {initials(user.name)}
+                      </div>
                       <span className="max-w-[120px] truncate sm:max-w-[160px]">
                         {user.name}
                       </span>
@@ -139,10 +138,9 @@ export function ShellChrome({
                     </summary>
                     <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] rounded-[24px] border border-[color:var(--border-strong)] bg-[color:var(--surface-elevated)] p-4 shadow-xl backdrop-blur-xl">
                       <div className="flex items-center gap-4">
-                        <div
-                          className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-soft text-xl text-brand-strong font-bold"
-                          dangerouslySetInnerHTML={{ __html: user.avatarSeed }}
-                        />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xl font-bold text-brand-strong">
+                          {initials(user.name)}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <p className="truncate text-sm font-semibold text-[color:var(--foreground)]">
                             {user.name}
